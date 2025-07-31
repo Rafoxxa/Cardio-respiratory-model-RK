@@ -1,0 +1,111 @@
+
+    Variables hidden as parameters
+    "MRCO2" [X]
+    "MRO2" [X]
+    "TE" [X]
+    "TI" [X]
+    "Tresp" [X]
+    "a0"          [X]
+    "a1"          [X]
+    "a2"          [X]
+    "fO2"          [X]
+    "settling_time"  [X]
+    "t0"              [X]
+   "Ta"   [X]   its recomputed based on other vars
+    "V_unstressed_s_v" [X]    This is a control variable, other Vu are also manipulated variables but they are computed in estimation newton code
+    "V_unstressed_rm_v" [X] control variable
+
+    Non used
+
+    "MO2_p"  [X] unnecesary parameter, it shouldnt exist	
+    "V_unstressed_sa" [X]  unused parameter
+    *"R_p_p_n" [X]    Due to the new R_p_p_n parameter, R_pp should cease to exist, so that parameter wont be used, rather R_pp will be used
+
+    Zero value
+
+    "Wp_h_s"  [X] its 0
+    "Pabdmax"        [X] its 0
+    "gcc_v_s"    [X]  its 0
+    "Pao"        [X] its 0
+    "V_unstressed_pa" [?]   Its 0 lol
+
+    Never achieved conditions
+
+    "bua"    [X]  the condition Pcritmin < 1/(Cua bua) is always false, unless some huge variation
+    "V_vc_min"[X] This and the one and the next ones are dependant on Vtotalvc being < Vunstressedvc
+    "D2"           [X]   
+    "K2_vc"      [X]  
+
+    Inestability errors when changed
+    "Rl" [X]  it didn't save anything, it was a type 1 error (inestability issue)
+    "Theta_h_s_n" [X]
+    "delay_Emax_lv" [X]
+
+    Estimation ohmNewton
+
+    "R_am_n" [X]
+    "R_am_p_0" [X]
+    "R_b_n" [X]
+    "R_e_n" [X]
+    "R_e_p_0" [X]
+    "R_h_n" [X]
+    "R_h_p_n" [X]
+    "R_pp" [X]
+    "R_pv" [X]
+    "R_rm_n" [X]
+    "R_rm_p_0" [X]
+    "R_s_n" [X]
+    "R_s_p_0" [X] 
+    "V_u_am_v_0" [X]
+    "V_u_e_v_0" [X]
+    "V_u_rm_v_0" [X]
+    "V_u_s_v_0" [X]
+    "V_unstressed_am_p" [X]
+    "V_unstressed_am_v" [X]
+    "V_unstressed_b_p" [X]
+    "V_unstressed_b_v" [X]
+    "V_unstressed_e_p" [X]
+    "V_unstressed_e_v" [X]
+    "V_unstressed_h_p" [X]
+    "V_unstressed_h_v" [X]
+    "V_unstressed_pp" [X]
+    "V_unstressed_pv" [X]
+    "V_unstressed_rm_p" [X] 
+    "V_unstressed_s_p" [X]
+    "V_unstressed_vc" [X] 
+
+    Errors
+
+    *"PO2_ref_h_s" [X o]  the problem was associated to a typo in calling O2v instead of O2
+    "PO2_ref_p_s" [X o]    
+    "k_isc_h_s"    [X o]
+    "k_isc_p_s"      [X o]
+    "x_h_s"           [X o]
+    "x_p_s"           [X o]
+-------
+    *"Wc_v"  [Xo]  error of calling the parameter (change in sensitivity analysis)
+   
+ 
+
+    
+
+
+
+
+ 
+
+
+
+
+ 
+    
+
+
+
+   
+
+
+
+
+
+   

@@ -1,0 +1,18 @@
+Parameters to fit not LSA given:
+
+    pars('dV_rest') = 0.0673;     %lt/s
+    
+    %New equations (after a first optimization, these values will be includeded in the fitting with huuuge intervals, to find the best effect of them)
+    pars('vO2_e_n') = 0.13;
+    pars('vO2_s_n') = 0.13;
+    pars('aO2_n') = 0.9;
+
+    pars('gO2_e') = 0.15*pars('gO2_rm');
+    pars('gO2_s') = 0.15*pars('gO2_rm');
+    pars('gO2_p') = 0.15 * pars('gO2_rm');%
+
+    pars('MO2_e') = 0.6;
+    pars('MO2_s') = 0.6;
+    pars('MO2_p') = 0.6;
+
+    pars('T0') = 0.4;

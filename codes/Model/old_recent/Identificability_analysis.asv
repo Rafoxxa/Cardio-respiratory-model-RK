@@ -1,0 +1,77 @@
+
+folder_name = "../Sens_analysis/";
+field_load_name = "SensMatrix_hipoxia_ascend_21-02-25.mat";
+
+
+sens_name = strcat(folder_name, file_load_name); 
+sens_out_struct = load(sens_name);
+sens_final_time_matrix = sens_out_struct.sens_final_time_matrix;
+
+
+S = sens_final_time_matrix';
+%S = S.*(S > 40);
+
+
+%FIM computation with arbitrary noise level 
+sigma = 0.05;   
+W = diag(1 ./ sigma^2);  
+FIM = S' * W * S;  
+
+%FIM = FIM(logical(sum(FIM>0,2)),logical(sum(FIM>0,2)));
+
+
+
+% Condition number (check for identifiability issues)
+cond_FIM = cond(FIM);
+disp(['Condition number: ', num2str(cond_FIM)]);
+
+
+
+%Correlation matrix for parameters
+correlation_matrix = FIM ./ sqrt(diag(FIM) * diag(FIM)');
+
+% FIM_ = FIM;
+% correlation_matrix_ = correlation_matrix;
+% correlation_matrix_cumulated = sum( abs(correlation_matrix_) < 1, 2);
+% 
+% 
+% %code for best parameters
+% while sum(correlation_matrix_cumulated) > 0
+%     correlation_matrix_cumulated = sum( abs(correlation_matrix_) < 1, 2);
+%     [~, idx_max] = max(correlation_matrix_cumulated);
+%     [rows, cols] = size(FIM_);
+%     indexes = 1:rows;
+%     new_idxs = indexes(indexes ~= idx_max);
+%     FIM_ = FIM_(new_idxs, new_idxs);
+%     correlation_matrix_ = FIM_ ./ sqrt(diag(FIM_) * diag(FIM_)');
+% end
+
+
+%
+
+%correlation_matrix = abs(correlation_matrix) > 0.9;
+disp('Correlation matrix:');
+
+
+[pars, init, taus] = load_global_easy();
+pars_keys = pars.keys;
+%%%
+figure;
+imagesc(correlation_matrix);
+
+colorbar; % Add a color scale
+caxis([0, 1]); % Normalize between -1 and 1
+colormap jet; % Use a color map for better visualization
+
+% Set axis labels
+xticks(1:length(pars_keys));
+yticks(1:length(pars_keys));
+xticklabels(pars_keys);
+yticklabels(pars_keys);
+xtickangle(45);
+
+%Cramer Rao Intervals
+param_variances = diag(inv(FIM));
+param_stddevs = sqrt(param_variances);
+disp('Parameter standard deviations:');
+disp(param_stddevs);

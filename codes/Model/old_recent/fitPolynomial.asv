@@ -1,0 +1,69 @@
+function [bestDegree, bestP, bestFit, x_fitted, y_fitted] = bestPolynomialFit(x, y, maxDegree)
+    % bestPolynomialFit Finds the best polynomial fit for experimental data.
+    %
+    % INPUTS:
+    %   x         - Vector of x-data (independent variable).
+    %   y         - Vector of y-data (dependent variable).
+    %   maxDegree - Maximum degree of polynomial to test.
+    %
+    % OUTPUTS:
+    %   bestDegree - Degree of the polynomial with the best fit (highest R²).
+    %   bestP      - Polynomial coefficients for the best fit.
+    %   bestFit    - R² value of the best fit.
+    %   x_fitted   - X-values for the fitted curve.
+    %   y_fitted   - Y-values of the fitted curve corresponding to x_fitted.
+    %
+    % Example usage:
+    %   [bestDegree, bestP, bestFit, x_fitted, y_fitted] = bestPolynomialFit([1,2,3], [2.3,3.1,4.9], 5);
+
+    % Initialize variables
+    bestFit = -Inf; % Start with a very low R² value
+    bestDegree = 0; % Initialize best degree
+    bestP = [];     % Initialize best polynomial coefficients
+
+    % Generate x_fitted for smooth curve
+    x_fitted = linspace(min(x), max(x), 100);
+
+    % Loop through degrees from 1 to maxDegree
+    for degree = 1:maxDegree
+        % Fit polynomial of current degree
+        p = polyfit(x, y, degree);
+
+        % Evaluate polynomial on x-data
+        y_predicted = polyval(p, x);
+
+        % Calculate R² (coefficient of determination)
+        ss_total = sum((y - mean(y)).^2);       % Total sum of squares
+        ss_residual = sum((y - y_predicted).^2); % Residual sum of squares
+        R_squared = 1 - (ss_residual / ss_total);
+
+        % Update best fit if R² improves
+        if R_squared > bestFit
+            bestFit = R_squared;
+            bestDegree = degree;
+            bestP = p;
+            y_fitted = polyval(p, x_fitted); % Save the curve for the best fit
+        end
+    end
+
+    % Plot experimental data and best fit
+    % figure;
+    % plot(x, y, 'o', 'MarkerSize', 8, 'DisplayName', 'Experimental Data'); % Data points
+    % hold on;
+    % plot(x_fitted, y_fitted, '-', 'LineWidth', 2, ...
+    %      'DisplayName', ['Best Polynomial Fit (degree = ', num2str(bestDegree), ')']); % Best fit
+    % hold off;
+    % 
+    % % Customize plot
+    % xlabel('X-axis');
+    % ylabel('Y-axis');
+    % title(['Best Polynomial Fit (R² = ', num2str(bestFit, '%.4f'), ')']);
+    % legend('show');
+    % grid on;
+    % 
+    % % Display results
+    % fprintf('Best Polynomial Degree: %d\n', bestDegree);
+    % fprintf('R² Value: %.4f\n', bestFit);
+    % disp('Polynomial Coefficients (highest power first):');
+    % disp(bestP);
+end

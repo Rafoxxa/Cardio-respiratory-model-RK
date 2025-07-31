@@ -1,0 +1,114 @@
+function [y_, dJ, dinsp_work_power, dexp_work_power, test_] = respiratory_mechanical_work(t, y, pars, index, tiny_y_keys, test)
+    
+    
+    % Parameters
+    n = pars('n');
+    lambda1 = pars('lambda1');
+    lambda2 = pars('lambda2');   
+    Pmax = pars('Pmax');
+    dPmax = pars('dPmax');
+
+    Rrs = pars('Rrs');
+    Ecw = pars('Ecw');
+    El = pars('El');
+    Ers = Ecw + El;
+
+    dt = pars('dt');
+    t0 = pars('t0');
+    
+    %vars 
+    Tresp = y('Tresp');
+    TI = y('TI');
+    a0 = y('a0');
+    a1 = y('a1');
+    a2 = y('a2');
+    tau = y('tau');
+
+    Pmusc = y('Pmusc');
+    dVE = y('dVE');
+
+    t_cycle = t - t0;
+    
+    try  %avoiding out of range problem
+        Pmusc_prev = all_global(index(tiny_y_keys, 'Pmusc'), round((t-dt)/dt) + 1);
+        dVE_prev = all_global(index(tiny_y_keys, 'dVE'), round((t-dt)/dt) + 1);
+
+        dPmusc_dt = (Pmusc - Pmusc_prev)/dt;    
+        ddVE_dt = (dVE - dVE_prev)/dt;
+    catch
+        dPmusc_dt = 0;
+        ddVE_dt = 0;
+    end
+    
+    
+    
+    
+    
+
+    
+
+    zheta1 = (1 - Pmusc/Pmax) * (Pmax > Pmusc) + 0.01 * (Pmax <= Pmusc); %this is for handling off limits cases
+    zheta2 = (1 - dPmusc_dt/dPmax) * (dPmax > dPmusc_dt) + 0.01 * (dPmax <= dPmusc_dt); %this is for handling off limits cases
+    
+    if zheta1 < 0.1 || zheta2 < 0.1
+        disp('error');
+        
+    end
+    insp_integrand = Pmusc/(zheta1^n * zheta2^n) + lambda1 * ddVE_dt^2;
+    exp_integrand = ddVE_dt^2;
+
+
+     %Solver based integration
+     %solver_based_integration = 0;
+     %if solver_based_integration
+     %    insp_integrand_0 = all_global(index(init_keys, 'insp_integrand'), round(t0/dt) + 1);
+     %    exp_integrand_TI = all_global(index(init_keys, 'exp_integrand'), round((t0 + TI)/dt) + 1);
+ %
+     %    dinsp_work_power = 1/Tresp * (insp_integrand - insp_integrand_0) * (t < (TI + t0));
+     %    dexp_work_power = 1/Tresp * (exp_integrand - exp_integrand_TI) * (t > (TI + t0));
+     %    insp_work_power = y('insp_work_power');
+     %    exp_work_power = y('exp_work_power');
+     %    resp_work_power = insp_work_power + lambda2 * exp_work_power;
+     %    J = resp_work_power;
+     %    if (J > 1000)
+     %        disp('alto')
+     %    end
+     %end
+
+    
+
+    all_global(index(tiny_y_keys, 'insp_integrand'), round(t/dt) + 1) = insp_integrand;
+    all_global(index(tiny_y_keys, 'exp_integrand'), round(t/dt) + 1) = exp_integrand;
+    
+     %this is to avoid 'index out of range', if that happens, it is forced to shrink Tresp
+     %disp(round(t0/dt) + 1: round((t0 + TI)/dt) + 1);
+     insp_work_power = 1/Tresp * dt * sum(all_global(index(tiny_y_keys, 'insp_integrand'), round(t0/dt) + 1: round((t0 + TI)/dt) + 1)); 
+        exp_work_power =  1/Tresp * dt * sum(all_global(index(tiny_y_keys, 'exp_integrand'), round((t0 + TI)/dt) + 1: round((t0 + Tresp)/dt) + 1)); %it should be until Tresp, but that happens at the end of the cycle
+        resp_work_power = insp_work_power + lambda2 * exp_work_power;
+        Jfinal = resp_work_power;
+
+        
+        
+    
+        %disp(round(t/dt));
+        %disp(index(tiny_y_keys, 'J'));
+        %Jfinal = all_global(index(tiny_y_keys, 'J'), round(t/dt));%10^5; %big M.
+
+    
+
+    
+    y('insp_integrand') = insp_integrand;
+    y('exp_integrand') = exp_integrand;
+    %y('J') = Jfinal;
+    dJ = (Jfinal - y('J'))/dt;
+    all_global(index(tiny_y_keys, 'J'), round(t/dt) + 1) = Jfinal;
+    %all_global(index(init_keys, 'J'), round(t/dt) + 1) = J;
+    %dJ = 0;
+    dinsp_work_power = 0;
+    dexp_work_power = 0;
+    y_ = y;
+    test_ = test;
+
+    
+
+end

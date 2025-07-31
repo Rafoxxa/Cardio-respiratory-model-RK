@@ -1,0 +1,65 @@
+    
+    %%%%%%%%%%%%%%%%%%%%%%%
+
+    % Setting up
+    vectorize_dicts("run_ode.m", "model_basic.m", "run_ode_vec_hipoxia.m", "model_vec_hipoxia.m");    
+    
+    setup_out_normoxia = set_up("fitting", 1, "normoxia", "-");
+    setup_out_hipoxia = set_up("fitting", 1, "hipoxia", "mix");         
+    setup = setup_out_normoxia;
+
+    setup.texp_list = {setup_out_normoxia.texp, setup_out_hipoxia.texp};
+    setup.yexp_list = {setup_out_normoxia.yexp, setup_out_hipoxia.yexp};
+    setup.pars_list = {setup_out_normoxia.pars, setup_out_hipoxia.pars}; 
+    setup.simulation_time_list = {setup_out_normoxia.simulation_time, setup_out_hipoxia.simulation_time};
+    
+    %%%%%%%%%%%%%%%%%%%%%%%
+    
+    % Run fitting     
+    [results, updated_pars] = exec_solver("pattern_search", setup);
+    
+    %%%%%%%%%%%%%%%%%%%%%%%
+
+    % Run simulation    
+    parsfitted_filename = setup.fitting_filename;
+    setup_out_normoxia_sim = set_up("simulation", 1, "normoxia", "-"); %, "pars_from_fitting", 1, 'fitting_mat_file', parsfitted_filename);
+    sn = setup_out_normoxia_sim;
+    setup_out_hipoxia_sim = set_up("simulation", 1, "hipoxia", "mix"); %, %"pars_from_fitting", 1, 'fitting_mat_file', parsfitted_filename);
+    sh = setup_out_hipoxia_sim;
+
+    global all_global;
+    all_global = zeros(15, round(10 * sn.simulation_time/sn.dt) + 1) + 0;  %This array saves all the data used for delays and for integration 
+    [t_normoxia, x_dot, x_vars, x_keys, ~] = sn.run_ode_fun(sn.model, sn.pars, sn.init, sn.simulation_time, sn.dt);
+    struct_vars_normoxia = arrange_results(x_dot, x_vars, x_keys, t_normoxia);
+    all_global = zeros(15, round(10 * sh.simulation_time/sh.dt) + 1) + 0;  %This array saves all the data used for delays and for integration 
+    [t_hipoxia, x_dot, x_vars, x_keys, ~] = sh.run_ode_fun(sh.model, sh.pars, sh.init, sh.simulation_time, sh.dt);
+    struct_vars_hipoxia = arrange_results(x_dot, x_vars, x_keys, t_hipoxia);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%
+
+    % Save simulation    
+    save(sn.simulation_filename, "struct_vars_normoxia", "t_normoxia");
+    save(sh.simulation_filename, "struct_vars_hipoxia", "t_hipoxia");
+
+    %%%%%%%%%%%%%%%
+
+    % Plot    
+    old_mode = "off";  %that means, the struct_vars have the old version
+    time_sim = t_normoxia;
+    X_sim = struct_vars_normoxia;
+    custom_plot("sim_vs_exp", {time_sim, setup_out_normoxia.texp, X_sim, setup_out_normoxia.yexp, setup.xnames_fitting, setup.units_table, 5, 2, sn.simulation_filename, old_mode});
+    figure;
+    time_sim = t_hipoxia; 
+    X_sim = struct_vars_hipoxia;
+    custom_plot("sim_vs_exp", {time_sim, setup_out_hipoxia.texp, X_sim, setup_out_hipoxia.yexp, setup.xnames_fitting, setup.units_table, 5, 2, sh.simulation_filename, old_mode});
+
+
+
+    
+
+    
+
+
+        
+    
+

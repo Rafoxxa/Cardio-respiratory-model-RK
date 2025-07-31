@@ -1,0 +1,103 @@
+
+%INSTRUCTIONS
+% This script is the main module for solving an ODE (Ordinary Differential
+% Equation) system. The main ODE solver is run in the 'run_ode' module. The
+% script takes parameters, initial conditions, and optimization boundaries 
+% from the 'load_global_easy' function.
+
+% Functionality:
+% The script can execute different types of simulations based on the 'type_of_input'
+% parameter:
+% 1. 'testing': Runs a small simulation (no longer than 20 seconds) to test 
+%    the system's response to an input value of MRtCO2.
+% 2. 'paper_simulation': Runs a complete simulation of 1260 seconds to observe 
+%    the transient behavior over time.
+% 3. 'deploy_results': Runs steady-state simulations, which means 10 different 
+%    simulations with increasing values of MRtCO2 and picks the last value from 
+%    a specific set of variables.
+% 4. 'tiny paper simulation': Similar to 'paper_simulation' but with a simulation 
+%    time of 0.1x (200 seconds).
+
+% The input characteristics can be modified in the 'input_consumption()' function 
+% within 'model_basic_vascular.m', which is only present in the 'tissue()' function.
+
+% Global Variables:
+% - 'all_global': Stores all the data used for delays and integration.
+
+% Simulation Parameters:
+% - 'type_of_input': Determines the type of simulation to run (1, 2, 3, or 4).
+% - 'control_on': Toggle control mechanisms (1 = on, 0 = off).
+% - 'only_plot': If set to 1, the script will only plot existing data without 
+%   running new simulations.
+% - 'dt': Time step for the simulation.
+% - 'simulation_time': Total duration of the simulation, which varies based on 
+%   'type_of_input'.
+
+% Plotting Options:
+% The script provides various plotting modes to visualize the results:
+% - 'vars_to_show': Plots specified variables with their own axes.
+% - 'multiple_to_show': Plots multiple variables against a common variable.
+% - 'same_units': Plots variables with the same units.
+% - 'interest_variables': Plots a predefined set of variables of interest.
+
+% The script also includes various functions to structure and plot the simulation data.
+
+% Load the necessary parameters, initial conditions, and time constants using
+% the 'load_global_easy()' function. Ensure that the "variables_units.xlsx" file
+% is present in the directory for reading the units of the variables.
+
+%%  Instructions to Run:
+% 1. Set the desired 'type_of_input'.
+% 2. Toggle 'control_on' and 'only_plot' as needed.
+% 3. Set the 'dt' and 'simulation_time' parameters.
+% 4. Run the script to execute the simulation and plot the results based on 
+%    the selected plotting mode.
+
+%% Metasimulation parameters
+
+%INPUT TYPE: (1) testing: Runs a small simulation (no longer than 20s) to test system's response to an input value of MRtCO2
+%          , (2) paper_simulation: Run the whole simulation of 1260s to observe the transient behaviour over time
+%            (3) deploy_results: Run the steady state simulation, that means 10 different simulations with increasing values of MRtCO2 and picks the last value form a specific set of variables
+%            (4) tiny paper simulation: Is the same as (2) but the time is 0.1x.
+%            (6) vo2 and vco2 external, normoxia or hipoxia exercise
+%            (7) vo2, vco2 and fio2 external, hipoxia ascend
+
+%to change input characteristics go to '''input_consumption()''' function from model_basic_vascular.m  which exists only in '''tissue()''' function.
+
+%Clear
+rng(2);  
+clc
+clear -global delays_global
+clear -global all_global
+clear -global externals_global
+
+%Vectorize dicts
+vectorize_dicts("run_ode.m", "model_basic.m", "run_ode_vec_hipoxia.m", "model_vec_hipoxia.m");
+only_plot = 0;
+
+[set_up_out] = set_up("simulation", 1, "hipoxia", "mix", "simulation_time", 3500, "dt", 0.1);
+
+model = set_up_out.model;
+run_ode_fun = set_up_out.run_ode_fun;
+pars = set_up_out.pars;
+init = set_up_out.init;
+simulation_time = set_up_out.simulation_time;
+dt = set_up_out.dt;
+only_plot = set_up_out.only_plot;
+units_table = set_up_out.units_table;
+
+
+global all_global;
+all_global = zeros(15, round(10 * simulation_time/dt) + 1) + 0;  %This array saves all the data used for delays and for integration 
+
+if ~only_plot
+     [t, x_dot, x_vars, x_keys, index] = run_ode_fun(model, pars, init, simulation_time, dt);
+     struct_vars = arrange_results(x_dot, x_vars, x_keys, t);
+end
+
+custom_plot("vars_to_show", {["dVE"], struct_vars, t, units_table}); 
+
+
+ 
+
+ 
