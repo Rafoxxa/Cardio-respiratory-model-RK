@@ -3,26 +3,23 @@ vectorize_dicts("run_ode.m", "model_basic.m", "run_ode_vec_hipoxia.m", "model_ve
 %% SENSITIVITY ANALYSIS
 %Set up
 patient_idx = 5;
-mode = "loading"; %"loading"
+mode = "saving"; %"loading"
 %mode = "saving";
 %mode = "p-space";
 %setup = set_up("sens", 1, "hipoxia", "mix", "requestedDate", "28-04-2025");
-setup = set_up("sens", patient_idx, "hipoxia", "mix");
-%setup = set_up("sens", 1, "hipoxia", "mix", "epsilon", 1, "params_sample_size",10);  
-basePath = sprintf('../Sens_analysis/%d/', patient_idx);
-latestFullPath = getLatestFittingDateStr(basePath);
+setup_n = set_up("sens", patient_idx, "normoxia", ".");
+setup_h = set_up("sens", patient_idx, "hipoxia", "mix");
+setup = {setup_n, setup_h};
 
-setup.sensitivity_load_filename = latestFullPath;
-% setup.p_space_files = ["../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_10.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_9.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_8.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_7.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_6.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_5.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_4.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_3.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_2.mat", ...
-%                         "../Sens_analysis/5/SensMatrix_15-05-2025.mat_pspace_sampling_1.mat"];
+%setup = setup_h;
+
+%setup = set_up("sens", 1, "hipoxia", "mix", "epsilon", 1, "params_sample_size",10);  
+if mode == "loading"
+    basePath = sprintf('../Sens_analysis/%d/', patient_idx);
+    latestFullPath = getLatestFittingDateStr(basePath);
+    setup.sensitivity_load_filename = latestFullPath;
+end
+
 %Run
 LSA_output = sens_functions(mode, "-", setup);
 if mode == "saving"
@@ -40,32 +37,32 @@ end
 
 
 
-% % Apply sensitivity threshold
-sens_threshold = 0.5;
-idx_variable_of_interest = [1:numel(setup.variables_of_interest)];
-setup.idx_variable_of_interest = idx_variable_of_interest;
-setup.sens_threshold = sens_threshold;
-setup.sens_matrix = sens_matrix;
-out = sens_functions("single", "sens_threshold", setup);
-sens_reduced = out{1};
-pars_to_sens_reduced = out{2};
-%custom_plot("LSA-plot", {sens_reduced, pars_to_sens_reduced,setup.variables_of_interest, idx_variable_of_interest});
-
-% %Apply fitler by class
-setup.sens_final_time_matrix = sens_reduced; %sens_matrix;%
-setup.pars_to_sens = pars_to_sens_reduced;%pars_to_sens;%
-filtered_output = sens_functions("single", "filter_params_by_class", setup);
-sens_matrix_filtered = filtered_output{1};
-pars_to_sens_filtered = filtered_output{2};
-%custom_plot("LSA-plot", {sens_matrix_filtered, pars_to_sens_filtered, setup.variables_of_interest, idx_variable_of_interest});
+% % % Apply sensitivity threshold
+% sens_threshold = 0.4;
+% idx_variable_of_interest = [1:numel(setup.variables_of_interest)];
+% setup.idx_variable_of_interest = idx_variable_of_interest;
+% setup.sens_threshold = sens_threshold;
+% setup.sens_matrix = sens_matrix;
+% out = sens_functions("single", "sens_threshold", setup);
+% sens_reduced = out{1};
+% pars_to_sens_reduced = out{2};
+% custom_plot("LSA-plot", {sens_reduced, pars_to_sens_reduced,setup.variables_of_interest, idx_variable_of_interest});
 % 
-% %% IDENTIFIABILITY ANALYSIS
-% 
-ident_args.sens_matrix = sens_matrix_filtered; %sens_reduced; %sens_matrix_filtered;
-ident_args.pars_list = pars_to_sens_filtered; %pars_to_sens_reduced; %pars_to_sens_filtered;
-ident_args.corr_threshold = 0.6; % Set the correlation threshold for the analysis
-IDENT_output = ident_functions("compute-corr", "-", ident_args);
-custom_plot("ident-plot", IDENT_output);
+% % %Apply fitler by class
+% setup.sens_final_time_matrix = sens_reduced; %sens_matrix;%
+% setup.pars_to_sens = pars_to_sens_reduced;%pars_to_sens;%
+% filtered_output = sens_functions("single", "filter_params_by_class", setup);
+% sens_matrix_filtered = filtered_output{1};
+% pars_to_sens_filtered = filtered_output{2};
+% custom_plot("LSA-plot", {sens_matrix_filtered, pars_to_sens_filtered, setup.variables_of_interest, idx_variable_of_interest});
+% % 
+% % % %% IDENTIFIABILITY ANALYSIS
+% % % 
+% ident_args.sens_matrix = sens_matrix_filtered; %sens_reduced; %sens_matrix_filtered;
+% ident_args.pars_list = pars_to_sens_filtered; %pars_to_sens_reduced; %pars_to_sens_filtered;
+% ident_args.corr_threshold = 0.98; % Set the correlation threshold for the analysis
+% IDENT_output = ident_functions("compute-corr", "-", ident_args);
+% custom_plot("ident-plot", IDENT_output);
 
 function latestFullPath = getLatestFittingDateStr(basePath)
     %GETLATESTFITTINGDATESTR Returns the full path containing the latest dd-MM-yyyy date
