@@ -1,5 +1,6 @@
 function out = sens_functions(mode, fun, setup)
     s = setup;
+    
 
     if mode == "single"
         if fun == "run_base"
@@ -20,36 +21,59 @@ function out = sens_functions(mode, fun, setup)
             out = "";       
         end
     elseif mode == "saving"
-        if s.params_sample_size == 0
+        if length(s) > 1
+            sens_cell  = {};
+            sens_ = {};
+            for s_index = 1: length(s)
+                s_i = s{s_index};
+                results_base_i = run_base(s_i);
+                s_i.results_base = results_base_i;
+                [sens_i, error_i, perturbed_i] = run_LSA(s_i, s_i.pars);
+                sens_cell{s_index} = sens_i;
+            end
+
+            for pars_index = 1:length(sens_cell{2})
+                sens_{pars_index} = [sens_cell{1}{pars_index}, sens_cell{2}{pars_index}];
+            end
             
-            results_base = run_base(s);
-            s.results_base = results_base;
-            [sens, error, perturbed] = run_LSA(s);
-            
-            sens_matrix = build_LSA_matrix(s, s.variables_of_interest, sens, perturbed); 
-            s.sens_final_time_matrix = sens_matrix;        
-            save_sens(s);
-            out = {sens_matrix, sensitivities, error, perturbed, pars_to_sens};
+            sens_matrix = build_LSA_matrix(s_i, s_i.variables_of_interest, sens_, perturbed_i); 
+            s_i.sens_final_time_matrix = sens_matrix;        
+            save_sens(s_i);
+            out = {sens_matrix, sens_, error_i, perturbed_i, s_i.pars_to_sens};
+           
         else
-            for i = 1:s.params_sample_size
-                % Create a copy of the parameter set
-                params_base = s.pars;
-                pars_free2move = s.pars_free2move;
-                noise = 0.5; 
-                params_base_noised = add_noise(params_base, pars_free2move, noise); 
-                format long;
-                disp(sqrt(sum(((params_base_noised.values - params_base.values)./(eps + params_base.values)).^2)));
+            if s.params_sample_size == 0
+                
                 results_base = run_base(s);
                 s.results_base = results_base;
-                [sens, error, perturbed] = run_LSA(s, params_base);
+                [sens, error, perturbed] = run_LSA(s, s.pars);
                 
                 sens_matrix = build_LSA_matrix(s, s.variables_of_interest, sens, perturbed); 
-                s.sens_final_time_matrix = sens_matrix;  
-                s.new_pars =   params_base;      
+                s.sens_final_time_matrix = sens_matrix;        
                 save_sens(s);
-            end
-        end   
-
+                out = {sens_matrix, sensitivities, error, perturbed, pars_to_sens};
+            else
+                for i = 1:s.params_sample_size
+                    % Create a copy of the parameter set
+                    %I think this whole code is wrong, so if use fix
+                    %please!
+                    params_base = s.pars;
+                    pars_free2move = s.pars_free2move;
+                    noise = 0.5; 
+                    params_base_noised = add_noise(params_base, pars_free2move, noise); 
+                    format long;
+                    disp(sqrt(sum(((params_base_noised.values - params_base.values)./(eps + params_base.values)).^2)));
+                    results_base = run_base(s);
+                    s.results_base = results_base;
+                    [sens, error, perturbed] = run_LSA(s, params_base);
+                    
+                    sens_matrix = build_LSA_matrix(s, s.variables_of_interest, sens, perturbed); 
+                    s.sens_final_time_matrix = sens_matrix;  
+                    s.new_pars =   params_base;      
+                    save_sens(s);
+                end
+            end   
+    end
     elseif mode == "loading"
         [sens_matrix, pars_to_sens] = load_sens(s);
         out = {sens_matrix, pars_to_sens};
@@ -66,12 +90,14 @@ function out = sens_functions(mode, fun, setup)
         sensitivities = s.sensitivities;
         sens_final_time_matrix = s.sens_final_time_matrix;
         pars_to_sens = s.pars_to_sens;
-        new_pars = s.new_pars;
+        
         
         if s.params_sample_size == 0
+        
         save(write_path_all, "sensitivities");  
         save(write_path, "sens_final_time_matrix", "pars_to_sens"); 
         else
+            new_pars = s.new_pars;
             % Save the parameters and sensitivities for each sample
             for i = 1:s.params_sample_size
                 filename = sprintf('%s_pspace_sampling_%d.mat', write_path, i);
@@ -119,6 +145,7 @@ function out = sens_functions(mode, fun, setup)
                 
                 % Perturb the i-th selected parameter by epsilon            
                 param_key = pars_to_sens(i);  % Get the actual index of the 
+
                           
                 params_perturbed(param_key) = params_base(param_key)*(1+ epsilon);        
                 params_perturbed = estimate_newton_ohm(percentages, params_perturbed);
@@ -130,15 +157,20 @@ function out = sens_functions(mode, fun, setup)
                 x_perturbed_ = data_processing("add-desired", {x_perturbed, init}, t); 
                 matchSize_output = data_processing("match-size", {x_perturbed_, results_base_}, "-");
                 x_perturbed__ = matchSize_output{1};
-                results_base__ = matchSize_output{2};                   
-                sensitivities{i} = (x_perturbed__ - results_base__)/(epsilon) ./ results_base__;
+                results_base__ = matchSize_output{2};        
+                
+                
+                
+                
+                sensitivities{i} = (x_perturbed__ - results_base__)/(epsilon) ./ (results_base__ + epsilon);
                 error{i} = 0;
                 if size(x_perturbed__, 1) <= 1
                     disp("error-size");
                     error{i} = 2;
                 end
                 perturbed{i} = x_perturbed__;
-            catch
+            catch ME
+                disp(ME.message);
                 disp("error-simulation");
                 sensitivities{i} = 0;
                 perturbed{i} = 0;
@@ -170,6 +202,8 @@ function out = sens_functions(mode, fun, setup)
        for v = 1:num_variables
             key = variables_of_interest{v};
             target_variable_idx = find(init.keys == key);
+            disp(key);
+            disp(target_variable_idx);
             
             if numel(target_variable_idx) ~= 1
                 error(['Key "' key '" should correspond to a single variable index.']);
@@ -185,6 +219,7 @@ function out = sens_functions(mode, fun, setup)
                      sens_final_time_matrix(i, v) = 0;
                      disp(s.pars_to_sens(i));
                 end
+                disp(sens_final_time_matrix(i,v));
 
 
             end

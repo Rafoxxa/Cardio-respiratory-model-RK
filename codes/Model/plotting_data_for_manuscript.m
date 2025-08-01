@@ -90,7 +90,7 @@ function plot_LSA(subject_ids, plot_type, thresh_arr)
     figure;
     for idx = 1:length(subject_ids)
         subplot(2,2,idx)
-        parameter_analysis_fun(subject_ids(idx), plot_type, thresh_arr(idx));
+        parameter_analysis_fun_plot(subject_ids(idx), plot_type, thresh_arr(idx));
         hold on;
     end
 
