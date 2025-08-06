@@ -1,6 +1,6 @@
 %plotting_data_for_manuscript
 %DATA
-% % 
+% 
 % [t1_N, y1_N, poly1VO2_N, poly1VCO2_N, poly1fiO2_N, ~] = data_preprocessing(1, "normoxia", ".", 0, "ori");
 % [t4_N, y4_N, poly4VO2_N, poly4VCO2_N, poly4fiO2_N, ~] = data_preprocessing(4, "normoxia", ".", 0, "ori");
 % [t5_N, y5_N, poly5VO2_N, poly5VCO2_N, poly5fiO2_N, ~] = data_preprocessing(5, "normoxia", ".", 0, "ori");
@@ -12,38 +12,39 @@
 % [t6_H, y6_H, poly6VO2_H, poly6VCO2_H, poly6fiO2_H, ~] = data_preprocessing(6, "hipoxia", "mix", 0, "ori");
 
 
-% hipoxia = 1;
-% normoxia = 1 - hipoxia;
-% 
-% 
-% 
-% 
-% variables_to_show = [11, 12];
-% width = 1;
-% height = 2;
-% with_mask = 0;
-% 
-% y_cells_H = {y1_H', y4_H', y5_H', y6_H'};
-% t_cells_H = {t1_H', t4_H', t5_H', t6_H'};
-% 
-% y_cells_N = {y1_N', y4_N', y5_N', y6_N'};
-% t_cells_N = {t1_N, t4_N, t5_N, t6_N};
-% 
-% VO2_cells_H = {poly1VO2_H, poly4VO2_H, poly5VO2_H, poly6VO2_H};
-% VCO2_cells_H = {poly1VCO2_H, poly4VCO2_H, poly5VCO2_H, poly6VCO2_H};
-% 
-% VO2_cells_N = {poly1VO2_N, poly4VO2_N, poly5VO2_N, poly6VO2_N};
-% VCO2_cells_N = {poly1VCO2_N, poly4VCO2_N, poly5VCO2_N, poly6VCO2_N};
-% 
-% VT1_N = {791.00, 705.00, 668.00, 766.00}; %t@VT1
-% VT1_H = {2864.00, 2721.00, 2799.00, 3184.00}; %t@VT1
-% 
-% tmax_N = 2300;
-% tmax_H = 3400;
-% 
-% variable_names = ["dVE", "VT", "TI", "Tresp","PAO2", "PACO2", "HR", "PS", "PD", "PM", "VO2", "VCO2", "Pow"];
-% subject_ids = [1,4,5,6];
-% units_table = readtable("variables_units.xlsx");
+hipoxia = 1;
+normoxia = 1 - hipoxia;
+
+
+
+
+variables_to_show = [5, 6];
+subject = 1;
+width = 1;
+height = 2;
+with_mask = 0;
+
+y_cells_H = {y1_H', y4_H', y5_H', y6_H'};
+t_cells_H = {t1_H', t4_H', t5_H', t6_H'};
+
+y_cells_N = {y1_N', y4_N', y5_N', y6_N'};
+t_cells_N = {t1_N, t4_N, t5_N, t6_N};
+
+VO2_cells_H = {poly1VO2_H, poly4VO2_H, poly5VO2_H, poly6VO2_H};
+VCO2_cells_H = {poly1VCO2_H, poly4VCO2_H, poly5VCO2_H, poly6VCO2_H};
+
+VO2_cells_N = {poly1VO2_N, poly4VO2_N, poly5VO2_N, poly6VO2_N};
+VCO2_cells_N = {poly1VCO2_N, poly4VCO2_N, poly5VCO2_N, poly6VCO2_N};
+
+VT1_N = {791.00, 705.00, 668.00, 766.00}; %t@VT1
+VT1_H = {2864.00, 2721.00, 2799.00, 3184.00}; %t@VT1
+
+tmax_N = 2300;
+tmax_H = 3400;
+
+variable_names = ["dVE", "VT", "TI", "Tresp","PAO2", "PACO2", "HR", "PS", "PD", "PM", "VO2", "VCO2", "Pow"];
+subject_ids = [1,4,5,6];
+units_table = readtable("variables_units.xlsx");
 
 % if hipoxia
 %    plot_data(y_cells_H, variables_to_show ,t_cells_H, variable_names , {}, units_table,  VO2_cells_H, VCO2_cells_H, VT1_H, subject_ids, tmax_H, with_mask);
@@ -53,31 +54,49 @@
 
 %average = 0;
 
-%plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, variables_to_show, variable_names, units_table, width, height);
+plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, variables_to_show, variable_names, units_table, width, height, subject);
 
 %plot_poly(t_cells_H, VCO2_cells_H, subject_ids);
 
 %SIMULATIONS
-subject_ids = [1,4,5,6];
+% subject_ids = [1,4,5,6];
 
-autonomic_vars = ["fh_s", "fp_s", "fv_s", "fv"];
-local_vars = ["xO2_b", "xO2_h", "xO2_rm", "xO2_am"];
+% autonomic_vars = ["fh_s", "fp_s", "fv_s", "fv"];
+% local_vars = ["xO2_b", "xO2_h", "xO2_rm", "xO2_am"];
+% resp_vars = ["HR"];
+% gas_vars = ["PACO2"];
+% 
+% autonomic_colors = [
+%             0.6, 0.8, 0.6;   % Verde claro
+%             0.3, 0.6, 0.3;   % Verde medio
+%             0.1, 0.4, 0.1;   % Verde oscuro
+%             0.5, 0.25, 0     % Marrón
+%         ];
+% local_colors = [
+%     0.1216, 0.4667, 0.7059;  % Azul (similar al default de MATLAB)
+%     1.0000, 0.4980, 0.0549;  % Naranja
+%     0.1725, 0.6275, 0.1725;  % Verde
+%     0.8392, 0.1529, 0.1569;  % Rojo
+% ];
+% common_vars = ["aCO2", "vCO2"];
+% title_name = "Gaseous variables and gas concentrations";
+% plot_simulations(subject_ids, gas_vars, [], title_name, common_vars);
 
-autonomic_colors = [
-            0.6, 0.8, 0.6;   % Verde claro
-            0.3, 0.6, 0.3;   % Verde medio
-            0.1, 0.4, 0.1;   % Verde oscuro
-            0.5, 0.25, 0     % Marrón
-        ];
-local_colors = [
-    0.1216, 0.4667, 0.7059;  % Azul (similar al default de MATLAB)
-    1.0000, 0.4980, 0.0549;  % Naranja
-    0.1725, 0.6275, 0.1725;  % Verde
-    0.8392, 0.1529, 0.1569;  % Rojo
-];
-common_vars = ["dVE", "dVE"];
-title_name = "Respiratory variables and Minut";
-plot_simulations(subject_ids, local_vars, local_colors, title_name, common_vars);
+% thresh_arr = [0.6, 0.8, 0.6, 0.5];
+% plot_LSA(subject_ids, "all", thresh_arr);
+% %The Sall was computed in the shared_params code
+
+
+function plot_LSA(subject_ids, plot_type, thresh_arr)
+    figure;
+    for idx = 1:length(subject_ids)
+        subplot(2,2,idx)
+        parameter_analysis_fun_plot(subject_ids(idx), plot_type, thresh_arr(idx));
+        hold on;
+    end
+
+end
+
 function plot_simulations(subjects, vars, colors, title_name, common)
 
     units_table = readtable("variables_units.xlsx");    
@@ -269,7 +288,7 @@ function plot_data(y_cells, V, t_cells, nombres, together, units_table, vo2_cell
 end
 
 
-function plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, variables_to_show, variable_names, units_table, width, height)
+function plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, variables_to_show, variable_names, units_table, width, height, subject)
     % Colores por condición
     color_N = [0.00, 0.45, 0.74]; % azul normoxia
     color_H = [0.85, 0.33, 0.10]; % rojo hipoxia
@@ -311,12 +330,14 @@ function plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, vari
     
             Y_interp_N(i, :) = interp1(t_unique, y_unique, t_grid, 'linear', NaN);
         end
-        mean_N = mean(Y_interp_N, 1, 'omitnan');
-        std_N  = std(Y_interp_N, 0, 1, 'omitnan');
+        %mean_N = mean(Y_interp_N, 1, 'omitnan');
+        %std_N  = std(Y_interp_N, 0, 1, 'omitnan');
     
-        mean_N = mean_N(~isnan(mean_N));
-        std_N = std_N(~isnan(mean_N));
-        t_grid_N = t_grid(~isnan(mean_N));
+        %mean_N = mean_N(~isnan(mean_N));
+        %std_N = std_N(~isnan(mean_N));
+        Y_subject_N = Y_interp_N(subject,:);
+        YN2plot = Y_subject_N(~isnan(Y_subject_N))
+        t_grid_N = t_grid(~isnan(Y_subject_N));%t_grid_N = t_grid(~isnan(mean_N));
     
         
     
@@ -342,13 +363,15 @@ function plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, vari
             Y_interp_H(i, :) = interp1(t_unique, y_unique, t_grid, 'linear');
             power_interp = interp1(t_unique, power_unique, t_grid, 'linear');
         end
-        mean_H = mean(Y_interp_H, 1, 'omitnan');
-        std_H  = std(Y_interp_H, 0, 1, 'omitnan');
+        %mean_H = mean(Y_interp_H, 1, 'omitnan');
+        %std_H  = std(Y_interp_H, 0, 1, 'omitnan');
     
-        mean_H = mean_H(~isnan(mean_H));
-        std_H = std_H(~isnan(mean_H));
-        t_grid_H = t_grid(~isnan(mean_H));
-        power_H = power_interp(~isnan(mean_H));
+        %mean_H = mean_H(~isnan(mean_H));
+        %std_H = std_H(~isnan(mean_H));
+        Y_subject_H = Y_interp_H(subject,:);
+        YH2plot = Y_subject_H(~isnan(Y_subject_H));
+        t_grid_H = t_grid(~isnan(Y_subject_H)); %t_grid_H = t_grid(~isnan(mean_H));
+        power_H = power_interp(~isnan(Y_subject_H));
         
     
     
@@ -359,22 +382,27 @@ function plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, vari
         % Normoxia: sombreado ±1 std
         yyaxis left
 
-        fill([t_grid_N, fliplr(t_grid_N)], ...
-             [mean_N + std_N, fliplr(mean_N - std_N)], ...
-            color_N, 'FaceAlpha', 0.3, 'EdgeColor', 'none',  'DisplayName', 'std Normoxia');
+        %fill([t_grid_N, fliplr(t_grid_N)], ...
+        %     [mean_N + std_N, fliplr(mean_N - std_N)], ...
+        %    color_N, 'FaceAlpha', 0.3, 'EdgeColor', 'none',  'DisplayName', 'std Normoxia');
         
-        plot(t_grid_N, mean_N, 'Color', color_N, 'LineWidth', 2, ...
+        %plot(t_grid_N, mean_N, 'Color', color_N, 'LineWidth', 2, ...
+        %     'DisplayName', 'Normoxia', 'LineStyle','-');
+        plot(t_grid_N, YN2plot, 'Color', color_N, 'LineWidth', 2, ...
              'DisplayName', 'Normoxia', 'LineStyle','-');
     
         % Hipoxia: sombreado ±1 std
-        fill([t_grid_H, fliplr(t_grid_H)], ...
-             [mean_H + std_H, fliplr(mean_H - std_H)], ...
-             color_H, 'FaceAlpha', 0.2, 'EdgeColor', 'none',  'DisplayName', 'std Hipoxia');
-        plot(t_grid_H, mean_H, 'Color', color_H, 'LineWidth', 2, ...
-             'DisplayName', 'Hipoxia', 'LineStyle','-');
+        %fill([t_grid_H, fliplr(t_grid_H)], ...
+        %     [mean_H + std_H, fliplr(mean_H - std_H)], ...
+        %     color_H, 'FaceAlpha', 0.2, 'EdgeColor', 'none',  'DisplayName', 'std Hipoxia');
+        %plot(t_grid_H, mean_H, 'Color', color_H, 'LineWidth', 2, ...
+        %     'DisplayName', 'Hipoxia', 'LineStyle','-');
+
+        plot(t_grid_H, YH2plot, 'Color', color_H, 'LineWidth', 2, ...
+             'DisplayName', 'Hypoxia', 'LineStyle','-');
     
         yyaxis right        
-        plot(t_grid_H, power_H, 'DisplayName', 'Potencia', 'Color', 'black');        
+        plot(t_grid_H, power_H, 'DisplayName', 'Power', 'Color', 'black');        
         ax = gca;
         ax.YColor = [0 0 0];
         
@@ -382,7 +410,7 @@ function plot_masked_comparison(y_cells_N, t_cells_N, y_cells_H, t_cells_H, vari
         xlim([0, 1000]);
     
         % === Formato gráfico ===
-        xlabel('Tiempo alineado [s]');
+        xlabel('Time [s]');
         ylabel(sprintf('Variable %d', var_idx));
         title(sprintf('Comparación promedio ± std (var %d)', var_idx));
         legend('Location', 'best');

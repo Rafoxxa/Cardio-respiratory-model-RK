@@ -255,6 +255,7 @@ function plot_mutiple_vs_common(t, rt,units_table, multiple_to_show, common, col
         plot(t, real(rt.(multiple_to_show(var_idx))), "-", "Color", colors_(var_idx, :));
         unit = find_unit(units_table, multiple_to_show(var_idx));
         ylabel(unit);
+        ylim([0, 70]);
         hold on;
     end
     xlabel("t(s)");
@@ -270,6 +271,7 @@ function plot_mutiple_vs_common(t, rt,units_table, multiple_to_show, common, col
     legend([multiple_to_show, common]);
     unit = find_unit(units_table, common(1));
     ylabel(unit);
+    ylim([0,2]);
     ax = gca;
     ax.YColor = "black";
 end

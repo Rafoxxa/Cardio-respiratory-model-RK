@@ -25,6 +25,7 @@ end
 sens_matrix = simple_merge_S(sensMatrices);
 subplot(2,2,1);
 custom_plot("LSA-plot", {sens_matrix, pars_to_sens, setup.variables_of_interest, setup.idx_variable_of_interest});
+title("A");
 hold on;
 
 % % Apply sensitivity threshold
@@ -38,7 +39,9 @@ sens_reduced = out{1};
 pars_to_sens_reduced = out{2};
 subplot(2,2,2);
 custom_plot("LSA-plot", {sens_reduced, pars_to_sens_reduced,setup.variables_of_interest, idx_variable_of_interest});
+title("B");
 hold on;
+
 
 % %Apply fitler by class
 setup.sens_final_time_matrix = sens_reduced; %sens_matrix;%
@@ -48,6 +51,7 @@ sens_matrix_filtered = filtered_output{1};
 pars_to_sens_filtered = filtered_output{2};
 subplot(2,2,3);
 custom_plot("LSA-plot", {sens_matrix_filtered, pars_to_sens_filtered, setup.variables_of_interest, idx_variable_of_interest});
+title("C")
 hold on;
 % 
 % % %% IDENTIFIABILITY ANALYSIS
@@ -58,6 +62,7 @@ ident_args.corr_threshold = 0.8; % Set the correlation threshold for the analysi
 IDENT_output = ident_functions("compute-corr", "-", ident_args);
 subplot(2,2,4);
 custom_plot("ident-plot", IDENT_output);
+title("D")
 
 
 
