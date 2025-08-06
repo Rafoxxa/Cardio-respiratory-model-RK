@@ -1,9 +1,9 @@
 function [pars, init, taus] = load_global_easy()
   
-init = dictionary();  
-pars = dictionary();  
-taus = dictionary();
-local_vars = dictionary();  %this is just for the metaprogramming feature
+init = containers.Map();  
+pars = containers.Map();  
+taus = containers.Map();
+local_vars = containers.Map();  %this is just for the metaprogramming feature
 
 %Notes:
 % - pars('tauMR') and pars('tauMRv') defines how fast the input reaches its defined values, is important to change this value if the simulation scale changes.
@@ -19,9 +19,9 @@ local_vars = dictionary();  %this is just for the metaprogramming feature
 
 %% ------------PARAMETERS:    There will be a description of every parameter in the form of Name |Value | Units |References | Description 
 %Fitting hyperparameters
-pars("settling_time") = 0;
-pars("dt") = 0.01;
-pars("tiny_dt") = 0.1;
+pars('settling_time') = 0;
+pars('dt') = 0.01;
+pars('tiny_dt') = 0.1;
 %Time-related  
 
 pars('T1') = 1;             % s              | [2]    | Time constant for cardiovascular mixing
@@ -30,18 +30,18 @@ pars('tauMR') = 50;%50;%5;%50;         % s              | [0]    | Metabolic rat
 pars('tauMRv') = 50;%5;%50;        % s              | [8]    | Metabolic rate time constant
 pars('Ta') = 0.8;             % s              | [0]    | Time delay for gas exchange
 % Pressure-related          
-pars("gabd") = 3.39;        % mmHg/l         | [5]    | Constant gain factor linking tidal volume changes to abdominal pressure variations
-pars("gthor") = 6.8;        % mmHg/l         | [5]    | Constant gain factor linking tidal volume changes to intrathoracic pressure variations
-pars("Pabdmax") = 0;        % mmHg           | [5]    | Basal value of abdominal pressure at the end of expiration
-pars("Pabdmin") = -2.5;     % mmHg           | [5]    | Basal value of abdominal pressure at the end of inspiration
-pars("Pthormax") = -4;      % mmHg           | [5]    | Basal value of intrathoracic pressure at the end of expiration
-pars("Pthormin") = -9;      % mmHg           | [5]    | Basal value of intrathoracic pressure at the end of inspiration
+pars('gabd') = 3.39;        % mmHg/l         | [5]    | Constant gain factor linking tidal volume changes to abdominal pressure variations
+pars('gthor') = 6.8;        % mmHg/l         | [5]    | Constant gain factor linking tidal volume changes to intrathoracic pressure variations
+pars('Pabdmax') = 0;        % mmHg           | [5]    | Basal value of abdominal pressure at the end of expiration
+pars('Pabdmin') = -2.5;     % mmHg           | [5]    | Basal value of abdominal pressure at the end of inspiration
+pars('Pthormax') = -4;      % mmHg           | [5]    | Basal value of intrathoracic pressure at the end of expiration
+pars('Pthormin') = -9;      % mmHg           | [5]    | Basal value of intrathoracic pressure at the end of inspiration
 pars('Pcrit_min') = -40;    % cmH2O          | [2]    | Critical UPPER AIRWAY pressure
 pars('Patm') = 719;%640;         % mmHg           | [0]    | Atmospheric pressure
 pars('Pws') = 47;           % mmHg           | [1]    | Water vapor pressure
-pars("Pao") = 0;            % cmH2O          | [1]    | Airway pressure
+pars('Pao') = 0;            % cmH2O          | [1]    | Airway pressure
 % Volume-related          
-pars("VTn") = 0.73;         % l              | [5]    | Basal value of tidal volume
+pars('VTn') = 0.73;         % l              | [5]    | Basal value of tidal volume
 pars('VLO2') = 2.5;         % l              | [2]    | Lungs storage volume for O2
 pars('VLCO2') = 3;          % l              | [2]    | Lungs storage volume for CO2
 pars('Vtissue_CO2') = 15;   % l              | [8]    | Tissue storage volume for CO2
@@ -49,17 +49,17 @@ pars('Vtissue_O2') = 6;     % l              | [2]    | Tissue storage volume fo
 
 pars('Vdead') = 0.1587;     % l              | [3]    | Dead space volume
 %Resistance-related          
-pars("Rcw") = 0.8326;       % cmH2Os/l       | [0]    | Chest wall resistance
+pars('Rcw') = 0.8326;       % cmH2Os/l       | [0]    | Chest wall resistance
 pars('Rl') = 1.366;         % cmH2Os/l       | [0]    | Lung transmural resistance
 pars('Raw') = 0.82128;      % cmH2Os/l       | [0]    | Airway wall resistance
-pars("Rrs") = 3.02;         % cmH2Os/l       | [6][7] | Overall resistance
+pars('Rrs') = 3.02;         % cmH2Os/l       | [6][7] | Overall resistance
 pars('Rtrachea') = 10^6;    % cmH2Os/l       | [5]    | Upper airway wall resistance  
       
       
 %Elastance-related         
 pars('Cua') = 0.001;        % l/cmH2O        | [2]    | upper airways compliance
-pars("Ecw") = 10.545;       % cmH2O/l        | [0]    | chest wall elastance
-pars("El") = 10.545;        % cmH2O/l        | [0]    | lung transmural elastance
+pars('Ecw') = 10.545;       % cmH2O/l        | [0]    | chest wall elastance
+pars('El') = 10.545;        % cmH2O/l        | [0]    | lung transmural elastance
       
 %Gas-related         
 pars('fO2') = 21.0379;      %    %           | [1]    | Inspired fraction of O2
@@ -70,8 +70,8 @@ pars('fCO2') = 0.0421;      %    %           | [1]    | Inspired fraction of CO2
 pars('bua') = 1;            % l              | [2]    | upper airways mechanic constant
 pars('A0ua') = 1;           % --------       | [2]    | Maximum area of oppening in airway
 pars('Kua') = 1;            % l/cmH2O/s      | [2]    | Proportionality coefficient
-pars("kaw1")  = 1.85;       % cmH2O s/l      | [2]    | constant for upper airway pressure
-pars("kaw2") = 0.43;        % cmH2O s^2/l^2      | [2]    | constant for upper airway pressure
+pars('kaw1')  = 1.85;       % cmH2O s/l      | [2]    | constant for upper airway pressure
+pars('kaw2') = 0.43;        % cmH2O s^2/l^2      | [2]    | constant for upper airway pressure
 
 %GAS         
 pars('Z') = 0.0227;         % l/mmol         | [-]    | molar conversion factor 
@@ -387,31 +387,31 @@ pars('tau_Tsym') = 2;              %s                     | [2][11]    | Time co
 pars('tau_Tvagal') = 1.5;          %s                     | [2][11]    | Time constant
 
 %For fitting
-pars("MRO2_poly_0") = 0;
-pars("MRO2_poly_1") = 0;
-pars("MRO2_poly_2") = 0;
-pars("MRO2_poly_3") = 0;
-pars("MRO2_poly_4") = 0;
-pars("MRO2_poly_5") = 0;
-pars("MRO2_poly_6") = 0;
-pars("MRO2_poly_7") = 0;
-pars("MRO2_poly_8") = 0;
+pars('MRO2_poly_0') = 0;
+pars('MRO2_poly_1') = 0;
+pars('MRO2_poly_2') = 0;
+pars('MRO2_poly_3') = 0;
+pars('MRO2_poly_4') = 0;
+pars('MRO2_poly_5') = 0;
+pars('MRO2_poly_6') = 0;
+pars('MRO2_poly_7') = 0;
+pars('MRO2_poly_8') = 0;
 
-pars("MRCO2_poly_0") = 0;
-pars("MRCO2_poly_1") = 0;
-pars("MRCO2_poly_2") = 0;
-pars("MRCO2_poly_3") = 0;
-pars("MRCO2_poly_4") = 0;
-pars("MRCO2_poly_5") = 0;
-pars("MRCO2_poly_6") = 0;
-pars("MRCO2_poly_7") = 0;
-pars("MRCO2_poly_8") = 0;
+pars('MRCO2_poly_0') = 0;
+pars('MRCO2_poly_1') = 0;
+pars('MRCO2_poly_2') = 0;
+pars('MRCO2_poly_3') = 0;
+pars('MRCO2_poly_4') = 0;
+pars('MRCO2_poly_5') = 0;
+pars('MRCO2_poly_6') = 0;
+pars('MRCO2_poly_7') = 0;
+pars('MRCO2_poly_8') = 0;
 
-pars("fiO2_poly_0") = 0;
-pars("fiO2_poly_1") = 0;
-pars("fiO2_poly_2") = 0;
-pars("fiO2_poly_3") = 0;
-pars("fiO2_poly_4") = 0;
+pars('fiO2_poly_0') = 0;
+pars('fiO2_poly_1') = 0;
+pars('fiO2_poly_2') = 0;
+pars('fiO2_poly_3') = 0;
+pars('fiO2_poly_4') = 0;
 
 
 pars('vO2_e_n') = 0.13;
@@ -427,9 +427,9 @@ pars('MO2_s') = 0.6;
 pars('MO2_p') = 0;
 
 pars('R_p_p_n') = 0.24266;
-pars("Hgt") = 170;
-pars("BW") = 70;
-pars("Gender") = 2;
+pars('Hgt') = 170;
+pars('BW') = 70;
+pars('Gender') = 2;
  
 
 
@@ -446,42 +446,42 @@ init('Qla') = 255; %0.225;%0.01;             % ml/s | []  | blood flow in left a
 
 
 % Time-related
-init("TI") = 1.6;%1;%1;%3;             % s    | []  | Inspiration time ,its important to recall that TI of 1 at least in their research was for maximum excercise.
-init("Tresp") = 3.5;%3;%3;%5.6;        % s    | []  | Respiration time
+init('TI') = 1.6;%1;%1;%3;             % s    | []  | Inspiration time ,its important to recall that TI of 1 at least in their research was for maximum excercise.
+init('Tresp') = 3.5;%3;%3;%5.6;        % s    | []  | Respiration time
 init('TE') = init('Tresp') - init('TI');
 
-init('fake_TI') = init("TI");
-init('fake_Tresp') = init("Tresp");
+init('fake_TI') = init('TI');
+init('fake_Tresp') = init('Tresp');
 
 % Volume-related
-init("VT") = 0;           % l    | []  | Tidal volume
-init("dV") = 0;            % l/s  | []  | Flow
+init('VT') = 0;           % l    | []  | Tidal volume
+init('dV') = 0;            % l/s  | []  | Flow
 init('dVua') = 0;          % l    | []  | Upper airways flow volume
-init("V") = 0;             % l    | []  | Total volume
-init("dVE") = 0;           % l/s  | []  | Minute ventilation, inspired volume in a minute (it must be a positive value)
+init('V') = 0;             % l    | []  | Total volume
+init('dVE') = 0;           % l/s  | []  | Minute ventilation, inspired volume in a minute (it must be a positive value)
 
 
 
 %Pressure-related
-init("Ppl") = 0;           % mmHg | []  | Pleural pressure
-init("Pmusc") = 0;         % mmHg | []  | diafragmatic pressure
+init('Ppl') = 0;           % mmHg | []  | Pleural pressure
+init('Pmusc') = 0;         % mmHg | []  | diafragmatic pressure
 init('Pua') = 0;
 
 %Gains
-init("Gaw") = 0;           %   ?  | []  | Airflow's gain factor
+init('Gaw') = 0;           %   ?  | []  | Airflow's gain factor
 init('Nt') = 0;            %   ?  | []  | Central respiratory neuromuscular drive response
 %init('RR') = 0;            %   ?  | []  | Respiratory rythm
 
 %Control optimizer
-init("a0")  = 0;           %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
-init("a1") = 30; %8;%40;%12;          %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
-init("a2") = -3;%-1;            %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
-init("t1") = init('TI');   %   ?  | []  | Control parameter to optimize (inspiration time)
-init("t2") = init('TE');   %   ?  | []  | Control parameter to optimize (expiration time)
-init("tau") = 0.3;           %   ?  | []  | Control parameter to optimize (decaying time constant)
+init('a0')  = 0;           %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
+init('a1') = 30; %8;%40;%12;          %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
+init('a2') = -3;%-1;            %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
+init('t1') = init('TI');   %   ?  | []  | Control parameter to optimize (inspiration time)
+init('t2') = init('TE');   %   ?  | []  | Control parameter to optimize (expiration time)
+init('tau') = 0.3;           %   ?  | []  | Control parameter to optimize (decaying time constant)
 init('insp_integrand') = 0;
 init('exp_integrand') = 0;
-init("J") = 0;
+init('J') = 0;
 init('insp_work_power') = 0;
 init('exp_work_power') = 0;
 
@@ -532,10 +532,10 @@ init('P_sp') = 75;%0.85 * init('P_sa');   % systemic peripheric pressure (capila
 init('mean_P_sa') = init('P_sa');
 
 %flows  %we will have to set it depending if simulation starts at systole or diastole.
-local_vars("TotBV") = 5000; %blood volume (ml)
-local_vars("TotFlow") = local_vars("TotBV")/60; %ml/s
-init('Q_sa') = local_vars("TotFlow")*0.85*0.35;   % flow of systemic arteries  
-init('Q_pa') = local_vars("TotFlow")/2;   % flow of pulmonary arteries
+local_vars('TotBV') = 5000; %blood volume (ml)
+local_vars('TotFlow') = local_vars('TotBV')/60; %ml/s
+init('Q_sa') = local_vars('TotFlow')*0.85*0.35;   % flow of systemic arteries  
+init('Q_pa') = local_vars('TotFlow')/2;   % flow of pulmonary arteries
 
 %volumes   define if I will begin with systole or dyastole!. check Vt - Vu = V!.
 
@@ -638,23 +638,23 @@ init('var6') = 0;
 init('var7') = 0;
 init('var8') = 0;
 init('var9') = 0;
-init("R_bp") = 0;
-init("Q_e") = 0;
-init("Q_s") = 0;
-init("Q_h") = 0;
-init("Q_rm") = 0;
-init("Q_am") = 0;
-init("P_v_e") = 0;
-init("P_v_s") = 0;
-init("P_v_h") = 0;
-init("P_v_rm") = 0;
-init("P_v_am") = 0;
-init("R_e_p") = 0;
-init("R_s_p") = 0;
-init("R_b_p") = 0;
-init("R_h_p") = 0;
-init("R_rm_p") = 0;
-init("R_am_p") = 0;
+init('R_bp') = 0;
+init('Q_e') = 0;
+init('Q_s') = 0;
+init('Q_h') = 0;
+init('Q_rm') = 0;
+init('Q_am') = 0;
+init('P_v_e') = 0;
+init('P_v_s') = 0;
+init('P_v_h') = 0;
+init('P_v_rm') = 0;
+init('P_v_am') = 0;
+init('R_e_p') = 0;
+init('R_s_p') = 0;
+init('R_b_p') = 0;
+init('R_h_p') = 0;
+init('R_rm_p') = 0;
+init('R_am_p') = 0;
 
 %HIPOXIA
 init('xO2_e') = 0;
@@ -702,7 +702,7 @@ pars('Tresp') = 0;
 
 %% Metasimulation parameters
 
-pars("type_of_input") = 0;
+pars('type_of_input') = 0;
 
 
 
