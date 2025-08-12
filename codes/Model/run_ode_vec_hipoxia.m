@@ -8,21 +8,21 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
     control_on = 1;
     
     % Loop invariant variables
-    %disp("simulation_time");
+    %disp('simulation_time');
     %disp(simulation_time);
-    if isa(init, "dictionary")
-        X_KEYS = init.keys;
-        INDEX = dictionary(X_KEYS, [1:length(X_KEYS)]');    
+    if isa(init, 'containers.Map')
+        X_KEYS = keys(init);
+        INDEX = containers.Map(X_KEYS, num2cell(1:length(X_KEYS)));    
     else
         X_KEYS = 0;
         INDEX = 0;
     end
 
-    %TINY_X_KEYS = ["dVE", "PACO2", "PAO2", "Pmusc", "insp_integrand", "exp_integrand", "J", "t0_heart", "u_t0", "HR", "phi_met", "fh_s", "fp_s", "fv_s", "fv"]; 
-    %TINY_INDEX = dictionary(TINY_X_KEYS, [1:length(TINY_X_KEYS)]);
+    %TINY_X_KEYS = {'dVE', 'PACO2', 'PAO2', 'Pmusc', 'insp_integrand', 'exp_integrand', 'J', 't0_heart', 'u_t0', 'HR', 'phi_met', 'fh_s', 'fp_s', 'fv_s', 'fv'}; 
+    %TINY_INDEX = containers.Map(TINY_X_KEYS, num2cell(1:length(TINY_X_KEYS)));
     %OPTIONS = ddeset('AbsTol',1e-8,'RelTol',1e-5); 
-    if isa(pars, "dictionary")
-        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars.values, varargin) );
+    if isa(pars, 'containers.Map')
+        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
     else
         OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
     end
@@ -31,17 +31,19 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
     DT = dt;
     
     
-if isa(pars, 'dictionary')
-pars = pars.values;
+if isa(pars, 'containers.Map')
+pars_vals = values(pars);
+pars = cell2mat(pars_vals);
 end
-if isa(init, 'dictionary')
-init = init.values;
+if isa(init, 'containers.Map')
+init_vals = values(init);
+init = cell2mat(init_vals);
 end
 PARS = pars;   
     
     
     % cycle periods  
-    Tresp = init(5);
+    Tresp = init(81);
 
     % define cycle-elements
     cycle = struct();
@@ -92,7 +94,7 @@ PARS = pars;
             cnt = cnt + 1;
             t0 = stacked.t0(cnt);
         end
-        PARS(77) = t0;
+        PARS(317) = t0;
         x_dot(:,i) = model(t(i), x_vars(:,i), PARS, X_KEYS);
         %x_dot(:,i) = model(t(i), x_vars(:,i), delays_global(:, :, round(t(i)/DT) + 1), PARS, init.keys, taus.keys);
         
@@ -103,14 +105,14 @@ PARS = pars;
     function [PARS_, stacked, cycle] = cycle_driver(stacked, cycle, DT, INDEX, PARS)       
         
         
-        Tresp = cycle.x_vars(5, end); 
-        dVE = cycle.x_vars(13, end);
+        Tresp = cycle.x_vars(81, end); 
+        dVE = cycle.x_vars(107, end);
         stacked.t = [stacked.t cycle.time_interval(1:end-1)];
         stacked.vars = [stacked.vars cycle.x_vars(:,1:end-1)];
         
         stacked.t0 = [stacked.t0 cycle.t_ini];   
         cycle.t_ini = cycle.t_end;
-        PARS(77) = cycle.t_ini;
+        PARS(317) = cycle.t_ini;
         
         cycle.init_vars = cycle.x_vars(:,end);
         %cycle.init_vars_values = [cycle.x_vars(:, end)];% ; squeeze(delays_global(:,:,end))];        
@@ -127,18 +129,18 @@ PARS = pars;
             %disp('args_optimal')
             %disp(args_optimal);
 
-            cycle.init_vars(4) = args_optimal(1);
-            cycle.init_vars(6) = args_optimal(2);
-            %cycle.init_vars(19) = args_optimal(3);
-            cycle.init_vars(20) = args_optimal(3);
-            cycle.init_vars(21) = args_optimal(4);
-            cycle.init_vars(24) = args_optimal(5);
+            cycle.init_vars(79) = args_optimal(1);
+            cycle.init_vars(78) = args_optimal(2);
+            %cycle.init_vars(99) = args_optimal(3);
+            cycle.init_vars(100) = args_optimal(3);
+            cycle.init_vars(101) = args_optimal(4);
+            cycle.init_vars(129) = args_optimal(5);
         end
-        cycle.init_vars(5) = cycle.init_vars(4) + cycle.init_vars(6); 
-        Tresp = cycle.init_vars(5);
+        cycle.init_vars(81) = cycle.init_vars(79) + cycle.init_vars(78); 
+        Tresp = cycle.init_vars(81);
         cycle.t_end = cycle.t_end + Tresp;
         cycle.time_interval = cycle.t_ini: DT: cycle.t_end;
-        %cycle.progress = PARS(77)/SIMULATION_TIME * 100;
+        %cycle.progress = PARS(317)/SIMULATION_TIME * 100;
         %if cycle.progress >= cycle.progress_dec 
         %    fprintf('The percentage is: %.2f%%\n', cycle.progress);
         %    cycle.progress_dec = cycle.progress_dec + 10;
@@ -152,18 +154,18 @@ PARS = pars;
 
     function J = cost_fun(cycle, OPTIONS, PARS, args)
         
-        %DT = pars(2);
+        %DT = pars(248);
         %optim_init = cycle.init_vars;
         optim_pars = PARS;
-        optim_pars(352) = args(1);
-        optim_pars(353) = args(2);
-        optim_pars(354) = 0;  %fixed by authors
-        optim_pars(355) = args(3);
-        optim_pars(356) = args(4);
-        optim_pars(357) = args(5);
+        optim_pars(162) = args(1);
+        optim_pars(161) = args(2);
+        optim_pars(223) = 0;  %fixed by authors
+        optim_pars(224) = args(3);
+        optim_pars(225) = args(4);
+        optim_pars(318) = args(5);
         
-        optim_pars(358) = optim_pars(352) + optim_pars(353);
-        state_var = [cycle.init_vars(12), cycle.init_vars(10), cycle.init_vars(11), cycle.init_vars(16)];
+        optim_pars(170) = optim_pars(162) + optim_pars(161);
+        state_var = [cycle.init_vars(82), cycle.init_vars(106), cycle.init_vars(108), cycle.init_vars(57)];
 
         J = respiratory_work(state_var, OPTIONS, optim_pars);
         J = log(J);
@@ -174,26 +176,26 @@ PARS = pars;
             %this should be the corect equation, that diminshes the speed of the ode incrporating upper airways dynamics, giving a lowe volume for the same muscular presion.
 
             %parameters
-            DT = pars(3);
-            Pao = pars(18);
-            Ecw = pars(31);
-            El = pars(32);
-            Rrs = pars(28);
+            DT = pars(344);
+            Pao = pars(124);
+            Ecw = pars(34);
+            El = pars(35);
+            Rrs = pars(154);
             Ers = Ecw + El;          
             
-            kaw1  = pars(38);
-            kaw2 = pars(39);
-            Rcw = pars(25);           
+            kaw1  = pars(296);
+            kaw2 = pars(297);
+            Rcw = pars(152);           
 
-            R_trachea = pars(29);    
-            Rl = pars(26);
-            Rcw = pars(25);  
-            Raw = pars(27);
+            R_trachea = pars(155);    
+            Rl = pars(153);
+            Rcw = pars(152);  
+            Raw = pars(151);
             Cua = pars(30);
-            bua = pars(35);
-            Pcrit_min = pars(15);
-            A0ua = pars(36);
-            Kua = pars(37);
+            bua = pars(231);
+            Pcrit_min = pars(126);
+            A0ua = pars(2);
+            Kua = pars(78);
             
             %define state vars dict           
             
@@ -204,10 +206,10 @@ PARS = pars;
             Pua_prev = init_value(4);
 
             a0 = 0;
-            a1 = pars(355);
-            a2 = pars(356);
-            tau = pars(357);
-            TI = pars(352);
+            a1 = pars(224);
+            a2 = pars(225);
+            tau = pars(318);
+            TI = pars(162);
 
             %Pmusc function
             if 0 <= t && t <= TI
@@ -267,10 +269,10 @@ PARS = pars;
             
 
             %parameters
-            Pao = pars(18);
-            Ecw = pars(31);
-            El = pars(32);
-            Rrs = pars(28);
+            Pao = pars(124);
+            Ecw = pars(34);
+            El = pars(35);
+            Rrs = pars(154);
             Ers = Ecw + El;
             
             %define state vars dict
@@ -279,10 +281,10 @@ PARS = pars;
             %obtain state vars
             V = init_value;
             a0 = 0;
-            a1 = pars(355);
-            a2 = pars(356);
-            tau = pars(357);
-            TI = pars(352);
+            a1 = pars(224);
+            a2 = pars(225);
+            tau = pars(318);
+            TI = pars(162);
 
             %pressure function
             if 0 <= t && t <= TI
@@ -301,25 +303,25 @@ PARS = pars;
         function J = respiratory_work(state_vars, OPTIONS, optim_pars)
             
             %parameters for cost function
-            Pmax = optim_pars(75);
-            dPmax = optim_pars(76);
-            lambda1 = optim_pars(73);
-            lambda2 = optim_pars(74);
-            n = optim_pars(72);
-            DT = optim_pars(3);
+            Pmax = optim_pars(127);
+            dPmax = optim_pars(232);
+            lambda1 = optim_pars(306);
+            lambda2 = optim_pars(307);
+            n = optim_pars(313);
+            DT = optim_pars(344);
 
-            TI = optim_pars(352);
-            TE  = optim_pars(353);
-            a0 = optim_pars(354);
-            a1 = optim_pars(355);
-            a2  = optim_pars(356);
-            tau = optim_pars(357);
+            TI = optim_pars(162);
+            TE  = optim_pars(161);
+            a0 = optim_pars(223);
+            a1 = optim_pars(224);
+            a2  = optim_pars(225);
+            tau = optim_pars(318);
 
-            TI_check = var_inside_boundries(TI, optim_pars(347), optim_pars(342));
-            TE_check = var_inside_boundries(TE, optim_pars(348), optim_pars(343)); 
-            a1_check = var_inside_boundries(a1, optim_pars(349), optim_pars(344));
-            a2_check = var_inside_boundries(a2, optim_pars(350), optim_pars(345));
-            tau_check = var_inside_boundries(tau, optim_pars(351), optim_pars(346));
+            TI_check = var_inside_boundries(TI, optim_pars(347), optim_pars(309));
+            TE_check = var_inside_boundries(TE, optim_pars(346), optim_pars(308)); 
+            a1_check = var_inside_boundries(a1, optim_pars(348), optim_pars(310));
+            a2_check = var_inside_boundries(a2, optim_pars(349), optim_pars(311));
+            tau_check = var_inside_boundries(tau, optim_pars(350), optim_pars(312));
             vars_inside_boundries = TI_check && TE_check && a1_check && a2_check && tau_check;
             if vars_inside_boundries
                 Tresp = TI + TE;
@@ -327,7 +329,7 @@ PARS = pars;
 
                 %run the volume wave ode, given that this tiny system doesn't require previous time of the simulation, we don't need information of the cycle.
                 tiny_model = @(t, init) tiny_system_ua(t, init, optim_pars); 
-                %sol = ode23(tiny_model, [0, optim_init(5)], optim_init.values, OPTIONS, PARS, optim_init.keys);
+                %sol = ode23(tiny_model, [0, optim_init(81)], optim_init.values, OPTIONS, PARS, optim_init.keys);
                 try
                     sol = ode23(tiny_model, [0, Tresp], state_vars, OPTIONS);
                     y = deval(sol, time_interval);  %the only variable is volume
@@ -376,15 +378,15 @@ PARS = pars;
 
     function args_optimal = control_optimization(cycle, OPTIONS, PARS, dVE)
         % Define initial values for optimization parameters
-        initial_TI_value = cycle.init_vars(4)  ;
-        initial_TE_value = cycle.init_vars(6);
-        initial_a1_value = cycle.init_vars(20) ;
-        initial_a2_value = cycle.init_vars(21)  ;
-        initial_tau_value = cycle.init_vars(24) ;
+        initial_TI_value = cycle.init_vars(79)  ;
+        initial_TE_value = cycle.init_vars(78);
+        initial_a1_value = cycle.init_vars(100) ;
+        initial_a2_value = cycle.init_vars(101)  ;
+        initial_tau_value = cycle.init_vars(129) ;
         args_init = [initial_TI_value, initial_TE_value, initial_a1_value, initial_a2_value, initial_tau_value];
     
         % Set up optimization options
-        %options = optimoptions("fmincon", "Display", "iter", "Algorithm", "sqp");
+        %options = optimoptions('fmincon', 'Display', 'iter', 'Algorithm', 'sqp');
         options = optimset('fmincon');
         options.Algorithm = 'sqp';
         options.Display = 'off';
@@ -394,8 +396,8 @@ PARS = pars;
         options.MaxIter = 3;
     
         % Set lower and upper bounds for the optimization parameters
-        lb = [pars(342), pars(343), pars(344), pars(345), pars(346)];
-        ub = [pars(347), pars(348), pars(349), pars(350), pars(351)];
+        lb = [PARS(309), PARS(308), PARS(310), PARS(311), PARS(312)];
+        ub = [PARS(347), PARS(346), PARS(348), PARS(349), PARS(350)];
     
         %Contraints
         % Tresp > TI
@@ -410,10 +412,10 @@ PARS = pars;
 
         function ydot = fast_tiny_system(t, init_value, pars, a1, a2)
             %parameters
-            %Pao = pars(18);
-            %Ecw = pars(31);
-            %El = pars(32);
-            %Rrs = pars(28);
+            %Pao = pars(124);
+            %Ecw = pars(34);
+            %El = pars(35);
+            %Rrs = pars(154);
             %Ers = Ecw + El;
             %%obtain state vars
             %V = init_value;
@@ -422,21 +424,21 @@ PARS = pars;
             %Pmusc = a0 + a1*t + a2*t^2; 
             %%ode for volume wave
             %dV =  Gaw/Rrs * ((Pmusc - Pao) - Ers * V);  %I think Gaw gots to be well computed instead of putting this static value o 0.3
-            DT = PARS(3);
-            Pao = pars(18);
-            Ecw = pars(31);
-            El = pars(32);
+            DT = PARS(344);
+            Pao = pars(124);
+            Ecw = pars(34);
+            El = pars(35);
             Ers = Ecw + El;
-            kaw1  = pars(38);
-            kaw2 = pars(39);
-            R_trachea = pars(29);    
-            Rl = pars(26);
-            Rcw = pars(25);  
-            Raw = pars(27);
+            kaw1  = pars(296);
+            kaw2 = pars(297);
+            R_trachea = pars(155);    
+            Rl = pars(153);
+            Rcw = pars(152);  
+            Raw = pars(151);
             Cua = pars(30);
-            Pcrit_min = pars(15);
-            A0ua = pars(36);
-            Kua = pars(37);
+            Pcrit_min = pars(126);
+            A0ua = pars(2);
+            Kua = pars(78);
             V = init_value(1);
             dV_prev = init_value(2);
             dVua = init_value(3);
@@ -467,10 +469,10 @@ PARS = pars;
         end
 
         function [c, ceq] = ventilation_constraint(args, dVE, PARS, OPTIONS)
-            DT = PARS(3);
-            Pao = PARS(18);
-            Ecw = PARS(31);
-            El = PARS(32);            
+            DT = PARS(344);
+            Pao = PARS(124);
+            Ecw = PARS(34);
+            El = PARS(35);            
             Ers = Ecw + El;
 
             TI = args(1);
@@ -478,10 +480,10 @@ PARS = pars;
             a1 = args(3);
             a2 = args(4);
 
-            TI_check = var_inside_boundries(TI, PARS(347), PARS(342));
-            TE_check = var_inside_boundries(TE, PARS(348), PARS(343));
-            a1_check = var_inside_boundries(a1, PARS(349), PARS(344));
-            a2_check = var_inside_boundries(a2, PARS(350), PARS(345));
+            TI_check = var_inside_boundries(TI, PARS(347), PARS(309));
+            TE_check = var_inside_boundries(TE, PARS(346), PARS(308));
+            a1_check = var_inside_boundries(a1, PARS(348), PARS(310));
+            a2_check = var_inside_boundries(a2, PARS(349), PARS(311));
 
             vars_inside_boundries = TI_check && TE_check && a1_check && a2_check;
             if vars_inside_boundries
@@ -523,8 +525,9 @@ PARS = pars;
         % Initialize the persistent variable during initialization
         init = y;
         if strcmp(flag, 'init')
-            dt = pars(2); % Set the time step         
-            
+            %dt = pars(strcmp(keys(pars), 'dt')); % Set the time step         
+            dt = pars(248);
+            dt = dt{1};
         elseif isempty(flag)
             % Regular call for each solver step
             round_time = round(t/dt);
@@ -535,33 +538,33 @@ PARS = pars;
             iter_step_prev_plus_1 = iter_step_prev + 1;
             
             if delta_step > 0
-                all_global(1,iter_step_prev_plus_1:iter_step_plus_1) = init(13);
-                all_global(2,iter_step_prev_plus_1:iter_step_plus_1) = init(52);
-                all_global(3,iter_step_prev_plus_1:iter_step_plus_1) = init(51);
-                all_global(4,iter_step_prev_plus_1:iter_step_plus_1) = init(15);
-                all_global(5,iter_step_prev_plus_1:iter_step_plus_1) = init(93);
-                all_global(6,iter_step_prev_plus_1:iter_step_plus_1) = init(95);
-                all_global(7,iter_step_prev_plus_1:iter_step_plus_1) = init(92);
-                all_global(8,iter_step_prev_plus_1:iter_step_plus_1) = init(127);
-                all_global(9,iter_step_prev_plus_1:iter_step_plus_1) = init(128);
-                all_global(10,iter_step_prev_plus_1:iter_step_plus_1) = init(129);
-                all_global(11,iter_step_prev_plus_1:iter_step_plus_1) = init(130);
-                all_global(12,iter_step_prev_plus_1:iter_step_plus_1) = init(131);
+                all_global(1,iter_step_prev_plus_1:iter_step_plus_1) = init(107);
+                all_global(2,iter_step_prev_plus_1:iter_step_plus_1) = init(31);
+                all_global(3,iter_step_prev_plus_1:iter_step_plus_1) = init(32);
+                all_global(4,iter_step_prev_plus_1:iter_step_plus_1) = init(55);
+                all_global(5,iter_step_prev_plus_1:iter_step_plus_1) = init(126);
+                all_global(6,iter_step_prev_plus_1:iter_step_plus_1) = init(130);
+                all_global(7,iter_step_prev_plus_1:iter_step_plus_1) = init(22);
+                all_global(8,iter_step_prev_plus_1:iter_step_plus_1) = init(125);
+                all_global(9,iter_step_prev_plus_1:iter_step_plus_1) = init(115);
+                all_global(10,iter_step_prev_plus_1:iter_step_plus_1) = init(116);
+                all_global(11,iter_step_prev_plus_1:iter_step_plus_1) = init(118);
+                all_global(12,iter_step_prev_plus_1:iter_step_plus_1) = init(117);
             
             elseif delta_step <= 0
 
-                all_global(1,iter_step_plus_1) = init(13);
-                all_global(2,iter_step_plus_1) = init(52);
-                all_global(3,iter_step_plus_1) = init(51);
-                all_global(4,iter_step_plus_1) = init(15);
-                all_global(5,iter_step_plus_1) = init(93);
-                all_global(6,iter_step_plus_1) = init(95);
-                all_global(7,iter_step_plus_1) = init(92);
-                all_global(8,iter_step_plus_1) = init(127);
-                all_global(9,iter_step_plus_1) = init(128);
-                all_global(10,iter_step_plus_1) = init(129);
-                all_global(11,iter_step_plus_1) = init(130);
-                all_global(12,iter_step_plus_1) = init(131);
+                all_global(1,iter_step_plus_1) = init(107);
+                all_global(2,iter_step_plus_1) = init(31);
+                all_global(3,iter_step_plus_1) = init(32);
+                all_global(4,iter_step_plus_1) = init(55);
+                all_global(5,iter_step_plus_1) = init(126);
+                all_global(6,iter_step_plus_1) = init(130);
+                all_global(7,iter_step_plus_1) = init(22);
+                all_global(8,iter_step_plus_1) = init(125);
+                all_global(9,iter_step_plus_1) = init(115);
+                all_global(10,iter_step_plus_1) = init(116);
+                all_global(11,iter_step_plus_1) = init(118);
+                all_global(12,iter_step_plus_1) = init(117);
             
             end
 

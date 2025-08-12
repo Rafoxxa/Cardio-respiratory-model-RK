@@ -1,6 +1,6 @@
 function custom_plot(type_of_plot, custom_args)       
 
- if type_of_plot == "vars_to_show"
+ if strcmp(type_of_plot, 'vars_to_show')
     
     t = custom_args{3};
     struct_vars = custom_args{2};
@@ -14,7 +14,7 @@ function custom_plot(type_of_plot, custom_args)
     % vars_to_show = [" ", " "];
     % plot_vars(t, struct_vars, vars_to_show, units_table);
     % figure;
- elseif type_of_plot == "sim_vs_exp"
+ elseif strcmp(type_of_plot == "sim_vs_exp"
     %figure;  
     t_sim = custom_args{1};
     t_exp = custom_args{2};
@@ -74,10 +74,14 @@ elseif type_of_plot == "LSA-plot"
     pars_to_sens = custom_args{2};   
     variables_of_interest = custom_args{3}; 
     idx_variable_of_interest = custom_args{4};
-    if isempty(custom_args{5})
-        patiend_idx = 
+    if length(custom_args) < 5
+        patient_idx = "all";
+        title_text = "All: Local Sensitivity Analysis integrated over time (sum sqr)";
+    else 
+        patient_idx = custom_args{5};
+        title_text = sprintf('Subject %d: Local Sensitivity Analysis integrated over time (sum sqr)', patient_idx);
     end
-    patient_idx = custom_args{5};
+    
     
    
     %figure;
@@ -93,7 +97,7 @@ elseif type_of_plot == "LSA-plot"
     
     
     % Title, labels, and grid
-    title_text = sprintf('Subject %d: Local Sensitivity Analysis integrated over time (sum sqr)', patient_idx);
+    
     title(title_text);
     xlabel('Parameters');
     ylabel('Sensitivities');
@@ -106,7 +110,14 @@ elseif type_of_plot == "ident-plot"
 
     correlation_matrix = custom_args{1};
     pars_to_sens_red = custom_args{2};    
-    patient_idx = custom_args{3};
+    if length(custom_args) < 4
+        patient_idx = "all";
+        title_text = "All: Correlation between parameters";
+    else
+        patient_idx = custom_args{4};
+        title_text = sprintf("Subject %d: Correlation between parameters", patient_idx);
+    end
+    
 
     %figure;
     imagesc(abs(correlation_matrix));
@@ -121,7 +132,7 @@ elseif type_of_plot == "ident-plot"
     xticklabels(pars_to_sens_red);
     yticklabels(pars_to_sens_red);
     xtickangle(45);
-    title_text = sprintf("Subject %d: Correlation between parameters", patient_idx);
+    
     title(title_text);
     
 
@@ -244,6 +255,7 @@ function plot_mutiple_vs_common(t, rt,units_table, multiple_to_show, common, col
         plot(t, real(rt.(multiple_to_show(var_idx))), "-", "Color", colors_(var_idx, :));
         unit = find_unit(units_table, multiple_to_show(var_idx));
         ylabel(unit);
+        ylim([0, 70]);
         hold on;
     end
     xlabel("t(s)");
@@ -259,6 +271,7 @@ function plot_mutiple_vs_common(t, rt,units_table, multiple_to_show, common, col
     legend([multiple_to_show, common]);
     unit = find_unit(units_table, common(1));
     ylabel(unit);
+    ylim([0,2]);
     ax = gca;
     ax.YColor = "black";
 end

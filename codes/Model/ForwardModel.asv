@@ -71,7 +71,7 @@ clear -global all_global
 clear -global externals_global
 
 
-vectorize_dicts('run_ode.m', 'model_basic.m', 'run_ode_vec_hipoxia.m', 'model_vec_hipoxia.m');
+%vectorize_dicts('run_ode.m', 'model_basic.m', 'run_ode_vec_hipoxia.m', 'model_vec_hipoxia.m');
 
 
 patient_idx = 1;

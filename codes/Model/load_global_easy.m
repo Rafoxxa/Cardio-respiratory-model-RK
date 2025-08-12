@@ -682,8 +682,8 @@ taus('tau_gases') =  pars('LCTV') / init('Qla');
 
 pars('lb_TI')  = 1;%1.2;  %we could change them to be 1 the minimum value
 pars('lb_TE') = 1.2;%1.2;   %cambiar a mas bajo
-pars('lb_a1')  = 20; %TESTING 11.8; %15 %11; %36.2;%10;   %36.2  %bajar este también, en base a los papers este debería estar en 20
-pars('lb_a2')  = -20;%TESTING -2.5;%-20;  %-5.5
+pars('lb_a1')  = 10; %TESTING 11.8; %15 %11; %36.2;%10;   %36.2  %bajar este también, en base a los papers este debería estar en 20
+pars('lb_a2')  = -5.5;%TESTING -2.5;%-20;  %-5.5
 pars('lb_tau') = 0.25;
 
 pars('ub_TI') = 3;%1.8;%2;    %this could be 2, its minimum value, cambiar a más alto

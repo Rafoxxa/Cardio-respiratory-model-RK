@@ -1,5 +1,5 @@
 function [out_solver] = exec_solver(type_of_solver, setup)
-    rng("shuffle");
+    rng('shuffle');
     out_solver = struct();
     % Execute the solver
     %
@@ -22,7 +22,7 @@ function [out_solver] = exec_solver(type_of_solver, setup)
     %
 %for pattern search
 
-    if type_of_solver == "find-best-solution"
+    if strcmp(type_of_solver, 'find-best-solution')
         % Folder where the .mat files are located
     folderPath = setup.fitting_folder;  % <-- replace with actual path
     files = dir(fullfile(folderPath, '*.mat'));
@@ -60,15 +60,15 @@ function [out_solver] = exec_solver(type_of_solver, setup)
     disp(bestX);
 
     pars = setup.pars_list{1};
-    pars_keys = pars.keys;
+    pars_keys = keys(pars);
     pars_keys_updated = pars_keys(setup.idx_optpars);
-    updated_pars = dictionary(pars_keys_updated, bestX');
+    updated_pars = containers.Map(pars_keys_updated, num2cell(bestX'));
     x = bestX;
     fval = minFval;
 
 
     out_solver = struct('x', bestX, 'fval', minFval);    
-    save(setup.best_fitting_filename, "updated_pars", "fval", "x");  
+    save(setup.best_fitting_filename, 'updated_pars', 'fval', 'x');  
 
     %Show Iterations over each nuclei
     figure;
@@ -91,9 +91,9 @@ function [out_solver] = exec_solver(type_of_solver, setup)
     
     
     legend(plotHandles, legendLabels);
-    xlabel("iterations");
-    ylabel("J"); 
-    disp("end");
+    xlabel('iterations');
+    ylabel('J'); 
+    disp('end');
     uistack(plotHandles(end), 'top');
 
 
@@ -101,7 +101,7 @@ function [out_solver] = exec_solver(type_of_solver, setup)
 
 
     
-elseif type_of_solver == "pattern_search"
+elseif strcmp(type_of_solver, 'pattern_search')
         % Define the objective function
 
         logStruct.iteration = [];
@@ -133,7 +133,7 @@ elseif type_of_solver == "pattern_search"
         %num_start_points = 4; % Number of starting points
         initial_point = setup.optpars_0' + rand(1, length(setup.optpars_0)) * 0.01; % Add small random perturbations
         initial_point = max(lb', min(ub', initial_point));
-        disp(sprintf("SEED: %s", mat2str(initial_point, 2)));
+        disp(sprintf('SEED: %s', mat2str(initial_point, 2)));
         %Folder to store results in case of a crush
         objFunParams.initial_point = initial_point;
 
@@ -170,7 +170,7 @@ elseif type_of_solver == "pattern_search"
         %output = output;
        
         JvsIter = logStruct;
-        save(setup.fitting_filename, "x", "fval", "JvsIter"); 
+        save(setup.fitting_filename, 'x', 'fval', 'JvsIter'); 
         %out_solver.JvsIter = logStruct;
 
         %figure;
@@ -186,13 +186,13 @@ elseif type_of_solver == "pattern_search"
         % disp(['Objective value: ', num2str(results(bestIdx).fval)]);
 
         % pars = setup.pars_list{1};
-        % pars_keys = pars.keys;
+        % pars_keys = keys(pars);
         % pars_keys_updated = pars_keys(setup.idx_optpars);
-        % updated_pars = dictionary(pars_keys_updated, x');
-        % save(setup.fitting_filename, "updated_pars", "fval");    
+        % updated_pars = containers.Map(pars_keys_updated, x');
+        % save(setup.fitting_filename, 'updated_pars', 'fval');    
 
  
-    elseif type_of_solver == "surrogate"
+    elseif strcmp(type_of_solver, 'surrogate')
         objFunParams.texp_list =  setup.texp_list;
         objFunParams.yexp_list = setup.yexp_list;
         objFunParams.dt = setup.dt;
@@ -217,12 +217,25 @@ elseif type_of_solver == "pattern_search"
         %num_start_points = 4; % Number of starting points
         %initial_point = setup.optpars_0' + rand(1, length(setup.optpars_0)) * 0.01; % Add small random perturbations
 
-        options = optimoptions('surrogateopt', ...
-       'MaxFunctionEvaluations', 40, ...      % total expensive evals allowed
-       'UseParallel', false, ...               % use parpool if available     
-       'Display', 'iter');                    % show progress in Command Window
+        % Check if surrogateopt exists (R2016a+)
+        if exist('surrogateopt', 'file') == 2
+            options = optimoptions('surrogateopt', ...
+           'MaxFunctionEvaluations', 40, ...      % total expensive evals allowed
+           'UseParallel', false, ...               % use parpool if available     
+           'Display', 'iter');                    % show progress in Command Window
 
-        [x, fval, exitflag, output] = surrogateopt(objFun, lb, ub, options);
+            [x, fval, exitflag, output] = surrogateopt(objFun, lb, ub, options);
+        else
+            % Fallback to pattern search if surrogateopt not available
+            warning('surrogateopt not available in this MATLAB version. Using patternsearch instead.');
+            options = optimoptions('patternsearch', ...
+                'MaxFunctionEvaluations', 40, ...
+                'UseParallel', false, ...
+                'Display', 'iter');
+            
+            initial_point = lb + (ub - lb) .* rand(size(lb));
+            [x, fval, exitflag, output] = patternsearch(objFun, initial_point, [], [], [], [], lb, ub, options);
+        end
 
         % Display results
         disp('Best parameter set found:');
@@ -230,9 +243,9 @@ elseif type_of_solver == "pattern_search"
         disp('Objective function value:');
         disp(fval);
         
-        save(setup.fitting_filename, "x", "fval"); 
+        save(setup.fitting_filename, 'x', 'fval'); 
 
-    elseif type_of_solver == "local_solver"
+    elseif strcmp(type_of_solver, 'local_solver')
         % %Testing fitting with local solvers
         options = optimset('fmincon');
         options.Algorithm = 'sqp';
@@ -259,10 +272,10 @@ elseif type_of_solver == "pattern_search"
         elapsed_time = toc;
         
         %pars(idx_optpars) = optpars;
-        %save(filename, "pars");
+        %save(filename, 'pars');
 
 
-    elseif type_of_solver == "multistart"
+    elseif strcmp(type_of_solver, 'multistart')
         % Define options for fmincon
         options = optimset('fmincon');
         options.Algorithm = 'sqp';
@@ -303,7 +316,7 @@ elseif type_of_solver == "pattern_search"
 
     
     
-    elseif type_of_solver == "global_search"
+    elseif strcmp(type_of_solver, 'global_search')
 
         % Configure fmincon options
         options = optimoptions('fmincon', ...
@@ -476,7 +489,12 @@ elseif type_of_solver == "pattern_search"
         if isempty(pool)
             workerID = 0; % Running in serial mode
         else
-            workerID = getCurrentTask().ID; % Get parallel worker ID
+            try
+                t = getCurrentTask();
+                workerID = t.ID; % Get parallel worker ID
+            catch
+                workerID = 1; % Fallback for older MATLAB versions
+            end
         end
     end
 

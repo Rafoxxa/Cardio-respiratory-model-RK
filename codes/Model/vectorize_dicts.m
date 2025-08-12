@@ -9,11 +9,11 @@ function transform_run_ode(in_run_ode, out_run_ode)
     [pars, init] = load_global_easy();    
     keys_pars = keys(pars); 
     keys_init = keys(init); 
-    % Crear un diccionario que mapea llaves a sus índices
-    index_map_pars = containers.Map(keys_pars, 1:length(keys_pars));
+    % Crear un containers.Map que mapea llaves a sus índices
+    index_map_pars = containers.Map(keys_pars, num2cell(1:length(keys_pars)));
     
-    % Hacer lo mismo para el diccionario init si es necesario    
-    index_map_init = containers.Map(keys_init, 1:length(keys_init));
+    % Hacer lo mismo para el containers.Map init si es necesario    
+    index_map_init = containers.Map(keys_init, num2cell(1:length(keys_init)));
 
     fid = fopen(in_run_ode, 'rt');
     original_code = fread(fid, '*char')';
@@ -128,16 +128,16 @@ function transform_run_ode(in_run_ode, out_run_ode)
 
         % 1. Add lines after "DT = dt"
     pattern1 = '(DT\s*=\s*dt\s*;\s*)';
-    replacement1 = '$1\nif isa(pars, ''dictionary'')\npars = pars.values;\nend\nif isa(init, ''dictionary'')\ninit = init.values;\nend\n';
+    replacement1 = '$1\nif isa(pars, ''containers.Map'')\npars_vals = values(pars);\npars = cell2mat(pars_vals);\nend\nif isa(init, ''containers.Map'')\ninit_vals = values(init);\ninit = cell2mat(init_vals);\nend\n';
     new_code = regexprep(new_code, pattern1, replacement1);
 
     % 2. Replace "cycle.init_vars.values" with "cycle.init_vars"
-    pattern2 = 'cycle\.init_vars\.values';
+    pattern2 = 'values\(cycle\.init_vars\)';
     replacement2 = 'cycle.init_vars';
     new_code = regexprep(new_code, pattern2, replacement2);
 
-  % 3. Change "cycle.init_vars = dictionary(...)" to "cycle.init_vars = cycle.x_vars"
-    pattern3 = 'cycle\.init_vars\s*=\s*dictionary\([^)]*\)';
+  % 3. Change "cycle.init_vars = containers.Map(...)" to "cycle.init_vars = cycle.x_vars"
+    pattern3 = 'cycle\.init_vars\s*=\s*containers\.Map\(.*?)\)';
     replacement3 = 'cycle.init_vars = cycle.x_vars(:,end';
     new_code = regexprep(new_code, pattern3, replacement3);
 
@@ -156,11 +156,11 @@ function transform_model(in_model, out_model)
     keys_pars = keys(pars); 
     keys_init = keys(init);    
     
-    % Crear un diccionario que mapea llaves a sus índices
-    index_map_pars = containers.Map(keys_pars, 1:length(keys_pars));
+    % Crear un containers.Map que mapea llaves a sus índices
+    index_map_pars = containers.Map(keys_pars, num2cell(1:length(keys_pars)));
     
-    % Hacer lo mismo para el diccionario init si es necesario    
-    index_map_init = containers.Map(keys_init, 1:length(keys_init));
+    % Hacer lo mismo para el containers.Map init si es necesario    
+    index_map_init = containers.Map(keys_init, num2cell(1:length(keys_init)));
 
     fid = fopen(in_model, 'rt');
     original_code = fread(fid, '*char')';
@@ -237,14 +237,14 @@ function transform_model(in_model, out_model)
    
     % Find all matches in the original code
     [matched_parts, tokens] = regexp(original_code, expr_internal, 'match', 'tokens');
-    strArray = strings(0);
+    strArray = cell(1, length(matched_parts));  % Cambio para R2017
     for i=1:length(matched_parts)
         
-        strArray(i) = tokens{i};
+        strArray{i} = tokens{i}{1};  % Cambio para R2017
         
     end
 
-    index_map_internal = containers.Map(strArray, 1:length(strArray));
+    index_map_internal = containers.Map(strArray, num2cell(1:length(strArray)));
 
     for i = 1:length(matched_parts)
         key = tokens{i}{1};  % Extract the key (e.g., "R" or 'R')
@@ -279,14 +279,17 @@ function transform_model(in_model, out_model)
         keys_str = tokens{1}{1};
 
         % Use another regex to extract individual keys from the string
-        key_pattern = '"([^"]+)"';
+        key_pattern = '[''"]([^''"]+)[''"]';
         key_matches = regexp(keys_str, key_pattern, 'tokens');
         
         % Flatten the cell array of tokens
-        tiny_y_keys = [key_matches{:}];
+        tiny_y_keys = cell(1, length(key_matches));
+        for i = 1:length(key_matches)
+            tiny_y_keys{i} = key_matches{i}{1};
+        end
 
         % Create a mapping from keys to indices
-        index_map_tiny = containers.Map(tiny_y_keys, 1:numel(tiny_y_keys));  
+        index_map_tiny = containers.Map(tiny_y_keys, num2cell(1:numel(tiny_y_keys)));  
     end
 
     %para cambiar el index_fun

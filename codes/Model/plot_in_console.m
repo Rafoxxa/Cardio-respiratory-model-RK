@@ -31,7 +31,15 @@ function plot_in_console(data, max_width, mask)
         mask_interp = mask;
     end
 
-    scaled = round(rescale(data_interp, 1, max_height));
+    % En R2017, rescale no existe - usar implementación manual
+    data_min = min(data_interp);
+    data_max = max(data_interp);
+    if data_max == data_min
+        scaled = ones(size(data_interp));  % Evitar división por cero
+    else
+        scaled = round(1 + (data_interp - data_min) * (max_height - 1) / (data_max - data_min));
+    end
+    
     real_max = max(data_interp);
     real_min = min(data_interp);
     real_range = linspace(real_min, real_max, max_height);
@@ -54,5 +62,3 @@ function plot_in_console(data, max_width, mask)
         disp([label, line])
     end
 end
-
-

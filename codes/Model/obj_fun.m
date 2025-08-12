@@ -42,15 +42,15 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
             
             Jp = J_normoxia + J_hipoxia;
 
-            show_each_J(J_normoxia, "INDIVIDUAL JN: ");
-            show_each_J(J_hipoxia, "INDIVIDUAL JH: ");
+            show_each_J(J_normoxia, 'INDIVIDUAL JN: ');
+            show_each_J(J_hipoxia, 'INDIVIDUAL JH: ');
             J = sum(Jp);
             logJ = log(J);
             %J = 10*Jp(7)/numel(Jp) + J;
 
             real_total_time = toc(init_time);
             sim_total_time = simulation_time_normoxia + simulation_time_hipoxia;
-            disp(sprintf("EVAL COMPLETED | REAL TIME: %.4f | RATIO: %.4f | JN: %.4f | JH: %.4f | J: %.4f", real_total_time, real_total_time / sim_total_time, sum(J_normoxia), sum(J_hipoxia) , J));
+            disp(sprintf('EVAL COMPLETED | REAL TIME: %.4f | RATIO: %.4f | JN: %.4f | JH: %.4f | J: %.4f', real_total_time, real_total_time / sim_total_time, sum(J_normoxia), sum(J_hipoxia) , J));
             show_parameter_variation(initial_point, optpars_iter, pars_hipoxia, idx_optpars, lb, ub);
 
             
@@ -121,31 +121,31 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
     end
 
     function [texp, yexp, pars] = extract_input_args(pars, t_exp, y_exp, percentages, idx_optpars, optpars_iter)
-        p_values = pars.values;
-        p_keys = pars.keys;
+        p_values = values(pars);
+        p_keys = keys(pars);
 
         p_values(idx_optpars) = optpars_iter;   
         texp = t_exp;
         yexp = y_exp;      
-        pars = estimate_newton_ohm(percentages, dictionary(p_keys, p_values));
+        pars = estimate_newton_ohm(percentages, containers.Map(p_keys, p_values));
     end
 
     function [sim_vars, time_sim] = find_sim_vars(x_vars, x_keys, x_dot, t)
 
-       PAO2_sim = x_vars(:, find(x_keys == "PAO2"));%
-       PACO2_sim = x_vars(:, find(x_keys == "PACO2"));%
-       dVE_sim = x_vars(:, find(x_keys == "dVE"));%
-       V_sim = x_vars(:, find(x_keys == "V"));
-       TI_sim = x_dot(:, find(x_keys == "fake_TI"));%
-       Tresp_sim = x_dot(:, find(x_keys == "fake_Tresp"));%
-       Theart_sim = x_vars(:, find(x_keys == "Theart"));
-       P_sa_sim = x_vars(:, find(x_keys == "P_sa"));
-       PM_sim = x_vars(:, find(x_keys == "mean_P_sa"));
+       PAO2_sim = x_vars(:, find(strcmp(x_keys, 'PAO2')));%
+       PACO2_sim = x_vars(:, find(strcmp(x_keys, 'PACO2')));%
+       dVE_sim = x_vars(:, find(strcmp(x_keys, 'dVE')));%
+       V_sim = x_vars(:, find(strcmp(x_keys, 'V')));
+       TI_sim = x_dot(:, find(strcmp(x_keys, 'fake_TI')));%
+       Tresp_sim = x_dot(:, find(strcmp(x_keys, 'fake_Tresp')));%
+       Theart_sim = x_vars(:, find(strcmp(x_keys, 'Theart')));
+       P_sa_sim = x_vars(:, find(strcmp(x_keys, 'P_sa')));
+       PM_sim = x_vars(:, find(strcmp(x_keys, 'mean_P_sa')));
        
        %Theart_sim = (Theart_sim <= 0).*(Theart_sim);
        HR_sim = Theart_sim.^1 * 60;
        VT_sim = data_processing('volume', V_sim, t);
-       out_pressure = data_processing("pressure", P_sa_sim, t);
+       out_pressure = data_processing('pressure', P_sa_sim, t);
        PS_sim = out_pressure{2};
        PD_sim = out_pressure{3};
 
@@ -183,7 +183,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
        finapres_notnan_mask_crop = finapres_notnan_mask(time_exp < time_sim(end));
        on_exercise_mask_crop = on_exercise_mask(time_exp < time_sim(end));
 
-       [time_exp_crop, indexes, ~] = unique(time_exp_crop, "stable");
+       [time_exp_crop, indexes, ~] = unique(time_exp_crop, 'stable');
        exp_vars_crop = exp_vars_crop(:, indexes); 
        finapres_notnan_mask_crop = finapres_notnan_mask_crop(indexes);
        on_exercise_mask_crop = on_exercise_mask_crop(indexes);
@@ -201,12 +201,12 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
         sim_vars_crop = sim_vars_crop';
        end
        catch
-           disp("probably: interpolation error");
+           disp('probably: interpolation error');
        end
     end
 
 function show_parameter_variation(initial_point, optpars_iter, pars, idx_optpars, lb, ub)
-    str = "PARAMETERS:" + newline;
+    str = ['PARAMETERS:', sprintf('\n')];
     
     % Define column widths
     param_width = 15; % Width for the parameter name
@@ -216,23 +216,24 @@ function show_parameter_variation(initial_point, optpars_iter, pars, idx_optpars
     for i = 1:length(initial_point)
         value = optpars_iter(i);
         delta_percent = 100 * (value - initial_point(i)) / initial_point(i);
-        param_name = pars.keys{idx_optpars(i)};
+        param_name = keys(pars);
+        param_name = param_name{idx_optpars(i)};
         upper_boundary = ub(idx_optpars(i)); 
         lower_boundary = lb(idx_optpars(i));
         
         % Build formatted number section
-        numbers_part = sprintf("%*.2f%s==%*.2f%s==%*.2f", ...
+        numbers_part = sprintf('%*.2f%s==%*.2f%s==%*.2f', ...
             num_width, lower_boundary, repmat(' ', 1, sep_width), ...
             num_width, value, repmat(' ', 1, sep_width), ...
             num_width, upper_boundary);
         
         % Build whole line with fixed width until "DELTA"
-        line = sprintf("%-*s %s   DELTA: %6.1f%%", ...
+        line = sprintf('%-*s %s   DELTA: %6.1f%%', ...
             param_width, param_name, ...
             numbers_part, ...
             delta_percent);
         
-        str = str + line + newline;
+        str = [str, line, sprintf('\n')];
     end
 
     % Display
@@ -242,16 +243,16 @@ end
 
     function show_each_J(J, msg)
         str = msg;
-        xnames = ["PAO2",  "PACO2",  "dVE",  "VT",  "TI",  "Tresp",  "HR",  "PM",  "PS", "PD"];
+        xnames = {'PAO2',  'PACO2',  'dVE',  'VT',  'TI',  'Tresp',  'HR',  'PM',  'PS', 'PD'};
         for i = 1:length(xnames)           
             
-            str = str + sprintf("%s: %.4f | ", xnames{i}, J(i));
+            str = [str, sprintf('%s: %.4f | ', xnames{i}, J(i))];
         end
 
         % Remove last separator
-        str = strip(str, "right");
-        if endsWith(str, "|")
-            str = extractBefore(str, strlength(str) - 1);
+        str = strtrim(str);
+        if length(str) > 0 && str(end) == '|'
+            str = str(1:end-2);
         end
 
         disp(str);

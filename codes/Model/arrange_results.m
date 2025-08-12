@@ -21,8 +21,8 @@ function struct_vars = arrange_results(x_dot, x_vars, x_keys, t)
     %Derived from operations
     struct_vars.HR = struct_vars.Theart.^-1;      
 
-    struct_vars.VT = data_processing("volume", struct_vars.V, t); %volume
-    out_pressure = data_processing("pressure", struct_vars.P_sa, t);
+    struct_vars.VT = data_processing('volume', struct_vars.V, t); %volume
+    out_pressure = data_processing('pressure', struct_vars.P_sa, t);
     struct_vars.ps = out_pressure{2};
     struct_vars.pd = out_pressure{3};
     struct_vars.pm = struct_vars.mean_P_sa;

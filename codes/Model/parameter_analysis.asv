@@ -7,10 +7,9 @@ mode = 'saving'; %'loading'
 %mode = 'saving';
 %mode = 'p-space';
 %setup = set_up('sens', 1, 'hipoxia', 'mix', 'requestedDate', '28-04-2025');
-%setup_n = set_up('sens', patient_idx, 'normoxia', '.');
-setup_h = set_up('sens', patient_idx, 'hipoxia', 'mix');
-%setup = {setup_n, setup_h};
-setup = setup_h;
+setup_n = set_up('sens', patient_idx, 'normoxia', '.', 'simulation_time', 500);
+setup_h = set_up('sens', patient_idx, 'hipoxia', 'mix', 'simulation_time', 500);
+setup = {setup_n, setup_h};
 
 %setup = setup_h;
 
@@ -34,7 +33,7 @@ elseif strcmp(mode, 'loading')
     pars_to_sens = LSA_output{2};   
 
 end
-custom_plot('LSA-plot', {sens_matrix, pars_to_sens, setup.variables_of_interest, setup.idx_variable_of_interest});
+custom_plot('LSA-plot', {sens_matrix, pars_to_sens, setup{1}.variables_of_interest, setup{1}.idx_variable_of_interest});
 
 
 

@@ -8,21 +8,21 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
     control_on = 1;
     
     % Loop invariant variables
-    %disp("simulation_time");
+    %disp('simulation_time');
     %disp(simulation_time);
-    if isa(init, "dictionary")
-        X_KEYS = init.keys;
-        INDEX = dictionary(X_KEYS, [1:length(X_KEYS)]');    
+    if isa(init, 'containers.Map')
+        X_KEYS = keys(init);
+        INDEX = containers.Map(X_KEYS, num2cell(1:length(X_KEYS)));    
     else
         X_KEYS = 0;
         INDEX = 0;
     end
 
-    %TINY_X_KEYS = ["dVE", "PACO2", "PAO2", "Pmusc", "insp_integrand", "exp_integrand", "J", "t0_heart", "u_t0", "HR", "phi_met", "fh_s", "fp_s", "fv_s", "fv"]; 
-    %TINY_INDEX = dictionary(TINY_X_KEYS, [1:length(TINY_X_KEYS)]);
+    %TINY_X_KEYS = {'dVE', 'PACO2', 'PAO2', 'Pmusc', 'insp_integrand', 'exp_integrand', 'J', 't0_heart', 'u_t0', 'HR', 'phi_met', 'fh_s', 'fp_s', 'fv_s', 'fv'}; 
+    %TINY_INDEX = containers.Map(TINY_X_KEYS, num2cell(1:length(TINY_X_KEYS)));
     %OPTIONS = ddeset('AbsTol',1e-8,'RelTol',1e-5); 
-    if isa(pars, "dictionary")
-        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars.values, varargin) );
+    if isa(pars, 'containers.Map')
+        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
     else
         OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
     end
@@ -57,7 +57,7 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
 
     while cycle.t_end < SIMULATION_TIME            
                 tic;
-                sol = ode23(model, [cycle.t_ini, cycle.t_end], cycle.init_vars.values, OPTIONS_CENTRAL, PARS, X_KEYS);
+                sol = ode23(model, [cycle.t_ini, cycle.t_end], values(cycle.init_vars), OPTIONS_CENTRAL, PARS, X_KEYS);
                 cycle.x_vars = deval(sol, cycle.time_interval);         
         
         [PARS, stacked, cycle] = cycle_driver(stacked, cycle, DT, INDEX, PARS);
@@ -105,7 +105,7 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         cycle.t_ini = cycle.t_end;
         PARS('t0') = cycle.t_ini;
         
-        cycle.init_vars = dictionary(X_KEYS, cycle.x_vars(:, end));
+        cycle.init_vars = containers.Map(X_KEYS, num2cell(cycle.x_vars(:, end)));
         %cycle.init_vars_values = [cycle.x_vars(:, end)];% ; squeeze(delays_global(:,:,end))];        
         %cycle.init_taus = cycle.init_taus;  %this is unnecesary, because tau is not variable
         
@@ -167,11 +167,11 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             %this should be the corect equation, that diminshes the speed of the ode incrporating upper airways dynamics, giving a lowe volume for the same muscular presion.
 
             %parameters
-            DT = pars("tiny_dt");
-            Pao = pars("Pao");
-            Ecw = pars("Ecw");
-            El = pars("El");
-            Rrs = pars("Rrs");
+            DT = pars('tiny_dt');
+            Pao = pars('Pao');
+            Ecw = pars('Ecw');
+            El = pars('El');
+            Rrs = pars('Rrs');
             Ers = Ecw + El;          
             
             kaw1  = pars('kaw1');
@@ -197,10 +197,10 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             Pua_prev = init_value(4);
 
             a0 = 0;
-            a1 = pars("a1");
-            a2 = pars("a2");
-            tau = pars("tau");
-            TI = pars("TI");
+            a1 = pars('a1');
+            a2 = pars('a2');
+            tau = pars('tau');
+            TI = pars('TI');
 
             %Pmusc function
             if 0 <= t && t <= TI
@@ -260,10 +260,10 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             
 
             %parameters
-            Pao = pars("Pao");
-            Ecw = pars("Ecw");
-            El = pars("El");
-            Rrs = pars("Rrs");
+            Pao = pars('Pao');
+            Ecw = pars('Ecw');
+            El = pars('El');
+            Rrs = pars('Rrs');
             Ers = Ecw + El;
             
             %define state vars dict
@@ -272,10 +272,10 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             %obtain state vars
             V = init_value;
             a0 = 0;
-            a1 = pars("a1");
-            a2 = pars("a2");
-            tau = pars("tau");
-            TI = pars("TI");
+            a1 = pars('a1');
+            a2 = pars('a2');
+            tau = pars('tau');
+            TI = pars('TI');
 
             %pressure function
             if 0 <= t && t <= TI
@@ -294,11 +294,11 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         function J = respiratory_work(state_vars, OPTIONS, optim_pars)
             
             %parameters for cost function
-            Pmax = optim_pars("Pmax");
+            Pmax = optim_pars('Pmax');
             dPmax = optim_pars('dPmax');
             lambda1 = optim_pars('lambda1');
             lambda2 = optim_pars('lambda2');
-            n = optim_pars("n");
+            n = optim_pars('n');
             DT = optim_pars('tiny_dt');
 
             TI = optim_pars('TI');
@@ -377,7 +377,7 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         args_init = [initial_TI_value, initial_TE_value, initial_a1_value, initial_a2_value, initial_tau_value];
     
         % Set up optimization options
-        %options = optimoptions("fmincon", "Display", "iter", "Algorithm", "sqp");
+        %options = optimoptions('fmincon', 'Display', 'iter', 'Algorithm', 'sqp');
         options = optimset('fmincon');
         options.Algorithm = 'sqp';
         options.Display = 'off';
@@ -387,8 +387,8 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         options.MaxIter = 3;
     
         % Set lower and upper bounds for the optimization parameters
-        lb = [pars('lb_TI'), pars('lb_TE'), pars('lb_a1'), pars('lb_a2'), pars('lb_tau')];
-        ub = [pars('ub_TI'), pars('ub_TE'), pars('ub_a1'), pars('ub_a2'), pars('ub_tau')];
+        lb = [PARS('lb_TI'), PARS('lb_TE'), PARS('lb_a1'), PARS('lb_a2'), PARS('lb_tau')];
+        ub = [PARS('ub_TI'), PARS('ub_TE'), PARS('ub_a1'), PARS('ub_a2'), PARS('ub_tau')];
     
         %Contraints
         % Tresp > TI
@@ -403,10 +403,10 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
 
         function ydot = fast_tiny_system(t, init_value, pars, a1, a2)
             %parameters
-            %Pao = pars("Pao");
-            %Ecw = pars("Ecw");
-            %El = pars("El");
-            %Rrs = pars("Rrs");
+            %Pao = pars('Pao');
+            %Ecw = pars('Ecw');
+            %El = pars('El');
+            %Rrs = pars('Rrs');
             %Ers = Ecw + El;
             %%obtain state vars
             %V = init_value;
@@ -416,9 +416,9 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             %%ode for volume wave
             %dV =  Gaw/Rrs * ((Pmusc - Pao) - Ers * V);  %I think Gaw gots to be well computed instead of putting this static value o 0.3
             DT = PARS('tiny_dt');
-            Pao = pars("Pao");
-            Ecw = pars("Ecw");
-            El = pars("El");
+            Pao = pars('Pao');
+            Ecw = pars('Ecw');
+            El = pars('El');
             Ers = Ecw + El;
             kaw1  = pars('kaw1');
             kaw2 = pars('kaw2');
@@ -462,8 +462,8 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         function [c, ceq] = ventilation_constraint(args, dVE, PARS, OPTIONS)
             DT = PARS('tiny_dt');
             Pao = PARS('Pao');
-            Ecw = PARS("Ecw");
-            El = PARS("El");            
+            Ecw = PARS('Ecw');
+            El = PARS('El');            
             Ers = Ecw + El;
 
             TI = args(1);
@@ -471,10 +471,10 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             a1 = args(3);
             a2 = args(4);
 
-            TI_check = var_inside_boundries(TI, PARS("ub_TI"), PARS("lb_TI"));
-            TE_check = var_inside_boundries(TE, PARS("ub_TE"), PARS("lb_TE"));
-            a1_check = var_inside_boundries(a1, PARS("ub_a1"), PARS("lb_a1"));
-            a2_check = var_inside_boundries(a2, PARS("ub_a2"), PARS("lb_a2"));
+            TI_check = var_inside_boundries(TI, PARS('ub_TI'), PARS('lb_TI'));
+            TE_check = var_inside_boundries(TE, PARS('ub_TE'), PARS('lb_TE'));
+            a1_check = var_inside_boundries(a1, PARS('ub_a1'), PARS('lb_a1'));
+            a2_check = var_inside_boundries(a2, PARS('ub_a2'), PARS('lb_a2'));
 
             vars_inside_boundries = TI_check && TE_check && a1_check && a2_check;
             if vars_inside_boundries
@@ -516,8 +516,9 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         % Initialize the persistent variable during initialization
         init = y;
         if strcmp(flag, 'init')
-            dt = pars("dt"); % Set the time step         
-            
+            %dt = pars(strcmp(keys(pars), 'dt')); % Set the time step         
+            dt = pars('dt');
+            dt = dt{1};
         elseif isempty(flag)
             % Regular call for each solver step
             round_time = round(t/dt);
@@ -528,33 +529,33 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             iter_step_prev_plus_1 = iter_step_prev + 1;
             
             if delta_step > 0
-                all_global(1,iter_step_prev_plus_1:iter_step_plus_1) = init("dVE");
-                all_global(2,iter_step_prev_plus_1:iter_step_plus_1) = init("PACO2");
-                all_global(3,iter_step_prev_plus_1:iter_step_plus_1) = init("PAO2");
-                all_global(4,iter_step_prev_plus_1:iter_step_plus_1) = init("Pmusc");
-                all_global(5,iter_step_prev_plus_1:iter_step_plus_1) = init("t0_heart");
-                all_global(6,iter_step_prev_plus_1:iter_step_plus_1) = init("u_t0");
-                all_global(7,iter_step_prev_plus_1:iter_step_plus_1) = init("HR");
-                all_global(8,iter_step_prev_plus_1:iter_step_plus_1) = init("phi_met");
-                all_global(9,iter_step_prev_plus_1:iter_step_plus_1) = init("fh_s");
-                all_global(10,iter_step_prev_plus_1:iter_step_plus_1) = init("fp_s");
-                all_global(11,iter_step_prev_plus_1:iter_step_plus_1) = init("fv_s");
-                all_global(12,iter_step_prev_plus_1:iter_step_plus_1) = init("fv");
+                all_global(1,iter_step_prev_plus_1:iter_step_plus_1) = init('dVE');
+                all_global(2,iter_step_prev_plus_1:iter_step_plus_1) = init('PACO2');
+                all_global(3,iter_step_prev_plus_1:iter_step_plus_1) = init('PAO2');
+                all_global(4,iter_step_prev_plus_1:iter_step_plus_1) = init('Pmusc');
+                all_global(5,iter_step_prev_plus_1:iter_step_plus_1) = init('t0_heart');
+                all_global(6,iter_step_prev_plus_1:iter_step_plus_1) = init('u_t0');
+                all_global(7,iter_step_prev_plus_1:iter_step_plus_1) = init('HR');
+                all_global(8,iter_step_prev_plus_1:iter_step_plus_1) = init('phi_met');
+                all_global(9,iter_step_prev_plus_1:iter_step_plus_1) = init('fh_s');
+                all_global(10,iter_step_prev_plus_1:iter_step_plus_1) = init('fp_s');
+                all_global(11,iter_step_prev_plus_1:iter_step_plus_1) = init('fv_s');
+                all_global(12,iter_step_prev_plus_1:iter_step_plus_1) = init('fv');
             
             elseif delta_step <= 0
 
-                all_global(1,iter_step_plus_1) = init("dVE");
-                all_global(2,iter_step_plus_1) = init("PACO2");
-                all_global(3,iter_step_plus_1) = init("PAO2");
-                all_global(4,iter_step_plus_1) = init("Pmusc");
-                all_global(5,iter_step_plus_1) = init("t0_heart");
-                all_global(6,iter_step_plus_1) = init("u_t0");
-                all_global(7,iter_step_plus_1) = init("HR");
-                all_global(8,iter_step_plus_1) = init("phi_met");
-                all_global(9,iter_step_plus_1) = init("fh_s");
-                all_global(10,iter_step_plus_1) = init("fp_s");
-                all_global(11,iter_step_plus_1) = init("fv_s");
-                all_global(12,iter_step_plus_1) = init("fv");
+                all_global(1,iter_step_plus_1) = init('dVE');
+                all_global(2,iter_step_plus_1) = init('PACO2');
+                all_global(3,iter_step_plus_1) = init('PAO2');
+                all_global(4,iter_step_plus_1) = init('Pmusc');
+                all_global(5,iter_step_plus_1) = init('t0_heart');
+                all_global(6,iter_step_plus_1) = init('u_t0');
+                all_global(7,iter_step_plus_1) = init('HR');
+                all_global(8,iter_step_plus_1) = init('phi_met');
+                all_global(9,iter_step_plus_1) = init('fh_s');
+                all_global(10,iter_step_plus_1) = init('fp_s');
+                all_global(11,iter_step_plus_1) = init('fv_s');
+                all_global(12,iter_step_plus_1) = init('fv');
             
             end
 

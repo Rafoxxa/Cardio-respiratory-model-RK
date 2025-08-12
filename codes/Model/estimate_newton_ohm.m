@@ -5,15 +5,15 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
 
 
     if nargin < 4
-        format_output = "dict";
+        format_output = 'dict';
     end
     % Compute estimated parameters based on x multipliers
 
     % Take data from patient measurements
     
-    BW        = pars("BW");%70; %data.BW;                         % Body weight (kg)                
-    Hgt       = pars("Hgt");%172;%data.Hgt;                        % Height (cm)                     
-    Gender    = pars("Gender");%2;%data.Gender;                     % Gender (1=female, 2=male)       
+    BW        = pars('BW');%70; %data.BW;                         % Body weight (kg)                
+    Hgt       = pars('Hgt');%172;%data.Hgt;                        % Height (cm)                     
+    Gender    = pars('Gender');%2;%data.Gender;                     % Gender (1=female, 2=male)       
     
 
     %% Total blood volume (mL) from general measurements
@@ -36,10 +36,10 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
 
     PM = 100; %1/3 * 120 + 2/3*75;
     
-    %fprintf("Vtot: %f\n", pars("V_tot"));
+    %fprintf("Vtot: %f\n", pars('V_tot'));
     %fprintf("ToTBV: %f\n", ToTBV);
     %ToTBV = 5027.6;  
-    %ToTBV = pars("V_tot");
+    %ToTBV = pars('V_tot');
     TotFlow = ToTBV/60;  
     CO = TotFlow;
     %% Blood Pressure
@@ -176,49 +176,49 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
     %C_vc_v = V_vc_v / P_vc_v;
 %
     %Renaming
-    pars("V_unstressed_am_p") = V_m_p_un * 0.6;
+    pars('V_unstressed_am_p') = V_m_p_un * 0.6;
     %V_unstressed_am_v = V_m_v_un;
-    pars("V_unstressed_b_p") = V_b_p_un;
-    pars("V_unstressed_b_v") = V_b_v_un;
-    pars("V_unstressed_e_p") = V_e_p_un;
+    pars('V_unstressed_b_p') = V_b_p_un;
+    pars('V_unstressed_b_v') = V_b_v_un;
+    pars('V_unstressed_e_p') = V_e_p_un;
     %V_unstressed_e_v = V_e_v_un;
-    pars("V_unstressed_h_p") = V_h_p_un;
-    pars("V_unstressed_h_v") = V_h_v_un;
+    pars('V_unstressed_h_p') = V_h_p_un;
+    pars('V_unstressed_h_v') = V_h_v_un;
     %V_unstressed_la = 
     %V_unstressed_lv
     %V_unstressed_pa
-    pars("V_unstressed_pp") = V_p_p_un;
-    pars("V_unstressed_pv") = V_p_v_un;
+    pars('V_unstressed_pp') = V_p_p_un;
+    pars('V_unstressed_pv') = V_p_v_un;
     %V_unstressed_ra
-    pars("V_unstressed_rm_p") = V_m_p_un * 0.4;
+    pars('V_unstressed_rm_p') = V_m_p_un * 0.4;
     %V_unstressed_rm_v = V_m_v_un;
     %V_unstressed_rv 
-    pars("V_unstressed_s_p") = V_s_p_un;
+    pars('V_unstressed_s_p') = V_s_p_un;
     %V_unstressed_s_v = V_s_v_un;
     %V_unstressed_sa = 
-    pars("V_unstressed_vc") = V_vc_v_un;
+    pars('V_unstressed_vc') = V_vc_v_un;
 
-    pars("V_u_am_v_0") = V_m_v_un * 0.6;
-    pars("V_u_e_v_0")= V_e_v_un;
-    pars("V_u_rm_v_0") = V_m_v_un * 0.4;
-    pars("V_u_s_v_0") = V_s_v_un;
+    pars('V_u_am_v_0') = V_m_v_un * 0.6;
+    pars('V_u_e_v_0')= V_e_v_un;
+    pars('V_u_rm_v_0') = V_m_v_un * 0.4;
+    pars('V_u_s_v_0') = V_s_v_un;
 
-    pars("R_am_n") = R_m_v;
-    pars("R_am_p_0") = R_m_p;
-    pars("R_b_n") = R_b_v;
-    pars("R_e_n") = R_e_v;
-    pars("R_e_p_0") = R_e_p;
-    pars("R_h_n") = R_h_v;
-    pars("R_h_p_n") = R_h_p;
+    pars('R_am_n') = R_m_v;
+    pars('R_am_p_0') = R_m_p;
+    pars('R_b_n') = R_b_v;
+    pars('R_e_n') = R_e_v;
+    pars('R_e_p_0') = R_e_p;
+    pars('R_h_n') = R_h_v;
+    pars('R_h_p_n') = R_h_p;
     %R_la = ;
     %R_pa = ;
-    pars("R_p_p_n") = R_p_p;
-    pars("R_pv") = R_p_v;
+    pars('R_p_p_n') = R_p_p;
+    pars('R_pv') = R_p_v;
     %R_ra = ;
-    pars("R_rm_n") = R_m_v;
-    pars("R_rm_p_0") = R_m_p;
-    pars("R_s_n") = R_s_v;
-    pars("R_s_p_0") = R_s_p;
+    pars('R_rm_n') = R_m_v;
+    pars('R_rm_p_0') = R_m_p;
+    pars('R_s_n') = R_s_v;
+    pars('R_s_p_0') = R_s_p;
 
     %C_am_p = C_m_p;
     %C_rm_p = C_m_p;
@@ -229,10 +229,10 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
 
     %new_pars = pars;
 
-    if format_output == "dict"
+    if strcmp(format_output, 'dict')
         new_pars = pars;
-    elseif format_output == "array"
-        new_pars = pars.values;
+    elseif strcmp(format_output, 'array')
+        new_pars = values(pars);
     end
 
    

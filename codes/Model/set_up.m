@@ -1,10 +1,10 @@
 function [setup_out] = ...
     set_up(case_of_use, patient_idx, hipoxia_state, ascend_state, varargin)
 
-    model             = "model";
-    run_ode_fun       = "run_ode_fun";
-    pars              = "pars";
-    init              = "init";
+    model             = 'model';
+    run_ode_fun       = 'run_ode_fun';
+    pars              = 'pars';
+    init              = 'init';
     type_of_input     = 7;
     control_on        = 1;
     only_plot         = 0;
@@ -12,65 +12,65 @@ function [setup_out] = ...
     simulation_time   = 2200;
     settling_time     = 20;
     pars_from_fitting = 0;
-    fitting_mat_file  = "";
+    fitting_mat_file  = '';
     VO2_external      = 1;    
-    solver            = "pattern_search";
-    lb                = "lb";
-    ub                = "ub";
-    simulation_filename          = "simulation_filename";
-    fitting_filename   = "fitting_filename";
-    xnames_fitting    = "xnames_fitting";
-    percentages       = "percentages";
-    texp              = "texp";
-    yexp              = "yexp";
-    epsilon           = 1e-2; 
-    requestedDate    = "";   
-    fitting_filename = "fitting_filename";
-    fitting_folder = "fitting_folder";
-    best_fitting_filename = "best_fitting_filename";    
+    solver            = 'pattern_search';
+    lb                = 'lb';
+    ub                = 'ub';
+    simulation_filename          = 'simulation_filename';
+    fitting_filename   = 'fitting_filename';
+    xnames_fitting    = 'xnames_fitting';
+    percentages       = 'percentages';
+    texp              = 'texp';
+    yexp              = 'yexp';
+    epsilon           = 1e-3; 
+    requestedDate    = '';   
+    fitting_filename = 'fitting_filename';
+    fitting_folder = 'fitting_folder';
+    best_fitting_filename = 'best_fitting_filename';    
     params_sample_size = 0;
     
 
-    if case_of_use == "simulation"
+    if strcmp(case_of_use, 'simulation')
         dt = 0.01;
         settling_time = 10;
-        simulation_folder = "only_simulation";
+        simulation_folder = 'only_simulation';
 
-    elseif case_of_use == "fitting"
+    elseif strcmp(case_of_use, 'fitting')
         dt = 0.1;
         settling_time = 11;
-        simulation_folder = "simulation_after_fitting";
+        simulation_folder = 'simulation_after_fitting';
 
-    elseif case_of_use == "sens"
+    elseif strcmp(case_of_use, 'sens')
         dt = 0.1;
         settling_time = 11;        
-        simulation_folder = "sens_simulation";
+        simulation_folder = 'sens_simulation';
         epsilon           = 1e-2; 
 
-    elseif case_of_use == "fiO2_ladder"
+    elseif strcmp(case_of_use, 'fiO2_ladder')
         dt = 0.1;
         settling_time = 11;        
-        simulation_folder = "fiO2_ladder";
+        simulation_folder = 'fiO2_ladder';
         epsilon           = 1e-2; 
         VO2_external = 0;
-        %hipoxia_state = "niether";
+        %hipoxia_state = 'niether';
         type_of_input = 0;
         simulation_time = 500;
 
         
     end
 
-    if hipoxia_state == "normoxia" && case_of_use ~= "fiO2_ladder"
+    if strcmp(hipoxia_state, 'normoxia') && ~strcmp(case_of_use, 'fiO2_ladder')
         type_of_input = 6;
         simulation_time = 1200;%1200;
         
-    elseif hipoxia_state == "hipoxia" && case_of_use ~= "fiO2_ladder"
+    elseif strcmp(hipoxia_state, 'hipoxia') && ~strcmp(case_of_use, 'fiO2_ladder')
         type_of_input = 7;
-        if ascend_state == "ascend"
+        if strcmp(ascend_state, 'ascend')
             simulation_time = 2200;
-        elseif ascend_state == "exercise"
+        elseif strcmp(ascend_state, 'exercise')
             simulation_time = 1200;
-        elseif ascend_state == "mix"
+        elseif strcmp(ascend_state, 'mix')
             simulation_time = 2200 + 1100;
         end
         
@@ -88,16 +88,16 @@ function [setup_out] = ...
     defaults.simulation_time   = simulation_time;
     defaults.settling_time     = settling_time;
     defaults.pars_from_fitting = pars_from_fitting;
-    defaults.fitting_mat_file  = "../Fittings/Fitting-21-02-2025.mat";
+    defaults.fitting_mat_file  = '../Fittings/Fitting-21-02-2025.mat';
     defaults.VO2_external      = VO2_external;
     defaults.patient_idx       = patient_idx;
-    defaults.solver            = "pattern_search";
-    defaults.lb               = "lb";
-    defaults.ub               = "ub";
-    defaults.idx_optpars      = "idx_optpars";
-    defaults.optpars_0        = "optpars_0";
-    defaults.pars_values      = "pars_values";
-    defaults.init_keys        = "init_keys";
+    defaults.solver            = 'pattern_search';
+    defaults.lb               = 'lb';
+    defaults.ub               = 'ub';
+    defaults.idx_optpars      = 'idx_optpars';
+    defaults.optpars_0        = 'optpars_0';
+    defaults.pars_values      = 'pars_values';
+    defaults.init_keys        = 'init_keys';
     defaults.epsilon          = epsilon;
     defaults.requestedDate    = requestedDate;
     defaults.params_sample_size = params_sample_size;
@@ -173,23 +173,24 @@ function [setup_out] = ...
 
     %Loadings
     [pars, init, taus] = load_global_easy();
-    data = struct("p1", [70.8, 177, 2], "p4", [85.5, 173, 2], "p5", [77.5, 185, 2], "p6", [68, 175, 2]);
-    pars("BW") =  data.(sprintf("p%d", patient_idx))(1);
-    pars("Hgt") =  data.(sprintf("p%d", patient_idx))(2);
-    pars("Gender") =  data.(sprintf("p%d", patient_idx))(3);
-    percentages = load("OhmNewton_percentages.mat").percentages;
+    data = struct('p1', [70.8, 177, 2], 'p4', [85.5, 173, 2], 'p5', [77.5, 185, 2], 'p6', [68, 175, 2]);
+    pars('BW') =  data.(sprintf('p%d', patient_idx))(1);
+    pars('Hgt') =  data.(sprintf('p%d', patient_idx))(2);
+    pars('Gender') =  data.(sprintf('p%d', patient_idx))(3);
+    percentages = load('OhmNewton_percentages.mat');
+    percentages = percentages.percentages;
     
     %Estimation of cardiovascular circuit components
     pars = estimate_newton_ohm(percentages, pars);
-    pars_keys = pars.keys;
+    pars_keys = keys(pars);
 
     %Sensitivity analysis
     pars_not_to_sens = load_pars_not_to_sens();
     pars_free2move = setdiff(pars_keys, pars_not_to_sens);     
     pars_to_sens = pars_free2move;
-    %pars_to_sens =  ["GVdead"    "I_0_h_s"    "Wp_p_s"    "Wp_v_s"    "dPmax"    "f_ab_max"    "f_ab_min"    "k_isc_v_s"    "phi_min"    "tau_V_u_s_v"    "x_h_s"    "x_v_s"];
-    %pars_to_sens = ["GTsym", "GTvagal"]; %, "G_R_e_p", "T0", "I0_met", "kmet"];
-    %pars_to_sens = ["GTsym", "GTvagal", "G_R_e_p", "T0", "I0_met", "kmet", "PaCO2_n", "P_n", "phi_max", "K_E_lv", "K_E_rv", "KR_lv", "KR_rv", "R_sa", "A2", "alpha2", "C1", "C2", "K2", "MRbCO2", "Vtissue_CO2", "Kbg", "KcCO2", "KpCO2", "KpO2", "lambda1", "lambda2", "n", "dPmax", "Vdead", "El", "Rrs", "Ecw"];
+    %pars_to_sens =  {'GVdead'    'I_0_h_s'    'Wp_p_s'    'Wp_v_s'    'dPmax'    'f_ab_max'    'f_ab_min'    'k_isc_v_s'    'phi_min'    'tau_V_u_s_v'    'x_h_s'    'x_v_s'};
+    pars_to_sens = {'GTsym'}; %, 'G_R_e_p', 'T0', 'I0_met', 'kmet'];
+    %pars_to_sens = {'GTsym', 'GTvagal', 'G_R_e_p', 'T0', 'I0_met', 'kmet', 'PaCO2_n', 'P_n', 'phi_max', 'K_E_lv', 'K_E_rv', 'KR_lv', 'KR_rv', 'R_sa', 'A2', 'alpha2', 'C1', 'C2', 'K2', 'MRbCO2', 'Vtissue_CO2', 'Kbg', 'KcCO2', 'KpCO2', 'KpO2', 'lambda1', 'lambda2', 'n', 'dPmax', 'Vdead', 'El', 'Rrs', 'Ecw'};
     n_params_sens = length(pars_to_sens);
     variables_of_interest = {'PAO2', 'PACO2', 'pd', 'ps', 'pm', 'Theart', 'TI', 'BF', 'VTidal', 'dVE'};
     idx_variable_of_interest = [1:numel(variables_of_interest)];
@@ -197,7 +198,7 @@ function [setup_out] = ...
     %Load fitting parameters
     if pars_from_fitting
         %disp(patient_idx)
-        if fitting_mat_file == "last"
+        if strcmp(fitting_mat_file, 'last')
             basePath = sprintf('../Fitting/parsFitted/%d', patient_idx);
             formattedDate = getLatestFittingDateStr(basePath);
             disp(formattedDate);
@@ -209,22 +210,24 @@ function [setup_out] = ...
         pars_struct = load(fitting_mat_path);
         updated_pars = pars_struct.updated_pars;
         
-        for key_ = updated_pars.keys
+        pars_keys_updated = keys(updated_pars);
+        for i = 1:length(pars_keys_updated)
+            key_ = pars_keys_updated{i};
             pars(key_) = updated_pars(key_);
         end
 
-        simulation_folder = "simulation_after_fitting";
+        simulation_folder = 'simulation_after_fitting';
     end
 
     %read fast data from each pacient
-    %if hipoxia_state == "normoxia" || hipoxia_state == "hipoxia"
-    fast_data_filename = sprintf("../fast_data/%d/%s_data_preprocessed.mat", patient_idx, hipoxia_state);
-    load(fast_data_filename, "texp", "yexp", "VO2_poly", "VCO2_poly", "fO2_poly", "basal", "VO2_ladder_points", "VCO2_ladder_points", "AT");
+    %if strcmp(hipoxia_state, 'normoxia') || strcmp(hipoxia_state, 'hipoxia')
+    fast_data_filename = sprintf('../fast_data/%d/%s_data_preprocessed.mat', patient_idx, hipoxia_state);
+    load(fast_data_filename, 'texp', 'yexp', 'VO2_poly', 'VCO2_poly', 'fO2_poly', 'basal', 'VO2_ladder_points', 'VCO2_ladder_points', 'AT');
     disp(basal(1))
     disp(basal(2))
     disp(AT);
     %end
-    pars("AT") = AT;
+    pars('AT') = AT;
     
     pars('MRtO2_basal') = basal(1); %this is making trouble
     pars('MRtCO2_basal') = basal(2); %this is making trouble
@@ -232,50 +235,50 @@ function [setup_out] = ...
     VO2_ladder_points_ = VO2_ladder_points;
     VCO2_ladder_points_ = VCO2_ladder_points;
 
-    %disp("MRtO2_basal:");
+    %disp('MRtO2_basal:');
     %disp(basal(1));
 
     %save input coefficients in pars
     if VO2_external
         %[~, ~, VO2_poly, VCO2_poly, fO2_poly] = data_preprocessing(patient_idx, hipoxia_state, ascend_state,0);
         %VO2
-        pars("MRO2_poly_0") = VO2_poly(1);
-        pars("MRO2_poly_1") = VO2_poly(2);
-        pars("MRO2_poly_2") = VO2_poly(3);
-        pars("MRO2_poly_3") = VO2_poly(4);
-        pars("MRO2_poly_4") = VO2_poly(5);
-        pars("MRO2_poly_5") = VO2_poly(6);
-        pars("MRO2_poly_6") = VO2_poly(7);
-        pars("MRO2_poly_7") = VO2_poly(8);
-        pars("MRO2_poly_8") = VO2_poly(9);
+        pars('MRO2_poly_0') = VO2_poly(1);
+        pars('MRO2_poly_1') = VO2_poly(2);
+        pars('MRO2_poly_2') = VO2_poly(3);
+        pars('MRO2_poly_3') = VO2_poly(4);
+        pars('MRO2_poly_4') = VO2_poly(5);
+        pars('MRO2_poly_5') = VO2_poly(6);
+        pars('MRO2_poly_6') = VO2_poly(7);
+        pars('MRO2_poly_7') = VO2_poly(8);
+        pars('MRO2_poly_8') = VO2_poly(9);
         
         %fiO2
-        if hipoxia_state == "hipoxia"
+        if strcmp(hipoxia_state, 'hipoxia')
             
-            if ascend_state == "ascend" || ascend_state == "mix"
-                pars("fiO2_poly_0") = fO2_poly(1);
-                pars("fiO2_poly_1") = fO2_poly(2);  %This can change depending on the best polynomial fit 
-                pars("fiO2_poly_2") = fO2_poly(3);
-                pars("fiO2_poly_3") = fO2_poly(4);
-                pars("fiO2_poly_4") = fO2_poly(5);
-            elseif ascend_state == "exercise" 
-                pars("fiO2_poly_0") = fO2_poly(1);
-                pars("fiO2_poly_1") = fO2_poly(2);
+            if strcmp(ascend_state, 'ascend') || strcmp(ascend_state, 'mix')
+                pars('fiO2_poly_0') = fO2_poly(1);
+                pars('fiO2_poly_1') = fO2_poly(2);  %This can change depending on the best polynomial fit 
+                pars('fiO2_poly_2') = fO2_poly(3);
+                pars('fiO2_poly_3') = fO2_poly(4);
+                pars('fiO2_poly_4') = fO2_poly(5);
+            elseif strcmp(ascend_state, 'exercise') 
+                pars('fiO2_poly_0') = fO2_poly(1);
+                pars('fiO2_poly_1') = fO2_poly(2);
             end
 
             
         end
         %VCO2
 
-        pars("MRCO2_poly_0") = VCO2_poly(1);
-        pars("MRCO2_poly_1") = VCO2_poly(2);
-        pars("MRCO2_poly_2") = VCO2_poly(3);
-        pars("MRCO2_poly_3") = VCO2_poly(4);
-        pars("MRCO2_poly_4") = VCO2_poly(5);
-        pars("MRCO2_poly_5") = VCO2_poly(6);
-        pars("MRCO2_poly_6") = VCO2_poly(7);
-        pars("MRCO2_poly_7") = VCO2_poly(8);
-        pars("MRCO2_poly_8") = VCO2_poly(9);
+        pars('MRCO2_poly_0') = VCO2_poly(1);
+        pars('MRCO2_poly_1') = VCO2_poly(2);
+        pars('MRCO2_poly_2') = VCO2_poly(3);
+        pars('MRCO2_poly_3') = VCO2_poly(4);
+        pars('MRCO2_poly_4') = VCO2_poly(5);
+        pars('MRCO2_poly_5') = VCO2_poly(6);
+        pars('MRCO2_poly_6') = VCO2_poly(7);
+        pars('MRCO2_poly_7') = VCO2_poly(8);
+        pars('MRCO2_poly_8') = VCO2_poly(9);
     end
 
     %
@@ -285,7 +288,7 @@ function [setup_out] = ...
     pars('dt') = dt; 
     pars('type_of_input') = type_of_input;
     pars('settling_time') = settling_time;
-    units_table = readtable("variables_units.xlsx");
+    units_table = readtable('variables_units.xlsx');
 
     %Load initial conditions in init
     if ~only_plot
@@ -293,14 +296,17 @@ function [setup_out] = ...
         init_values_loaded = preloaded_vars.x_vars(:, end);
         init_keys_loaded = fieldnames(preloaded_vars.struct_vars);
 
-        init_keys = init.keys;
+        init_keys = keys(init);
 
 
         % Redefine the values in the dictionary using the new vector
         for i = 1:length(init_values_loaded)
-            if init_keys_loaded(i) ~= "vO2" && init_keys_loaded(i) ~= "PAO2" && init_keys_loaded(i) ~= "P_1O2" && init_keys_loaded(i) ~= "P_2O2" && init_keys_loaded(i) ~= "P_3O2" && init_keys_loaded(i) ~= "P_4O2" && init_keys_loaded(i) ~= "P_5O2" && init_keys_loaded(i) ~= "MRtO2" && init_keys_loaded(i) ~= "aO2" && init_keys_loaded(i) ~= "vO2"  && init_keys_loaded(i) ~= "PvbCO2" && init_keys_loaded(i) ~= "PbCO2" && init_keys_loaded(i) ~= "PCSFCO2"  && init_keys_loaded(i) ~= "mean_PbCO2" && init_keys_loaded(i) ~= "TI" && init_keys_loaded(i) ~= "TE" && init_keys_loaded(i) ~= "a1" && init_keys_loaded(i) ~= "a2" && init_keys_loaded(i) ~= "a0" 
-                key_i = init_keys(init_keys == init_keys_loaded(i));
-                init(key_i)= init_values_loaded(i);
+            if ~strcmp(init_keys_loaded{i}, 'vO2') && ~strcmp(init_keys_loaded{i}, 'PAO2') && ~strcmp(init_keys_loaded{i}, 'P_1O2') && ~strcmp(init_keys_loaded{i}, 'P_2O2') && ~strcmp(init_keys_loaded{i}, 'P_3O2') && ~strcmp(init_keys_loaded{i}, 'P_4O2') && ~strcmp(init_keys_loaded{i}, 'P_5O2') && ~strcmp(init_keys_loaded{i}, 'MRtO2') && ~strcmp(init_keys_loaded{i}, 'aO2') && ~strcmp(init_keys_loaded{i}, 'vO2')  && ~strcmp(init_keys_loaded{i}, 'PvbCO2') && ~strcmp(init_keys_loaded{i}, 'PbCO2') && ~strcmp(init_keys_loaded{i}, 'PCSFCO2')  && ~strcmp(init_keys_loaded{i}, 'mean_PbCO2') && ~strcmp(init_keys_loaded{i}, 'TI') && ~strcmp(init_keys_loaded{i}, 'TE') && ~strcmp(init_keys_loaded{i}, 'a1') && ~strcmp(init_keys_loaded{i}, 'a2') && ~strcmp(init_keys_loaded{i}, 'a0') 
+                key_i_idx = find(strcmp(init_keys, init_keys_loaded{i}));
+                if ~isempty(key_i_idx)
+                    key_i = init_keys{key_i_idx(1)};
+                    init(key_i) = init_values_loaded(i);
+                end
             end
         end
         
@@ -318,13 +324,13 @@ function [setup_out] = ...
 
     %optimization hyperparameters
     %[texp, yexp, ~, ~, ~] = data_preprocessing(patient_idx, hipoxia_state, ascend_state); %its better to run it always
-    xnames_fitting = {"dVE", "V", "TI", "Tresp", "PAO2", "PACO2", "HR", "PS", "PD", "PM"};  
+    xnames_fitting = {'dVE', 'V', 'TI', 'Tresp', 'PAO2', 'PACO2', 'HR', 'PS', 'PD', 'PM'};  
     
-    if case_of_use == "fitting"
+    if strcmp(case_of_use, 'fitting')
         currentDate = datetime('today');  
         formattedDate = datestr(currentDate, 'dd-mm-yyyy');
-        if requestedDate ~= ""
-            if requestedDate  == "last"
+        if ~strcmp(requestedDate, '')
+            if strcmp(requestedDate, 'last')
                 basePath = sprintf('../Fitting/parsFitted/%d', patient_idx);
                 formattedDate = getLatestFittingDateStr(basePath);
             else
@@ -344,7 +350,7 @@ function [setup_out] = ...
         [lb, ub] = load_optim_boundries(pars, patient_idx);
         %Small size pars domain for optim solver
         idx_optpars = find(ub ~= lb);
-        pars_values = pars.values;
+        pars_values = values(pars);
         optpars_0 = pars_values(idx_optpars);  
 
     end
@@ -404,11 +410,11 @@ function [setup_out] = ...
     function [lb, ub] = load_optim_boundries(pars, patient_idx)
         lb = pars;
         ub = pars;
-        %list_of_pars = {"C2", "G_R_e_p", "KpCO2", "T0", "MRbCO2", "lambda1"};    
+        %list_of_pars = {'C2', 'G_R_e_p', 'KpCO2', 'T0', 'MRbCO2', 'lambda1'};    
         try    
            cell_of_pars = load_pars_to_fit(patient_idx);      %instead of this code we should use pars2fit files.
         catch
-           error("parameters to fit not correctly saved");
+           error('parameters to fit not correctly saved');
         end
         
         
@@ -423,8 +429,8 @@ function [setup_out] = ...
             end    
         end
 
-        lb = lb.values;
-        ub = ub.values;
+        lb = values(lb);
+        ub = values(ub);
     end
 
 function latestDateStr = getLatestFittingDateStr(basePath)
@@ -444,8 +450,12 @@ function latestDateStr = getLatestFittingDateStr(basePath)
         name = folders(k).name;
 
         % Look for pattern: Fitting-dd-MM-yyyy
-        if startsWith(name, 'Fitting-')
-            dateStr = extractAfter(name, 'Fitting-');
+        if strncmp(name, 'Fitting-', length('Fitting-'))
+            if length(name) > length('Fitting-')
+                dateStr = name(length('Fitting-')+1:end);
+            else
+                dateStr = '';
+            end
             try
                 Dt = datetime(dateStr, 'InputFormat', 'dd-MM-yyyy');
                 %if Dt ~= datetime('today')  % Exclude today's date
@@ -490,4 +500,3 @@ end
 
 
 end
-

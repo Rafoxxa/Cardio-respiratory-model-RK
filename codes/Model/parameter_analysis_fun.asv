@@ -4,7 +4,7 @@ function parameter_analysis_fun(p)
     %% SENSITIVITY ANALYSIS
     patient_idx = patients(p);    
     setup_n = set_up('sens', patient_idx, 'normoxia', '.', 'simulation_time', 500);
-    setup_h = set_up('sens', patient_idx, 'hipoxia', 'mix', 'simulation_time', 500);
+    setup_h = set_up('sens', patient_idx, 'hipoxia', 'mix', 'simulaion');
     setup = {setup_n, setup_h};
     sens_functions('saving', '-', setup);
 end

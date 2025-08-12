@@ -1,17 +1,17 @@
 function out = data_processing(mode, var, time)
-    if mode == "pressure"
+    if strcmp(mode, 'pressure')
         [pm, ps, pd] = compute_pressure(var, time);
         out = {pm, ps, pd};
-    elseif mode == "volume"  
+    elseif strcmp(mode, 'volume')  
         out = compute_VT(var, time);
-    elseif mode == "filtering"
+    elseif strcmp(mode, 'filtering')
         out = filtering(var); 
-    elseif mode == "add-desired"
+    elseif strcmp(mode, 'add-desired')
         out = add_desired_variables(var{1}, var{2}, time);
-    elseif mode == "match-size"
+    elseif strcmp(mode, 'match-size')
         [arr1,arr2] = matchSize(var{1}, var{2});
         out = {arr1, arr2};
-    elseif mode == "downsample"  
+    elseif strcmp(mode, 'downsample')  
         out = downsampleArray(var{1}, var{2});
     end
 
@@ -71,26 +71,26 @@ function out = data_processing(mode, var, time)
         fs = 1/0.995;
         cutoff = fs/80;
         %for i = 1:size(X,2)
-        X(:, 5) = lowpass(X(:, 5),cutoff, fs, "Steepness", 0.95);
-        X(:, 6) = lowpass(X(:, 6),cutoff, fs, "Steepness", 0.95);                                          
-        X(:, 7) = lowpass(X(:, 7),cutoff, fs, "Steepness", 0.95);      
-        X(:, 8) = lowpass(X(:, 8),cutoff, fs, "Steepness", 0.95);                                          
-        X(:, 9) = lowpass(X(:, 9),cutoff, fs, "Steepness", 0.95);                 
-        X(:, 10) = lowpass(X(:, 10),cutoff, fs, "Steepness", 0.95);                 
+        X(:, 5) = lowpass(X(:, 5),cutoff, fs, 'Steepness', 0.95);
+        X(:, 6) = lowpass(X(:, 6),cutoff, fs, 'Steepness', 0.95);                                          
+        X(:, 7) = lowpass(X(:, 7),cutoff, fs, 'Steepness', 0.95);      
+        X(:, 8) = lowpass(X(:, 8),cutoff, fs, 'Steepness', 0.95);                                          
+        X(:, 9) = lowpass(X(:, 9),cutoff, fs, 'Steepness', 0.95);                 
+        X(:, 10) = lowpass(X(:, 10),cutoff, fs, 'Steepness', 0.95);                 
         %end 
     end
 
     function [Xout] = add_desired_variables(Xin, init, t)
         
-        key_press = "P_sa";
-        key_V = "V";
-        key_TI = "TI";
-        key_TE = "TE";
+        key_press = 'P_sa';
+        key_V = 'V';
+        key_TI = 'TI';
+        key_TE = 'TE';
         
-        press_idx = find(init.keys == key_press);
-        V_idx = find(init.keys == key_V);
-        TI_idx = find(init.keys == key_TI);
-        TE_idx = find(init.keys == key_TE);
+        press_idx = find(strcmp(init.keys, key_press));
+        V_idx = find(strcmp(init.keys, key_V));
+        TI_idx = find(strcmp(init.keys, key_TI));
+        TE_idx = find(strcmp(init.keys, key_TE));
 
         pressure = Xin(press_idx, :);
         V = Xin(V_idx, :);
