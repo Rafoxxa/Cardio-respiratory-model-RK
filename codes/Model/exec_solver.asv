@@ -127,12 +127,12 @@ elseif strcmp(type_of_solver, 'pattern_search')
         objFunParams.xnames_fitting = setup.xnames_fitting;
 
         % Bounds for the optimization
-        lb = cell2mat(lower_boundries(setup.idx_optpars)); % Lower boundaries
-        ub = cell2mat(upper_boundries(setup.idx_optpars)); % Upper boundaries
+        lb = lower_boundries(setup.idx_optpars); % Lower boundaries
+        ub = upper_boundries(setup.idx_optpars); % Upper boundaries
         % Initial guesses for the optimization
         %num_start_points = 4; % Number of starting points
-        initial_point = cell2mat(setup.optpars_0) + rand(1, length(setup.optpars_0)) * 0.01; % Add small random perturbations
-        initial_point = max(lb, min(ub, initial_point));
+        initial_point = setup.optpars_0 + rand(1, length(setup.optpars_0)) * 0.01; % Add small random perturbations
+        initial_point = max(lb', min(ub', initial_point));
         disp(sprintf('SEED: %s', mat2str(initial_point, 2)));
         %Folder to store results in case of a crush
         objFunParams.initial_point = initial_point;

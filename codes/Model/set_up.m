@@ -317,9 +317,9 @@ function [setup_out] = ...
     formattedDate = datestr(currentDate, 'dd-mm-yyyy');
     simulation_filename = sprintf('../Simulations/%s/%d/%d_sec_%s-%s.mat',simulation_folder, patient_idx, simulation_time, hipoxia_state,formattedDate);
     %Sensitivity    
-    sensitivity_write_all_filename = sprintf('../Sens_analysis/%d/sensitivities_%s.mat', patient_idx,formattedDate); 
-    sensitivity_write_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s.mat', patient_idx,formattedDate);
-    sensitivity_load_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s.mat', patient_idx,requestedDate);
+    sensitivity_write_all_filename = sprintf('../Sens_analysis/%d/sensitivities_%s_%s.mat', hipoxia_state, patient_idx,formattedDate); 
+    sensitivity_write_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', hipoxia_state, patient_idx,formattedDate);
+    sensitivity_load_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', hipoxia_state, patient_idx,requestedDate);
 
 
     %optimization hyperparameters
@@ -349,7 +349,7 @@ function [setup_out] = ...
         
         [lb, ub] = load_optim_boundries(pars, patient_idx);
         %Small size pars domain for optim solver
-        idx_optpars = find(ub ~= lb);
+        idx_optpars = find(~cellfun(@isequal, ub, lb));
         pars_values = values(pars);
         optpars_0 = pars_values(idx_optpars);  
 
@@ -408,8 +408,8 @@ function [setup_out] = ...
     
 
     function [lb, ub] = load_optim_boundries(pars, patient_idx)
-        lb = pars;
-        ub = pars;
+        lb = containers.Map(pars.keys, pars.values);
+        ub = containers.Map(pars.keys, pars.values);
         %list_of_pars = {'C2', 'G_R_e_p', 'KpCO2', 'T0', 'MRbCO2', 'lambda1'};    
         try    
            cell_of_pars = load_pars_to_fit(patient_idx);      %instead of this code we should use pars2fit files.
@@ -423,9 +423,11 @@ function [setup_out] = ...
             if sign(pars(key)) >= 0
                 lb(key) = pars(key) * 0.5;
                 ub(key) = pars(key) * 10;
+                disp('change');
             else
                 lb(key) = pars(key) * 10;
                 ub(key) = pars(key) * 0.5;    
+                disp('change');
             end    
         end
 

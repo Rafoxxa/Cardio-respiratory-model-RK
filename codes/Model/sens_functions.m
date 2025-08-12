@@ -92,7 +92,7 @@ function out = sens_functions(mode, fun, setup)
         
         if s.params_sample_size == 0
         
-        save(write_path_all, 'sensitivities');  
+        %save(write_path_all, 'sensitivities');  
         save(write_path, 'sens_final_time_matrix', 'pars_to_sens'); 
         else
             new_pars = s.new_pars;

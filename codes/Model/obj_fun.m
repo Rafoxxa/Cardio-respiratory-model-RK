@@ -16,7 +16,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
     xnames_fitting = objFunParams.xnames_fitting;
 
     x_keys = init_dict.keys;
-    init = init_dict.values;
+    init = cell2mat(init_dict.values);
     
     simulation_time_normoxia = simulation_time_list{1} + settling_time;  
     simulation_time_hipoxia = simulation_time_list{2} + settling_time;  
@@ -33,7 +33,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
     end
    %[t, x_dot, x_vars, x_keys, index] = run_ode_fun(model, pars, init, taus, simulation_time, dt, control_on);
    %isp("fin");
-     try
+     %try
         if length(pars_list) < 2
             J = compute_J(texp, yexp, model, pars, init, simulation_time, dt);
         elseif length(pars_list) == 2
@@ -58,7 +58,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
 
           
         end      
-    catch ME
+    %catch ME
         J = 10^10;
         logJ = log(J);
         disp(sprintf('EVAL INCOMPLETED | Error: %s | J: %.4f', ME.message, J));
@@ -66,7 +66,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
         %disp(ME.message);
         %disp(ME.identifier);
         %disp(ME.stack(1));
-    end
+    %end
 
     function Jp = compute_J(texp, yexp, model, pars, init, simulation_time, dt )
         
@@ -121,7 +121,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
     end
 
     function [texp, yexp, pars] = extract_input_args(pars, t_exp, y_exp, percentages, idx_optpars, optpars_iter)
-        p_values = values(pars);
+        p_values = cell2mat(values(pars));
         p_keys = keys(pars);
 
         p_values(idx_optpars) = optpars_iter;   
