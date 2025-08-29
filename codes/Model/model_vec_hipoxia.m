@@ -2310,16 +2310,16 @@ end
 end
 
 % References:
-% [1] Albanese A, Cheng L, Ursino M, Chbat NW. An integrated mathematical model of the human cardiopulmonary system: model development. Am J Physiol Circ Physiol 310: H899âÿÿH921, 2016.
-% [2] Cheng L, Ivanova O, Fan H-H, Khoo MCK. An integrative model of respiratory and cardiovascular control in sleep-disordered breathing. Respir Physiol Neurobiol 174: 4âÿÿ28, 2010.
-% [3] Fincham WF, Tehrani FT. A mathematical model of the human respiratory system. J Biomed Eng 5: 125âÿÿ33, 1983.
+% [1] Albanese A, Cheng L, Ursino M, Chbat NW. An integrated mathematical model of the human cardiopulmonary system: model development. Am J Physiol Circ Physiol 310: H899â€“H921, 2016.
+% [2] Cheng L, Ivanova O, Fan H-H, Khoo MCK. An integrative model of respiratory and cardiovascular control in sleep-disordered breathing. Respir Physiol Neurobiol 174: 4â€“28, 2010.
+% [3] Fincham WF, Tehrani FT. A mathematical model of the human respiratory system. J Biomed Eng 5: 125â€“33, 1983.
 % [4] Magosso E, Ursino M. A mathematical model of CO2 effect on cardiovascular regulation. Am J Physiol Heart Circ Physiol 281: H2036-52, 2001.
-% [5] Magosso E, Ursino M. Cardiovascular response to dynamic aerobic exercise: a mathematical model. Med Biol Eng Comput 40: 660âÿÿ74, 2002.
-% [6] Poon CS, Lin SL, Knudson OB. Optimization character of inspiratory neural drive. J Appl Physiol 72: 2005âÿÿ17, 1992.
-% [7] Serna Higuita LY, Mananas MA, Mauricio Hernandez A, Marina Sanchez J, Benito S. Novel Modeling of Work of Breathing for Its Optimization During Increased Respiratory Efforts. IEEE Syst J 10: 1003âÿÿ1013, 2016.
+% [5] Magosso E, Ursino M. Cardiovascular response to dynamic aerobic exercise: a mathematical model. Med Biol Eng Comput 40: 660â€“74, 2002.
+% [6] Poon CS, Lin SL, Knudson OB. Optimization character of inspiratory neural drive. J Appl Physiol 72: 2005â€“17, 1992.
+% [7] Serna Higuita LY, Mananas MA, Mauricio Hernandez A, Marina Sanchez J, Benito S. Novel Modeling of Work of Breathing for Its Optimization During Increased Respiratory Efforts. IEEE Syst J 10: 1003â€“1013, 2016.
 % [8] Serna LY, MaÃ±anas MA, HernÃ¡ndez AM, Rabinovich RA. An Improved Dynamic Model for the Respiratory Response to Exercise. Front Physiol 9: 69, 2018.
-% [9] Spencer JL, Firouztale E, Mellins RB. Computational expressions for blood oxygen and carbon dioxide concentrations. Ann Biomed Eng 7: 59âÿÿ66, 1979.
-% [10] Ursino M. Interaction between carotid baroregulation and the pulsating heart: a mathematical model. Am J Physiol 275: H1733âÿÿH1747, 1998.
+% [9] Spencer JL, Firouztale E, Mellins RB. Computational expressions for blood oxygen and carbon dioxide concentrations. Ann Biomed Eng 7: 59â€“66, 1979.
+% [10] Ursino M. Interaction between carotid baroregulation and the pulsating heart: a mathematical model. Am J Physiol 275: H1733â€“H1747, 1998.
 % [11] Ursino M, Magosso E. Acute cardiovascular response to isocapnic hypoxia. I. A mathematical model. Am J Physiol Heart Circ Physiol 279: H149-65, 2000.
 
 

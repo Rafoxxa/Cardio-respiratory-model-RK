@@ -1,9 +1,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%
-
+    patient_list = [1,4,5,6];
+    %patient keys: number: [1,4,5,6]  idx: [1,2,3,4]
     % Setting up and run
     %setup = parallel_fitting(5, 'pattern_search');
     vectorize_dicts('run_ode.m', 'model_basic.m', 'run_ode_vec_hipoxia.m', 'model_vec_hipoxia.m');    
-    patient_idx = 5;
+    patient_idx = 4;
+    patient_number = patient_list(patient_idx);
     % setup_out_normoxia = set_up('fitting', patient_idx, 'normoxia', '-', 'simulation_time', 500);
     % setup_out_hipoxia = set_up('fitting', patient_idx, 'hipoxia', 'mix', 'simulation_time', 500);         
     % setup = setup_out_normoxia;
@@ -24,15 +26,16 @@
     
     
     %%%%%%%%%%%%%%%%%%%%%%%
+    
 
     % Run simulation    
     parsfitted_filename = setup.best_fitting_filename;
-    parts = strsplit(parsfitted_filename, filesep);
+    parts = strsplit(parsfitted_filename, '/');
     lastTwo = parts(end-1:end);
     path_parsfitted = fullfile(lastTwo{1}, lastTwo{2});
-    setup_out_normoxia_sim = set_up('simulation', patient_idx, 'normoxia', '-', 'pars_from_fitting', 1, 'fitting_mat_file', path_parsfitted);
+    setup_out_normoxia_sim = set_up('simulation', patient_number, 'normoxia', '-', 'pars_from_fitting', 1, 'fitting_mat_file', path_parsfitted);
     sn = setup_out_normoxia_sim;
-    setup_out_hipoxia_sim = set_up('simulation', patient_idx, 'hipoxia', 'mix', 'pars_from_fitting', 1, 'fitting_mat_file', path_parsfitted);
+    setup_out_hipoxia_sim = set_up('simulation', patient_number, 'hipoxia', 'mix', 'pars_from_fitting', 1, 'fitting_mat_file', path_parsfitted);
     sh = setup_out_hipoxia_sim;
 
     global all_global;
@@ -57,21 +60,21 @@
     time_sim = t_normoxia;
     X_sim = struct_vars_normoxia;
     custom_plot('sim_vs_exp', {time_sim, sn.texp, X_sim, sn.yexp, setup.xnames_fitting, setup.units_table, 5, 2, sn.simulation_filename, old_mode});
-    original_normoxia_simulation_filename = '../Simulations/only_simulation/5/1200_sec_normoxia-24-04-2025-p.mat';
+    original_normoxia_simulation_filename = sprintf('../Simulations/only_simulation/%d/1200_sec_normoxia-28-07-2025.mat', patient_number);
     custom_plot('sim_vs_exp', {'-', sn.texp, '-', sn.yexp, setup.xnames_fitting, setup.units_table, 5, 2, original_normoxia_simulation_filename, old_mode});
     
     figure;
     time_sim = t_hipoxia; 
     X_sim = struct_vars_hipoxia;
     custom_plot('sim_vs_exp', {time_sim, sh.texp, X_sim, sh.yexp, setup.xnames_fitting, setup.units_table, 5, 2, sh.simulation_filename, old_mode});
-    original_hipoxia_simulation_filename = '../Simulations/only_simulation/5/3300_sec_hipoxia-24-04-2025-p.mat';
+    original_hipoxia_simulation_filename = sprintf('../Simulations/only_simulation/%d/3300_sec_hipoxia-28-07-2025.mat', patient_number);
     custom_plot('sim_vs_exp', {'-', sh.texp, '-', sh.yexp, setup.xnames_fitting, setup.units_table, 5, 2, original_hipoxia_simulation_filename, old_mode});
 
 
     
     sh_filename = sh.simulation_filename;
     sn_filename = sn.simulation_filename;
-    name = sprintf('../plot_data/%d/logJ_is:%.4f.mat', patient_idx, out_solver.fval);
+    name = sprintf('../plot_data/%d/logJ_is:%.4f.mat', patient_number, out_solver.fval);
     if ~isfolder(sprintf('../plot_data/%d', patient_idx))
         mkdir(sprintf('../plot_data/%d', patient_idx));
     end

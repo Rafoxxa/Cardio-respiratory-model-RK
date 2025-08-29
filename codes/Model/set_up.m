@@ -29,6 +29,7 @@ function [setup_out] = ...
     fitting_folder = 'fitting_folder';
     best_fitting_filename = 'best_fitting_filename';    
     params_sample_size = 0;
+    type_of_optim = 'pattern_search';
     
 
     if strcmp(case_of_use, 'simulation')
@@ -101,6 +102,7 @@ function [setup_out] = ...
     defaults.epsilon          = epsilon;
     defaults.requestedDate    = requestedDate;
     defaults.params_sample_size = params_sample_size;
+    defaults.type_of_optim = type_of_optim;
 
     
 
@@ -130,6 +132,7 @@ function [setup_out] = ...
     addParameter(p, 'epsilon', defaults.epsilon);
     addParameter(p, 'requestedDate', defaults.requestedDate);
     addParameter(p, 'params_sample_size', defaults.params_sample_size);
+    addParameter(p, 'type_of_optim', defaults.type_of_optim);
 
 
 
@@ -189,7 +192,7 @@ function [setup_out] = ...
     pars_free2move = setdiff(pars_keys, pars_not_to_sens);     
     pars_to_sens = pars_free2move;
     %pars_to_sens =  {'GVdead'    'I_0_h_s'    'Wp_p_s'    'Wp_v_s'    'dPmax'    'f_ab_max'    'f_ab_min'    'k_isc_v_s'    'phi_min'    'tau_V_u_s_v'    'x_h_s'    'x_v_s'};
-    pars_to_sens = {'GTsym'}; %, 'G_R_e_p', 'T0', 'I0_met', 'kmet'];
+    %pars_to_sens = {'GTsym', 'G_R_e_p'}; %, 'G_R_e_p', 'T0', 'I0_met', 'kmet'];
     %pars_to_sens = {'GTsym', 'GTvagal', 'G_R_e_p', 'T0', 'I0_met', 'kmet', 'PaCO2_n', 'P_n', 'phi_max', 'K_E_lv', 'K_E_rv', 'KR_lv', 'KR_rv', 'R_sa', 'A2', 'alpha2', 'C1', 'C2', 'K2', 'MRbCO2', 'Vtissue_CO2', 'Kbg', 'KcCO2', 'KpCO2', 'KpO2', 'lambda1', 'lambda2', 'n', 'dPmax', 'Vdead', 'El', 'Rrs', 'Ecw'};
     n_params_sens = length(pars_to_sens);
     variables_of_interest = {'PAO2', 'PACO2', 'pd', 'ps', 'pm', 'Theart', 'TI', 'BF', 'VTidal', 'dVE'};
@@ -202,7 +205,7 @@ function [setup_out] = ...
             basePath = sprintf('../Fitting/parsFitted/%d', patient_idx);
             formattedDate = getLatestFittingDateStr(basePath);
             disp(formattedDate);
-            fitting_mat_file = sprintf('Fitting-%s/best.mat', formattedDate);
+            fitting_mat_file = sprintf('Fitting-%s-%s/best.mat', type_of_optim, formattedDate);
             
         end
         fitting_mat_path = sprintf('../Fitting/parsFitted/%d/%s', patient_idx, fitting_mat_file);
@@ -317,9 +320,9 @@ function [setup_out] = ...
     formattedDate = datestr(currentDate, 'dd-mm-yyyy');
     simulation_filename = sprintf('../Simulations/%s/%d/%d_sec_%s-%s.mat',simulation_folder, patient_idx, simulation_time, hipoxia_state,formattedDate);
     %Sensitivity    
-    sensitivity_write_all_filename = sprintf('../Sens_analysis/%d/sensitivities_%s_%s.mat', hipoxia_state, patient_idx,formattedDate); 
-    sensitivity_write_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', hipoxia_state, patient_idx,formattedDate);
-    sensitivity_load_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', hipoxia_state, patient_idx,requestedDate);
+    sensitivity_write_all_filename = sprintf('../Sens_analysis/%d/sensitivities_%s_%s.mat', patient_idx, hipoxia_state, formattedDate); 
+    sensitivity_write_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', patient_idx, hipoxia_state ,formattedDate);
+    sensitivity_load_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', patient_idx, hipoxia_state, requestedDate);
 
 
     %optimization hyperparameters
@@ -357,10 +360,13 @@ function [setup_out] = ...
 
     sensitivities = cell(1, n_params_sens);
     
-
-    
-
-    
+    %id for particle-swarm
+    timestamp = round(posixtime(datetime('now')) * 1000);    
+    % Número aleatorio (6 dígitos)
+    randomNum = randi([100000, 999999]);    
+    % Combinar como números
+    node_id = timestamp * 1000000 + randomNum; % Multiplico por 1M para hacer espacio
+       
     
     
     setup_out.model = model;
@@ -405,6 +411,8 @@ function [setup_out] = ...
     setup_out.VO2_ladder_points = VO2_ladder_points_;
     setup_out.VCO2_ladder_points = VCO2_ladder_points_;
 
+    setup_out.node_id = node_id;
+    setup_out.patient_idx = patient_idx;
     
 
     function [lb, ub] = load_optim_boundries(pars, patient_idx)
@@ -421,13 +429,13 @@ function [setup_out] = ...
         for i = 1:length(cell_of_pars)  %10 y 0.1
             key = cell_of_pars{i}; 
             if sign(pars(key)) >= 0
-                lb(key) = pars(key) * 0.5;
-                ub(key) = pars(key) * 10;
-                disp('change');
+                lb(key) = pars(key) * 0.7;
+                ub(key) = pars(key) * 2;
+                
             else
-                lb(key) = pars(key) * 10;
-                ub(key) = pars(key) * 0.5;    
-                disp('change');
+                lb(key) = pars(key) * 2;
+                ub(key) = pars(key) * 0.7;    
+                
             end    
         end
 

@@ -22,36 +22,47 @@ function out = sens_functions(mode, fun, setup)
         end
     elseif strcmp(mode, 'saving')
         if length(s) > 1
-            sens_cell  = {};
-            sens_ = {};
+            %sens_cell  = {};
+            %sens_ = {};
+            s_total = 0;
+            
             for s_index = 1: length(s)
                 s_i = s{s_index};
                 results_base_i = run_base(s_i);
                 s_i.results_base = results_base_i;
-                [sens_i, error_i, perturbed_i] = run_LSA(s_i, s_i.pars);
-                sens_cell{s_index} = sens_i;
+                sens_matrix_i = run_LSA(s_i, s_i.pars, s_i.variables_of_interest);
+                %sens_cell{s_index} = sens_matrix_i;
+                s_i.sens_final_time_matrix = sens_matrix_i;
+                save_sens(s_i);
+                s_total = (sens_matrix_i + s_total)/2;
             end
 
-            for pars_index = 1:length(sens_cell{2})
-                sens_{pars_index} = [sens_cell{1}{pars_index}, sens_cell{2}{pars_index}];
-            end
+
+
+
+
+            %for pars_index = 1:length(sens_cell{2})
+            %    sens_{pars_index} = [sens_cell{1}{pars_index}, sens_cell{2}{pars_index}];
+            %end
+
             
-            sens_matrix = build_LSA_matrix(s_i, s_i.variables_of_interest, sens_, perturbed_i); 
-            s_i.sens_final_time_matrix = sens_matrix;        
-            save_sens(s_i);
-            out = {sens_matrix, sens_, error_i, perturbed_i, s_i.pars_to_sens};
+            %sens_matrix = build_LSA_matrix(s_i, s_i.variables_of_interest, sens_, perturbed_i); 
+            %s_i.sens_final_time_matrix = sens_matrix;        
+            %save_sens(s_i);
+            %out = {s_i.sens_matrix, sens_, error_i, perturbed_i, s_i.pars_to_sens};
+            out = {s_total, s_i.pars_to_sens};
            
         else
             if s.params_sample_size == 0
                 
                 results_base = run_base(s);
                 s.results_base = results_base;
-                [sens, error, perturbed] = run_LSA(s, s.pars);
+                sens_matrix = run_LSA(s, s.pars, s.variables_of_interest);
                 
-                sens_matrix = build_LSA_matrix(s, s.variables_of_interest, sens, perturbed); 
+                %sens_matrix = build_LSA_matrix(s, s.variables_of_interest, sens, perturbed); 
                 s.sens_final_time_matrix = sens_matrix;        
                 save_sens(s);
-                out = {sens_matrix, sensitivities, error, perturbed, pars_to_sens};
+                out = {sens_matrix, pars_to_sens};
             else
                 for i = 1:s.params_sample_size
                     % Create a copy of the parameter set
@@ -85,7 +96,7 @@ function out = sens_functions(mode, fun, setup)
         write_path_all = s.sensitivity_write_all_filename;
         write_path = s.sensitivity_write_filename;
 
-        sensitivities = s.sensitivities;
+        %sensitivities = s.sensitivities;
         sens_final_time_matrix = s.sens_final_time_matrix;
         pars_to_sens = s.pars_to_sens;
         
@@ -120,11 +131,12 @@ function out = sens_functions(mode, fun, setup)
         results_base_ = data_processing('add-desired', {results_base, s.init}, t);
     end
 
-    function [sens, error, perturbed] = run_LSA(s, params_base)
+    function [sens_final_time_matrix] = run_LSA(s, params_base, variables_of_interest)
         pars_to_sens = s.pars_to_sens;        
         perturbed = cell(1, s.n_params_sens);
         error = cell(1, s.n_params_sens);
-        sensitivities = s.sensitivities;
+        %sensitivities = s.sensitivities;
+        
         epsilon = s.epsilon;
         percentages = s.percentages;
         model = s.model;
@@ -133,6 +145,22 @@ function out = sens_functions(mode, fun, setup)
         dt = s.dt;
         simulation_time = s.simulation_time;
         results_base_ = s.results_base;
+
+        num_variables = numel(variables_of_interest); 
+        target_variable_idx_arr = zeros(1,num_variables);      
+        sens_final_time_matrix = zeros(s.n_params_sens, num_variables); 
+        extra_vars = {'pm', 'ps', 'pd', 'VTidal', 'BF'};
+
+        for v = 1:num_variables
+            key = variables_of_interest{v};
+            if ismember(key, extra_vars)
+                extra_idx = find(strcmp(extra_vars, key));
+                target_variable_idx_arr(v) = extra_idx + length(init.keys);
+            else
+                target_variable_idx_arr(v) = find(strcmp(init.keys, key)); % Cambio para containers.Map                
+            end
+
+        end
 
         for i = 1:s.n_params_sens
             
@@ -161,23 +189,29 @@ function out = sens_functions(mode, fun, setup)
                 
                 
                 
-                sensitivities{i} = (x_perturbed__ - results_base__)/(epsilon) ./ (results_base__ + epsilon);
-                error{i} = 0;
+                %sensitivities{i} = (x_perturbed__ - results_base__)/(epsilon) ./ (results_base__ + epsilon);
+                sensitivities_ = (x_perturbed__ - results_base__)/(epsilon) ./ (results_base__ + epsilon);
+                %error{i} = 0;
                 if size(x_perturbed__, 1) <= 1
                     disp('error-size');
-                    error{i} = 2;
+                    %error{i} = 2;
+                else                       
+                    N = size(sensitivities_,2); 
+                    sens_final_time_matrix(i,:) = 1/N * sqrt(sum(sensitivities_(target_variable_idx_arr,:).^2,2));                  
                 end
-                perturbed{i} = x_perturbed__;
+
+                
+                %perturbed{i} = x_perturbed__;
             catch ME
                 disp(ME.message);
                 disp('error-simulation');
-                sensitivities{i} = 0;
-                perturbed{i} = 0;
-                error{i} = 1;
+                %sensitivities{i} = 0;
+                %perturbed{i} = 0;
+                %error{i} = 1;
             end
         end
 
-        sens = sensitivities;
+        %sens = sensitivities;
 
     end
 

@@ -96,6 +96,94 @@ function [out_solver] = exec_solver(type_of_solver, setup)
     disp('end');
     uistack(plotHandles(end), 'top');
 
+    %Checking boundries
+    lb = cell2mat(setup.lb);
+    lb_red = lb(setup.idx_optpars);
+    ub = cell2mat(setup.ub);
+    ub_red = ub(setup.idx_optpars);
+
+    upper = abs(cell2mat(setup.optpars_0)) * 0.5;
+    initial = abs(cell2mat(setup.optpars_0));
+    lower = abs(cell2mat(setup.optpars_0)) * 10;
+    keys_pars = setup.pars.keys;
+    
+    names = keys_pars(setup.idx_optpars);
+    custom_plot('optim-boundries', {upper, initial, lower, abs(bestX), names});
+
+
+    % ========== PCA VISUALIZATION OF PARAMETER SPACE ==========
+    % PCA analysis of parameter space with J value coloring
+    if size(param_space, 2) > 1 && size(param_space, 1) > 1
+    fprintf('\nPerforming PCA analysis of parameter space...\n');
+    
+    % Transpose param_space so each row is an observation (solution)
+    
+    param_space = param_space(:, J_space < 0);
+    J_space = J_space(J_space < 0);
+    param_data = param_space';
+    
+    
+    % Standardize the data (center and scale)
+    param_centered = param_data - mean(param_data, 1);
+    param_std = param_centered ./ std(param_centered, 0, 1);
+    
+    % Perform PCA
+    [coeff, score, latent, ~, explained] = pca(param_std);
+    
+    % Find minimum J value and its index
+    [min_J, min_idx] = min(J_space);
+    
+    % Create PCA visualization
+    figure('Name', 'PCA Parameter Space Analysis', 'Position', [100, 100, 1200, 400]);
+    
+    % Subplot 1: PCA scatter plot (2D projection)
+    subplot(1, 3, 1);
+    scatter(score(:, 1), score(:, 2), 50, J_space, 'filled');
+    hold on;
+    % Highlight the minimum
+    scatter(score(min_idx, 1), score(min_idx, 2), 200, 'red', 'filled', 'MarkerEdgeColor', 'black', 'LineWidth', 2);
+    colorbar;
+    colormap(jet);
+    xlabel(sprintf('PC1 (%.1f%% variance)', explained(1)));
+    ylabel(sprintf('PC2 (%.1f%% variance)', explained(2)));
+    title('PCA Parameter Space (colored by J value)');
+    grid on;
+    legend('Solutions', 'Best Solution', 'Location', 'best');
+    
+    % Subplot 2: Explained variance
+    subplot(1, 3, 2);
+    bar(explained(1:min(10, length(explained))));
+    xlabel('Principal Component');
+    ylabel('Explained Variance (%)');
+    title('PCA Explained Variance');
+    grid on;
+    
+    % Subplot 3: Parameter contributions to PC1 and PC2
+    subplot(1, 3, 3);
+    n_params = min(size(coeff, 1), 10); % Show max 10 parameters
+    x_pos = 1:n_params;
+    bar_width = 0.35;
+    
+    bar(x_pos - bar_width/2, coeff(1:n_params, 1), bar_width, 'DisplayName', 'PC1');
+    hold on;
+    bar(x_pos + bar_width/2, coeff(1:n_params, 2), bar_width, 'DisplayName', 'PC2');
+    
+    xlabel('Parameter Index');
+    ylabel('Loading Coefficient');
+    title('Parameter Loadings on PC1 & PC2');
+    legend('Location', 'best');
+    grid on;
+    xticks(x_pos);
+    
+    % Print PCA summary
+    fprintf('PCA Summary:\n');
+    fprintf('- Total variance explained by PC1-PC2: %.1f%%\n', sum(explained(1:2)));
+    fprintf('- Minimum J value: %.6g at solution %d\n', min_J, min_idx);
+    fprintf('- PC1 coordinates of best solution: %.3f\n', score(min_idx, 1));
+    fprintf('- PC2 coordinates of best solution: %.3f\n', score(min_idx, 2));
+    end
+    
+
 
 
 
@@ -131,11 +219,13 @@ elseif strcmp(type_of_solver, 'pattern_search')
         ub = cell2mat(upper_boundries(setup.idx_optpars)); % Upper boundaries
         % Initial guesses for the optimization
         %num_start_points = 4; % Number of starting points
-        initial_point = cell2mat(setup.optpars_0) + rand(1, length(setup.optpars_0)) * 0.01; % Add small random perturbations
+        initial_point = cell2mat(setup.optpars_0) .* (1 + rand(1, length(setup.optpars_0)) * 0.5); % Add small random perturbations
         initial_point = max(lb, min(ub, initial_point));
         disp(sprintf('SEED: %s', mat2str(initial_point, 2)));
         %Folder to store results in case of a crush
         objFunParams.initial_point = initial_point;
+        objFunParams.lb = cell2mat(lower_boundries);
+        objFunParams.ub = cell2mat(upper_boundries);
 
         objFun = @(args) obj_fun(args, objFunParams);
 
@@ -192,7 +282,14 @@ elseif strcmp(type_of_solver, 'pattern_search')
         % save(setup.fitting_filename, 'updated_pars', 'fval');    
 
  
-    elseif strcmp(type_of_solver, 'surrogate')
+    
+    
+    elseif strcmp(type_of_solver, 'particle_swarm')
+        
+        % Para PSO: UseParallel = true es MÁS efectivo que múltiples puntos
+        lower_boundries = setup.lb;
+        upper_boundries = setup.ub;
+        
         objFunParams.texp_list =  setup.texp_list;
         objFunParams.yexp_list = setup.yexp_list;
         objFunParams.dt = setup.dt;
@@ -202,49 +299,201 @@ elseif strcmp(type_of_solver, 'pattern_search')
         objFunParams.idx_optpars = setup.idx_optpars;
         objFunParams.percentages = setup.percentages;
         objFunParams.simulation_time_list =  setup.simulation_time_list;       
-        
-        
-        objFun = @(args) obj_fun(args, objFunParams);
-
-        lower_boundries = setup.lb;
-        upper_boundries = setup.ub;
+        objFunParams.lb = lower_boundries;
+        objFunParams.ub = upper_boundries;   
+        objFunParams.xnames_fitting = setup.xnames_fitting;
 
         % Bounds for the optimization
-        lb = lower_boundries(setup.idx_optpars); % Lower boundaries
-        ub = upper_boundries(setup.idx_optpars); % Upper boundaries
+        lb = cell2mat(lower_boundries(setup.idx_optpars)); 
+        ub = cell2mat(upper_boundries(setup.idx_optpars)); 
+        initial_point = cell2mat(setup.optpars_0); % Add small random perturbations
+        objFunParams.initial_point = initial_point;
+        objFunParams.lb = cell2mat(lower_boundries);
+        objFunParams.ub = cell2mat(upper_boundries);
+        objFun = @(args) obj_fun(args, objFunParams);
 
-        % Initial guesses for the optimization
-        %num_start_points = 4; % Number of starting points
-        %initial_point = setup.optpars_0' + rand(1, length(setup.optpars_0)) * 0.01; % Add small random perturbations
-
-        % Check if surrogateopt exists (R2016a+)
-        if exist('surrogateopt', 'file') == 2
-            options = optimoptions('surrogateopt', ...
-           'MaxFunctionEvaluations', 40, ...      % total expensive evals allowed
-           'UseParallel', false, ...               % use parpool if available     
-           'Display', 'iter');                    % show progress in Command Window
-
-            [x, fval, exitflag, output] = surrogateopt(objFun, lb, ub, options);
-        else
-            % Fallback to pattern search if surrogateopt not available
-            warning('surrogateopt not available in this MATLAB version. Using patternsearch instead.');
-            options = optimoptions('patternsearch', ...
-                'MaxFunctionEvaluations', 40, ...
-                'UseParallel', false, ...
-                'Display', 'iter');
+        
+       
+            % Setup parallel pool ANTES de configurar PSO
+            %pool_success = setupParallelPool();
             
-            initial_point = lb + (ub - lb) .* rand(size(lb));
-            [x, fval, exitflag, output] = patternsearch(objFun, initial_point, [], [], [], [], lb, ub, options);
+            % Configurar tamaño de swarm basado en dimensiones y workers
+            nvars = length(lb);
+            %if pool_success
+            %    num_workers = gcp().NumWorkers;
+                % Hacer swarm múltiplo del número de workers para eficiencia
+             %   swarm_size = 20;%max(20, ceil(4*nvars/num_workers)*num_workers);
+               % use_parallel = true;
+               % fprintf('Using parallel PSO with %d workers, swarm size: %d\n', num_workers, swarm_size);
+            %else
+                swarm_size = 4;%max(10, 4*nvars);
+                use_parallel = false;
+                fprintf('Using serial PSO, swarm size: %d\n', swarm_size);
+            %end
+            
+            % Initialize logging
+            logStruct.iteration = [];
+            logStruct.bestfval = [];
+            logStruct.bestx = [];
+            
+            options = optimoptions('particleswarm', ...
+           'MaxIterations', 50, ...               
+           'SwarmSize', swarm_size, ...            
+           'FunctionTolerance', 1e-6, ...          
+           'MaxStallIterations', 20, ...           
+           'UseParallel', use_parallel, ...        % Basado en disponibilidad del pool
+           'OutputFcn', @saving_pso_info, ...      
+           'Display', 'iter');                     
+
+            fprintf('Starting PSO with SEED bounds: [%s] to [%s]\n', ...
+                mat2str(lb, 2), mat2str(ub, 2));
+                
+            [x, fval, exitflag, output] = particleswarm(objFun, nvars, lb, ub, options);
+
+
+        % Save results with logging structure
+        JvsIter = logStruct;
+        save(setup.fitting_filename, 'x', 'fval', 'JvsIter', 'exitflag', 'output'); 
+        
+        % Display results
+        fprintf('Best parameter set found: %s\n', mat2str(x, 4));
+        fprintf('Objective function value: %.6f\n', fval);
+        
+        out_solver = struct('x', x, 'fval', fval, 'JvsIter', logStruct);
+
+    elseif strcmp(type_of_solver, 'particle_swarm_island')
+        
+        
+        
+        is_island_mode = logical(1);
+        if is_island_mode
+            node_id = setup.node_id;
+            total_nodes = 10; % Por defecto 10 nodos
+            if isfield(setup, 'total_nodes')
+                total_nodes = setup.total_nodes;
+            end
+            
+            % Crear directorio para migración
+            migration_base_dir = sprintf('migration_data/p%d', setup.patient_idx);
+            if ~exist(migration_base_dir, 'dir'), mkdir(migration_base_dir); end
+            
+            fprintf('=== ISLAND PSO MODE ===\n');
+            fprintf('Node %d/%d starting...\n', node_id, total_nodes);
+        else
+            fprintf('=== SINGLE NODE PSO MODE ===\n');
+        end
+        
+        % Configuración base del PSO
+        lower_boundries = setup.lb;
+        upper_boundries = setup.ub;
+        
+        objFunParams.texp_list =  setup.texp_list;
+        objFunParams.yexp_list = setup.yexp_list;
+        objFunParams.dt = setup.dt;
+        objFunParams.settling_time =  setup.settling_time;
+        objFunParams.init =  setup.init;
+        objFunParams.pars_list = setup.pars_list;
+        objFunParams.idx_optpars = setup.idx_optpars;
+        objFunParams.percentages = setup.percentages;
+        objFunParams.simulation_time_list =  setup.simulation_time_list;       
+        objFunParams.lb = lower_boundries;
+        objFunParams.ub = upper_boundries;   
+        objFunParams.xnames_fitting = setup.xnames_fitting;
+
+        lb = cell2mat(lower_boundries(setup.idx_optpars)); 
+        ub = cell2mat(upper_boundries(setup.idx_optpars)); 
+        nvars = length(lb);
+        
+        % Configuración del punto inicial
+        initial_point = cell2mat(setup.optpars_0);
+        
+        if is_island_mode
+            % Variación por nodo para diversidad inicial
+            node_variation = 0.2 * (rand(1, length(initial_point)) - 0.5) * mod(node_id, total_nodes)/total_nodes;
+            initial_point = initial_point .* (1 + node_variation);
+            initial_point = max(lb, min(ub, initial_point));
+            
+            % Semilla específica por nodo
+            rng(1000 + mod(node_id,100) * 137);
+            
+            % Parámetros optimizados para island
+            swarm_size = 4; % Menos partículas por nodo
+            max_iterations = 50; % Más iteraciones
+            migration_interval = 6;
+            
+            % Modificar filename para incluir node_id
+            [pathstr, name, ext] = fileparts(setup.fitting_filename);
+            setup.fitting_filename = fullfile(pathstr, sprintf('%s_node_%d%s', name, node_id, ext));
+            
+        else
+            % Configuración normal para nodo único
+            swarm_size = max(10, 4*nvars);
+            max_iterations = 100;
+        end
+        
+        objFunParams.initial_point = initial_point;
+        objFunParams.lb = cell2mat(lower_boundries);
+        objFunParams.ub = cell2mat(upper_boundries);
+        objFun = @(args) obj_fun(args, objFunParams);
+        
+        % Logging structure
+        logStruct.iteration = [];
+        logStruct.bestfval = [];
+        logStruct.bestx = [];
+        if is_island_mode
+            logStruct.node_id = node_id;
+            logStruct.migrations = [];
+        end
+        
+        
+        
+        % Configurar opciones PSO
+        if is_island_mode
+            % Configuración para island model
+            options = optimoptions('particleswarm', ...
+                'MaxIterations', max_iterations, ...
+                'SwarmSize', swarm_size, ...
+                'FunctionTolerance', 1e-6, ...
+                'MaxStallIterations', 15, ...
+                'UseParallel', false, ...
+                'OutputFcn', @adaptive_pso_output, ...
+                'Display', 'iter', ...
+                'SelfAdjustmentWeight', 1.49 + 0.05*randn(), ...
+                'SocialAdjustmentWeight', 1.49 + 0.05*randn(), ...
+                'InertiaRange', [0.1 + 0.02*randn(), 1.1 + 0.05*randn()]);
+        else
+            % Tu configuración original
+            swarm_size = max(10, 4*nvars);
+            use_parallel = false;
+            fprintf('Using serial PSO, swarm size: %d\n', swarm_size);
+            
+            options = optimoptions('particleswarm', ...
+               'MaxIterations', 100, ...               
+               'SwarmSize', swarm_size, ...            
+               'FunctionTolerance', 1e-6, ...          
+               'MaxStallIterations', 20, ...           
+               'UseParallel', use_parallel, ...        
+               'OutputFcn', @adaptive_pso_output, ...      
+               'Display', 'iter');
         end
 
-        % Display results
-        disp('Best parameter set found:');
-        disp(x);
-        disp('Objective function value:');
-        disp(fval);
-        
-        save(setup.fitting_filename, 'x', 'fval'); 
+        fprintf('Starting PSO with bounds: [%s] to [%s]\n', ...
+            mat2str(lb, 2), mat2str(ub, 2));
+        if is_island_mode
+            fprintf('Swarm size: %d, Migration every %d iterations\n', swarm_size, migration_interval);
+        end
+            
+        [x, fval, exitflag, output] = particleswarm(objFun, nvars, lb, ub, options);
 
+        % Guardar resultados
+        JvsIter = logStruct;
+        save(setup.fitting_filename, 'x', 'fval', 'JvsIter', 'exitflag', 'output'); 
+        
+        fprintf('Best parameter set found: %s\n', mat2str(x, 4));
+        fprintf('Objective function value: %.6f\n', fval);
+        
+        out_solver = struct('x', x, 'fval', fval, 'JvsIter', logStruct);
+    
     elseif strcmp(type_of_solver, 'local_solver')
         % %Testing fitting with local solvers
         options = optimset('fmincon');
@@ -273,6 +522,102 @@ elseif strcmp(type_of_solver, 'pattern_search')
         
         %pars(idx_optpars) = optpars;
         %save(filename, 'pars');
+    elseif strcmp(type_of_solver, 'surrogate')
+    % Initialize logging structure for surrogate optimization
+    logStruct.iteration = [];
+    logStruct.bestfval = [];
+    logStruct.bestx = [];
+    
+    lower_boundries = setup.lb;
+    upper_boundries = setup.ub;
+    
+    objFunParams.texp_list = setup.texp_list;
+    objFunParams.yexp_list = setup.yexp_list;
+    objFunParams.dt = setup.dt;
+    objFunParams.settling_time = setup.settling_time;
+    objFunParams.init = setup.init;
+    objFunParams.pars_list = setup.pars_list;
+    objFunParams.idx_optpars = setup.idx_optpars;
+    objFunParams.percentages = setup.percentages;
+    objFunParams.simulation_time_list = setup.simulation_time_list;       
+    objFunParams.lb = lower_boundries;
+    objFunParams.ub = upper_boundries;   
+    objFunParams.xnames_fitting = setup.xnames_fitting;
+    
+    % Bounds for the optimization
+    lb = cell2mat(lower_boundries(setup.idx_optpars)); % Lower boundaries
+    ub = cell2mat(upper_boundries(setup.idx_optpars)); % Upper boundaries
+    
+    % Initial point for reference (opcional para puntos iniciales)
+    initial_point = cell2mat(setup.optpars_0) + rand(1, length(setup.optpars_0)) * 0.01;
+    initial_point = max(lb, min(ub, initial_point));
+    disp(sprintf('SEED: %s', mat2str(initial_point, 2)));
+    
+    objFunParams.initial_point = initial_point;
+    objFunParams.lb = cell2mat(lower_boundries);
+    objFunParams.ub = cell2mat(upper_boundries);
+
+    objFun = @(args) obj_fun(args, objFunParams);
+
+    % Configurar opciones para custom_surrogateopt
+    options_custom = struct();    
+    options_custom.MinSampleDistance = 1e-6;
+    options_custom.MinSurrogatePoints = max(10, length(lb) + 1);
+    options_custom.MaxFunctionEvaluations = 20 * options_custom.MinSurrogatePoints;
+    options_custom.Display = 'iter';
+    options_custom.FunctionTolerance = 1e-6;
+    options_custom.MaxStallIterations = 20;
+    
+    % Función de output personalizada para logging
+    options_custom.OutputFcn = @saving_custom_surrogate_info;
+    
+    % Usar puntos iniciales si se desean (opcional)
+    if isfield(setup, 'initial_points') && ~isempty(setup.initial_points)
+        options_custom.InitialPoints = setup.initial_points;
+    else
+        % Generar algunos puntos iniciales incluyendo el punto de referencia
+        n_initial = options_custom.MinSurrogatePoints;
+        initial_points = zeros(n_initial, length(lb));
+        
+        % Primer punto: el punto de referencia
+        initial_points(1, :) = initial_point;
+        
+        % Resto de puntos: aleatorios dentro de los bounds
+        for i = 2:n_initial
+            initial_points(i, :) = lb + rand(1, length(lb)) .* (ub - lb);
+        end
+        
+        options_custom.InitialPoints = initial_points;
+    end
+
+    % Ejecutar custom_surrogateopt
+    fprintf('Running custom surrogate optimization...\n');
+    [x, fval, exitflag, output, log_custom] = custom_surrogateopt(objFun, lb, ub, options_custom);
+
+    % Combinar logging structures (tu logging + el del algoritmo)
+    JvsIter = logStruct;
+    if ~isempty(log_custom) && isfield(log_custom, 'bestfval')
+        % Usar datos del algoritmo si están disponibles
+        JvsIter.iteration = log_custom.iteration;
+        JvsIter.bestfval = log_custom.bestfval;
+        JvsIter.bestx = log_custom.bestx;
+        JvsIter.fval_history = log_custom.fval_history;
+    end
+    
+    % Guardar resultados
+    save(setup.fitting_filename, 'x', 'fval', 'JvsIter', 'exitflag', 'output', 'log_custom'); 
+    
+    % Mostrar resultados
+    fprintf('\n=== CUSTOM SURROGATE OPTIMIZATION RESULTS ===\n');
+    fprintf('Best parameter set found: %s\n', mat2str(x, 4));
+    fprintf('Objective function value: %.6f\n', fval);
+    fprintf('Function evaluations: %d\n', output.funcCount);
+    fprintf('Iterations: %d\n', output.iterations);
+    fprintf('Exit flag: %d\n', exitflag);
+    fprintf('Algorithm: %s\n', output.algorithm);
+    fprintf('==============================================\n');
+    
+    out_solver = struct('x', x, 'fval', fval, 'JvsIter', JvsIter, 'exitflag', exitflag, 'output', output);
 
 
     elseif strcmp(type_of_solver, 'multistart')
@@ -433,6 +778,128 @@ elseif strcmp(type_of_solver, 'pattern_search')
             mkdir(folderName);
         end
     end
+
+% Crear función de output personalizada para migración
+    % Función de output adaptativa
+    function [stop, options, optchanged] = saving_custom_surrogate_info(optimValues, options, state)
+    stop = false;
+    optchanged = false;
+    
+    switch state
+        case 'init'
+            logStruct.iteration = [];
+            logStruct.bestfval = [];
+            logStruct.bestx = [];
+            fprintf('Custom surrogate optimization initialized\n');
+            
+        case 'iter'
+            logStruct.iteration(end+1) = optimValues.iteration;
+            logStruct.bestfval(end+1) = optimValues.fval;
+            logStruct.bestx(:,end+1) = optimValues.x(:);
+            
+            fprintf('Custom Surrogate - Iter %d | fval = %.6f | FuncCount = %d\n', ...
+                optimValues.iteration, optimValues.fval, optimValues.funccount);
+            
+        case 'done'
+            fprintf('Custom surrogate optimization completed\n');
+    end
+    end
+        function stop = adaptive_pso_output(optimValues, state)
+            stop = false;
+            
+            switch state
+                case 'init'
+                    if is_island_mode
+                        fprintf('Node %d: Initializing Island PSO\n', node_id);
+                    end
+                    
+                case 'iter'
+                    % Log básico
+                    logStruct.iteration(end+1) = optimValues.iteration;
+                    logStruct.bestfval(end+1) = optimValues.bestfval;
+                    logStruct.bestx(:,end+1) = optimValues.bestx;
+                    
+                    if is_island_mode
+                        fprintf('Node %d | Iter %d | Best fval = %.6f\n', ...
+                            node_id, optimValues.iteration, optimValues.bestfval);
+                        
+                        % Checkpoint cada 5 iteraciones
+                        if mod(optimValues.iteration, 5) == 0
+                            checkpoint_file = sprintf('%s/checkpoint_node_%d_iter_%d.mat', ...
+                            migration_base_dir, node_id, optimValues.iteration);                             
+                            save(checkpoint_file, 'optimValues', 'logStruct');
+                        end
+                        
+                        % Migración periódica
+                        if mod(optimValues.iteration, migration_interval) == 0 && optimValues.iteration > 0
+                            perform_migration(optimValues, node_id, total_nodes);
+                        end
+                    else
+                        fprintf('Iter %d | fval = %.6f\n', ...
+                            optimValues.iteration, optimValues.bestfval);
+                    end
+                    
+                case 'done'
+                    if is_island_mode
+                        fprintf('Node %d: Optimization completed\n', node_id);
+                        % Guardar resultado final del nodo
+                        final_file = sprintf('%s/final_node_%d.mat', migration_base_dir, node_id);
+                        save(final_file, 'optimValues', 'logStruct');
+                    else
+                        fprintf('PSO optimization complete.\n');
+                    end
+            end
+        end
+    function perform_migration(optimValues, node_id, total_nodes)
+        try
+            % Guardar estado actual de este nodo
+            migration_file = sprintf('%s/node_%d_migration.mat', migration_base_dir, node_id);
+            migration_data = struct();
+            migration_data.bestx = optimValues.bestx;
+            migration_data.bestfval = optimValues.bestfval;
+            migration_data.iteration = optimValues.iteration;
+            migration_data.timestamp = now;
+            migration_data.node_id = node_id;
+            
+            save(migration_file, 'migration_data');
+            
+            % Leer datos de otros nodos
+            other_nodes_data = [];
+            for other_node = 1:total_nodes
+                if other_node ~= node_id
+                    other_file = sprintf('migration_data/node_%d_migration.mat', other_node);
+                    if exist(other_file, 'file')
+                        try
+                            other_data = load(other_file);
+                            % Solo datos recientes (últimas 3 horas)
+                            time_diff = abs(now - other_data.migration_data.timestamp);
+                            if time_diff < 0.125
+                                other_nodes_data = [other_nodes_data; other_data.migration_data];
+                            end
+                        catch
+                            % Ignorar archivos corruptos
+                        end
+                    end
+                end
+            end
+            
+            % Log de migración
+            if ~isempty(other_nodes_data)
+                logStruct.migrations(end+1) = optimValues.iteration;
+                [best_external_fval, ~] = min([other_nodes_data.bestfval]);
+                
+                fprintf('Node %d | Migration: Found %d other nodes | Best external: %.6f\n', ...
+                    node_id, length(other_nodes_data), best_external_fval);
+            else
+                fprintf('Node %d | Migration: No other nodes found yet\n', node_id);
+            end
+            
+        catch ME
+            fprintf('Node %d | Migration error: %s\n', node_id, ME.message);
+        end
+    end
+
+
     
     function [stop, optnew, changed] = saveResultsOutputFcn(optimValues, optold, flag, folderName)
         stop = false;  % Ensure optimization continues

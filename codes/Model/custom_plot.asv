@@ -14,13 +14,6 @@ function custom_plot(type_of_plot, custom_args)
     % vars_to_show = {" ", " "};
     % plot_vars(t, struct_vars, vars_to_show, units_table);
     % figure;
- elseif strcmp(type_of_plot, 'optim-boundries')
-     lower_bounds = custom_args{1};
-     initial_values = custom_args{2};
-     upper_bounds = custom_args{3};
-     final_values = custom_args{4};
-     names = custom_args{5};
-     boundary_saturation_table(lower_bounds, initial_values, upper_bounds, final_values, names);
  elseif strcmp(type_of_plot, 'sim_vs_exp')
     %figure;  
     t_sim = custom_args{1};
@@ -234,19 +227,18 @@ function plot_simulated_vs_experimental(t_sim, t_exp, X_sim, X_exp, Xnames, Xuni
         grid on; % Add grid for better visualization
     end
     
-    
-    % for i = 1:size(x_sim, 2)
-    %     subplot(width, height, i);
-    %     hold on;
-    %     % Manual yyaxis implementation for MATLAB 2017
-    %     ax1 = gca;
-    %     ax2 = axes('Position', get(ax1, 'Position'), 'Color', 'none', ...
-    %                'YAxisLocation', 'right', 'XTick', [], 'Box', 'off');
-    %     axes(ax2);
-    %     plot(t_exp, Power, 'Color', [0.5 0.5 0.5]);
-    %     set(ax2, 'YColor', [0.5 0.5 0.5]);
-    %     axes(ax1); % Return to original axis
-    % end
+    for i = 1:size(x_sim, 2)
+        subplot(width, height, i);
+        hold on;
+        % Manual yyaxis implementation for MATLAB 2017
+        
+        ax2 = axes('Position', get(ax1, 'Position'), 'Color', 'none', ...
+                   'YAxisLocation', 'right', 'XTick', [], 'Box', 'off');
+        axes(ax2);
+        plot(t_exp, Power, 'Color', [0.5 0.5 0.5]);
+        set(ax2, 'YColor', [0.5 0.5 0.5]);
+        axes(ax1); % Return to original axis
+    end
 
     
     % Adjust the layout to prevent overlap
@@ -422,91 +414,6 @@ function show_interest_variables(t, struct_vars, units_table)
     
 
 end
-
-    function boundary_saturation_table(lower_bounds, initial_values, upper_bounds, final_values, param_names)
-% BOUNDARY_SATURATION_TABLE - Genera tabla con análisis de saturación
-% Entradas:
-%   lower_bounds - vector con límites inferiores
-%   initial_values - vector con valores iniciales  
-%   upper_bounds - vector con límites superiores
-%   final_values - vector con valores finales
-%   param_names - (opcional) cell array o string array con nombres de parámetros
-
-% Datos de ejemplo si no se proporcionan entradas
-if nargin < 4
-    lower_bounds = [8.7000 22.5000 0.5687 0.1998 0.0515 0.2000 23.8900 0.0650 3.5300 10.0000];
-    initial_values = [17.4000 45.0000 1.1375 0.3997 0.1030 0.4000 47.7800 0.1300 7.0600 20.0000];
-    upper_bounds = [174.0000 450.0000 11.3750 3.9970 1.0300 4.0000 477.8000 1.3000 70.6000 200.0000];
-    final_values = [15.6313 450.0000 3.4914 0.1998 0.0515 3.9075 477.8000 0.3145 66.8010 199.9710];
-    param_names = {'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'kappa', 'lambda'};
-end
-
-n_params = length(lower_bounds);
-
-% Crear nombres de parámetros si no se proporcionan
-if nargin < 5 || isempty(param_names)
-    param_names = arrayfun(@(x) sprintf('P%d', x), 1:n_params, 'UniformOutput', false);
-else
-    % Convertir a cell array si es necesario
-    if ischar(param_names) || isstring(param_names)
-        param_names = cellstr(param_names);
-    end
-    % Verificar que el tamaño coincida
-    if length(param_names) ~= n_params
-        warning('El número de nombres de parámetros no coincide con el número de parámetros. Usando nombres por defecto.');
-        param_names = arrayfun(@(x) sprintf('P%d', x), 1:n_params, 'UniformOutput', false);
-    end
-end
-
-% Detectar saturación (tolerancia ajustable)
-tolerance = 1e-6;
-saturated_lower = abs(final_values - lower_bounds) <= tolerance;
-saturated_upper = abs(final_values - upper_bounds) <= tolerance;
-
-% Crear estado de saturación
-saturation_status = cell(n_params, 1);
-saturation_status(~saturated_lower & ~saturated_upper) = {'OK'};
-saturation_status(saturated_lower) = {'SATURADO_INFERIOR'};
-saturation_status(saturated_upper) = {'SATURADO_SUPERIOR'};
-
-% Crear la tabla
-T = table(param_names', lower_bounds', initial_values', upper_bounds', final_values', saturation_status, ...
-          'VariableNames', {'Parametro', 'Limite_Inferior', 'Valor_Inicial', 'Limite_Superior', 'Valor_Final', 'Estado'});
-
-% Mostrar la tabla
-disp(' ');
-disp('=============== ANÁLISIS DE SATURACIÓN DE PARÁMETROS ===============');
-disp(T);
-
-% Mostrar resumen estadístico
-fprintf('\n==================== RESUMEN ====================\n');
-fprintf('Total de parámetros: %d\n', n_params);
-fprintf('Parámetros OK: %d\n', sum(~saturated_lower & ~saturated_upper));
-fprintf('Saturados en límite inferior: %d\n', sum(saturated_lower));
-fprintf('Saturados en límite superior: %d\n', sum(saturated_upper));
-
-if sum(saturated_lower) > 0
-    fprintf('\nParámetros saturados en límite INFERIOR:\n');
-    sat_lower_indices = find(saturated_lower);
-    for i = 1:length(sat_lower_indices)
-        idx = sat_lower_indices(i);
-        fprintf('  %s: %.6f (límite: %.6f)\n', param_names{idx}, final_values(idx), lower_bounds(idx));
-    end
-end
-
-if sum(saturated_upper) > 0
-    fprintf('\nParámetros saturados en límite SUPERIOR:\n');
-    sat_upper_indices = find(saturated_upper);
-    for i = 1:length(sat_upper_indices)
-        idx = sat_upper_indices(i);
-        fprintf('  %s: %.6f (límite: %.6f)\n', param_names{idx}, final_values(idx), upper_bounds(idx));
-    end
-end
-
-fprintf('=====================================================\n');
-
-end
-
 
 function unit = find_unit(table, var)
     if iscell(var)

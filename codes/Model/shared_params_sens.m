@@ -6,21 +6,36 @@ vectorize_dicts("run_ode.m", "model_basic.m", "run_ode_vec_hipoxia.m", "model_ve
 sensMatrices = {};
 cnt = 0;
 patients = [1,4,5,6];
+window_name = ["normoxia", "hipoxia"];
+ 
 for i = 1:length(patients)
+    sens_matrix = 0;
+    for j = 1:length(window_name)   
+        weight = 0.33;
+        mode = "loading"; %"loading"        
+        setup = set_up("sens", patients(i), "hipoxia", "mix");
+        basePath = sprintf('../Sens_analysis/%d/%s/', patients(i), window_name(j));
+        latestFullPath = getLatestFittingDateStr(basePath);
+        setup.sensitivity_load_filename = latestFullPath;
+        LSA_output = sens_functions(mode, "-", setup);
+        sens_matrix_ = LSA_output{1};
+        pars_to_sens = LSA_output{2}; 
+        if window_name(j) == "normoxia"
+            sens_matrix_ = mapping_2017_to_2025_pars_indexes(pars_to_sens, sens_matrix_);
+            sens_matrix_ = weight * sens_matrix_;
+        else
+            sens_matrix_ = (1 - weight)/(length(window_name) - 1) * sens_matrix_;
+        end
+        sens_matrix = sens_matrix_  + sens_matrix;
     
+    end
     
-    mode = "loading"; %"loading"
 
-    setup = set_up("sens", patients(i), "hipoxia", "mix");
-    basePath = sprintf('../Sens_analysis/%d/', patients(i));
-    latestFullPath = getLatestFittingDateStr(basePath);
-    setup.sensitivity_load_filename = latestFullPath;
-    LSA_output = sens_functions(mode, "-", setup);
-    sens_matrix = LSA_output{1};
-    pars_to_sens = LSA_output{2}; 
-
+    %sens_matrix(:,1:6) = 0;
     sensMatrices{i} = sens_matrix;
 end
+
+
 
 sens_matrix = simple_merge_S(sensMatrices);
 subplot(2,2,1);
@@ -29,7 +44,7 @@ title("A");
 hold on;
 
 % % Apply sensitivity threshold
-sens_threshold = 0.33;
+sens_threshold = 0.4; %0.1;
 idx_variable_of_interest = [1:numel(setup.variables_of_interest)];
 setup.idx_variable_of_interest = idx_variable_of_interest;
 setup.sens_threshold = sens_threshold;
@@ -58,7 +73,7 @@ hold on;
 % % 
 ident_args.sens_matrix = sens_matrix_filtered; %sens_reduced; %sens_matrix_filtered;
 ident_args.pars_list = pars_to_sens_filtered; %pars_to_sens_reduced; %pars_to_sens_filtered;
-ident_args.corr_threshold = 0.8; % Set the correlation threshold for the analysis
+ident_args.corr_threshold = 0.85; % Set the correlation threshold for the analysis
 IDENT_output = ident_functions("compute-corr", "-", ident_args);
 subplot(2,2,4);
 custom_plot("ident-plot", IDENT_output);
@@ -199,4 +214,23 @@ function [sharedParamIndices, sensMatricesOut] = selectSharedSensitiveParamIndic
         sensMatricesOut{i} = S(sharedParamIndices, :);
     end
 
+end
+
+function [sens_matrix_to_2025] = mapping_2017_to_2025_pars_indexes(pars2sens2017, sens_matrix2017)
+    [pars25, init, taus] = load_global_easy_2025();
+    pars_keys25 = pars25.keys;
+    pars_not_to_sens25 = load_pars_not_to_sens_2025();
+    pars_free2move25 = setdiff(pars_keys25, pars_not_to_sens25);
+
+    sens_matrix_to_2025 = zeros(size(pars_free2move25,1),size(sens_matrix2017,2)); 
+
+    for par_index = 1:size(sens_matrix2017,1)
+        par_string_on_index2017 = pars2sens2017(par_index);
+        index_of_that_par_in2025 = find(pars_free2move25 == par_string_on_index2017);
+        try
+            sens_matrix_to_2025(index_of_that_par_in2025, :) = sens_matrix2017(par_index, :);  
+        catch
+            disp('no existence!')
+        end
+    end
 end

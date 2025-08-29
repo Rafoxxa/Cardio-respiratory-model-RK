@@ -1,4 +1,8 @@
-function setup = parallel_fitting(patient_idx, solver_option, date)
+function setup = parallel_fitting(idx, solver_option, date)
+
+    if ischar(idx)
+        idx = str2double(idx);
+    end
     if nargin > 2
         if strcmp(solver_option, 'find-best-solution')
             pars_from_fitting = 0;
@@ -19,6 +23,10 @@ function setup = parallel_fitting(patient_idx, solver_option, date)
         fitting_mat_file = '';
         pars_from_fitting = 0; % Default value if not specified
     end
+    
+    patient_array = [1,4,5,6];
+    patient_idx = patient_array(idx);
+    
  
     
     %
@@ -28,8 +36,8 @@ function setup = parallel_fitting(patient_idx, solver_option, date)
     % Setting up
     vectorize_dicts('run_ode.m', 'model_basic.m', 'run_ode_vec_hipoxia.m', 'model_vec_hipoxia.m');    
     %patient_idx = 5;
-    setup_out_normoxia = set_up('fitting', patient_idx, 'normoxia', '-', 'requestedDate', requestedDate, 'fitting_mat_file', fitting_mat_file, 'pars_from_fitting', pars_from_fitting, 'simulation_time', 500);
-    setup_out_hipoxia = set_up('fitting', patient_idx, 'hipoxia', 'mix', 'requestedDate', requestedDate, 'fitting_mat_file', fitting_mat_file, 'pars_from_fitting', pars_from_fitting, 'simulation_time', 500);         
+    setup_out_normoxia = set_up('fitting', patient_idx, 'normoxia', '-', 'requestedDate', requestedDate, 'fitting_mat_file', fitting_mat_file, 'pars_from_fitting', pars_from_fitting, 'type_of_optim', solver_option, 'simulation_time', 100);
+    setup_out_hipoxia = set_up('fitting', patient_idx, 'hipoxia', 'mix', 'requestedDate', requestedDate, 'fitting_mat_file', fitting_mat_file, 'pars_from_fitting', pars_from_fitting, 'type_of_optim', solver_option, 'simulation_time', 100);          
     setup = setup_out_normoxia;
 
     setup.texp_list = {setup_out_normoxia.texp, setup_out_hipoxia.texp};

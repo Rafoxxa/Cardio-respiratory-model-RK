@@ -7,10 +7,10 @@ mode = 'saving'; %'loading'
 %mode = 'saving';
 %mode = 'p-space';
 %setup = set_up('sens', 1, 'hipoxia', 'mix', 'requestedDate', '28-04-2025');
-%setup_n = set_up('sens', patient_idx, 'normoxia', '.');
-setup_h = set_up('sens', patient_idx, 'hipoxia', 'mix');
-%setup = {setup_n, setup_h};
-setup = setup_h;
+setup_n = set_up('sens', patient_idx, 'normoxia', '.', 'simulation_time', 100);
+setup_h = set_up('sens', patient_idx, 'hipoxia', 'mix', 'simulation_time', 100);
+setup = {setup_n, setup_h};
+%setup = setup_h;
 
 %setup = setup_h;
 
@@ -25,7 +25,7 @@ end
 LSA_output = sens_functions(mode, '-', setup);
 if strcmp(mode, 'saving')
     sens_matrix = LSA_output{1};
-    pars_to_sens = LSA_output{5};
+    pars_to_sens = LSA_output{2};
     %sensitivities = LSA_output{2};
     %error = LSA_output{3};
     %perturbed = LSA_output{4};

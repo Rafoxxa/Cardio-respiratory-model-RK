@@ -106,6 +106,8 @@ function [C_final, par_list_final, best_param_idx] = apply_threshold(corr_matrix
         over_thresh = abs(C_final) > thresh;
         over_thresh(logical(eye(size(C_final)))) = false;
     end
-    end
+end
+
+
     
 end

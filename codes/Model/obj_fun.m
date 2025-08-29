@@ -33,7 +33,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
     end
    %[t, x_dot, x_vars, x_keys, index] = run_ode_fun(model, pars, init, taus, simulation_time, dt, control_on);
    %isp("fin");
-     %try
+     try
         if length(pars_list) < 2
             J = compute_J(texp, yexp, model, pars, init, simulation_time, dt);
         elseif length(pars_list) == 2
@@ -58,7 +58,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
 
           
         end      
-    %catch ME
+    catch ME
         J = 10^10;
         logJ = log(J);
         disp(sprintf('EVAL INCOMPLETED | Error: %s | J: %.4f', ME.message, J));
@@ -66,7 +66,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
         %disp(ME.message);
         %disp(ME.identifier);
         %disp(ME.stack(1));
-    %end
+    end
 
     function Jp = compute_J(texp, yexp, model, pars, init, simulation_time, dt )
         
@@ -84,14 +84,15 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
         [~, sim_vars_crop, ~, exp_vars_crop, finapres_notnan_mask_crop, on_exercise_mask_crop] = adjust_sizes(time_sim, time_exp, sim_vars, exp_vars, finapres_notnan_mask, on_exercise_mask);
 
         %% Residuals
-   
+
         R_all = ((exp_vars_crop - sim_vars_crop).^2)./(eps + exp_vars_crop).^2; %the normalization is related to the experimental variable
         
         %exercise weight over rest weight
         ex_rest_weight_ratio = 5;  %5 is the maximum value, 2 is too low
         R_all = R_all .* on_exercise_mask_crop * ex_rest_weight_ratio + R_all .* (1 - on_exercise_mask_crop); 
         %remove "nan" values
-       
+        
+        
         R_all(7,:)  = R_all(7,:)  .* finapres_notnan_mask_crop; 
         R_all(8,:)  = R_all(8,:)  .* finapres_notnan_mask_crop; 
         R_all(9,:)  = R_all(9,:)  .* finapres_notnan_mask_crop;
@@ -104,7 +105,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
         plot_in_console(sum_only_for_plotting, 100, on_exercise_mask_crop); %just testing
 
         sum_without_nan_vars = sum(R_all(1:6,:),2)/sz_time;
-        sum_with_nan_vars = sum(R_all(7:10,:),2)/(sz_time - nan_values);
+        sum_with_nan_vars = sum(R_all(7:10,:),2)/(sz_time - nan_values + eps);
         sum_along_time = [sum_without_nan_vars; sum_with_nan_vars];
 
 
