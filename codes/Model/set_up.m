@@ -1,5 +1,24 @@
+% set_up.m
+% Prepara y devuelve una estructura 'setup_out' con todos los parámetros y
+% configuraciones necesarias para ejecutar el modelo y la simulación.
+% Entradas:
+%  - case_of_use: cadena que indica el propósito ('simulation', 'fitting', etc.)
+%  - patient_idx: índice del paciente (entero)
+%  - hipoxia_state: 'normoxia'|'hipoxia'
+%  - ascend_state: describe el tipo de subida ('ascend','exercise','mix', ...)
+%  - varargin: parámetros opcionales pasados mediante name-value pairs
+% Salida:
+%  - setup_out: estructura con funciones, parámetros, condiciones iniciales,
+%    nombres de archivos y otros metadatos necesarios.
+
 function [setup_out] = ...
     set_up(case_of_use, patient_idx, hipoxia_state, ascend_state, varargin)
+
+      % ---------------------------------------------------------------------
+    % 1) Valores por defecto: variables internas y parámetros "hard-coded"
+    %    Se definen valores por defecto que pueden ser sobrescritos por
+    %    argumentos en varargin (mediante inputParser más abajo).
+    % ---------------------------------------------------------------------
 
     model             = 'model';
     run_ode_fun       = 'run_ode_fun';
@@ -37,6 +56,13 @@ function [setup_out] = ...
     param_index_sens = 1;
     load_rb = 0;
     estimated_newton = 1;
+
+     
+    % ---------------------------------------------------------------------
+    % 2) Ajustes específicos según el use-case (case_of_use)
+    %    Aquí se cambian dt, settling_time, simulation_folder y otros
+    %    parámetros en función de la finalidad (simulación, fitting, sens, ...).
+    % ---------------------------------------------------------------------
     
     
 
@@ -81,6 +107,11 @@ function [setup_out] = ...
         
     end
 
+     % ---------------------------------------------------------------------
+    % 3) Ajustes según hipoxia_state y ascend_state
+    %    Determinan el tipo de entrada y duración de la simulación.
+    % ---------------------------------------------------------------------
+
     if strcmp(hipoxia_state, 'normoxia') && ~strcmp(case_of_use, 'fiO2_ladder') %&& ~strcmp(case_of_use, 'sens')
         type_of_input = 6;
         simulation_time = 1200;%1200;
@@ -97,6 +128,11 @@ function [setup_out] = ...
         
 
     end
+
+    % ---------------------------------------------------------------------
+    % 4) Construcción de la estructura 'defaults' usada por inputParser
+    %    Reúne los valores por defecto que se pueden sobrescribir.
+    % ---------------------------------------------------------------------
     
     defaults.model             = model;
     defaults.run_ode_fun       = run_ode_fun;
@@ -133,7 +169,9 @@ function [setup_out] = ...
     defaults.load_rb = load_rb;
     defaults.estimated_newton = estimated_newton;
 
-    
+     % ---------------------------------------------------------------------
+    % 5) inputParser: permite pasar parámetros opcionales vía name-value pairs
+    % ---------------------------------------------------------------------  
 
     % Create input parser
     p = inputParser;
@@ -179,6 +217,10 @@ function [setup_out] = ...
     parse(p, varargin{:});
     opts = p.Results;
 
+        % ---------------------------------------------------------------------
+    % 6) Extraer valores finales (posibles sobrescrituras) desde opts
+    % ---------------------------------------------------------------------
+
     % Extract values
     model             = opts.model;
     run_ode_fun       = opts.run_ode_fun;
@@ -217,13 +259,21 @@ function [setup_out] = ...
     
 
 
-    
-
+    % ---------------------------------------------------------------------
+    % 7) Selección de funciones del modelo (se descargan las versiones vectorizadas)
+    %    Se asignan funciones anónimas que llaman a model_vec_hipoxia y run_ode_vec_hipoxia.
+    % ---------------------------------------------------------------------
 
     %Select model
     model = @(varargin) model_vec_hipoxia(varargin{:});
     run_ode_fun = @(varargin) run_ode_vec_hipoxia(varargin{:});
 
+
+
+    % ---------------------------------------------------------------------
+    % 8) Carga inicial de parámetros, condiciones y constantes (load_global_easy)
+    %    load_global_easy devuelve containers.Map para pars y init, y taus.
+    % ---------------------------------------------------------------------
 
     %Loadings
     [pars, init, taus] = load_global_easy();
@@ -234,10 +284,21 @@ function [setup_out] = ...
     percentages = load('OhmNewton_percentages.mat');
     percentages = percentages.percentages;
     
+    
+    % ---------------------------------------------------------------------
+    % 9) Estimación por método Newton/OHM (opcional)
+    %    estimate_newton_ohm puede modificar algunos parámetros basales.
+    % ---------------------------------------------------------------------
     %Estimation of cardiovascular circuit components
     if estimated_newton
         pars = estimate_newton_ohm(percentages, pars, patient_idx);
     end
+
+    % ---------------------------------------------------------------------
+    % 10) Preparación para análisis de sensibilidad
+    %    Se define qué parámetros están disponibles para sensibilidad, etc.
+    % ---------------------------------------------------------------------
+
     pars_keys = keys(pars);
     %Sensitivity analysis
     pars_not_to_sens = load_pars_not_to_sens();
@@ -254,6 +315,12 @@ function [setup_out] = ...
     variables_of_interest = {'PAO2', 'PACO2', 'pd', 'ps', 'pm', 'Theart', 'TI', 'BF', 'VTidal', 'dVE'};
     idx_variable_of_interest = [1:numel(variables_of_interest)];
 
+    
+    % ---------------------------------------------------------------------
+    % 11) Carga de parámetros ajustados (fitting) si corresponde
+    %    Si pars_from_fitting se activa, carga updated_pars desde archivos .mat
+    %    y sobrescribe valores en 'pars'.
+    % ---------------------------------------------------------------------
     %Load fitting parameters
     updated_pars_old = {};
     optpars_0_old = {};
@@ -261,6 +328,7 @@ function [setup_out] = ...
     if pars_from_fitting
         %disp(patient_idx)
         if strcmp(fitting_mat_file, 'last')
+            % Busca la última carpeta con fitting válido y carga el best.mat
             basePath = sprintf('../Fitting/parsFitted/%d', patient_idx);
             formattedDate = getLatestFittingDateStr(basePath);
             disp(formattedDate);
@@ -282,6 +350,7 @@ function [setup_out] = ...
         %fitting_mat_path = sprintf('../Fitting/parsFitted/%d/%s', patient_idx, fitting_mat_file);
         
         else
+            % Si se provee una lista de fechas/archivos, se itera sobre ellos
             fitting_mat_files = fitting_mat_file;
             for file_idx = 1:length(fitting_mat_files)
                 disp(file_idx);
@@ -309,6 +378,7 @@ function [setup_out] = ...
                 end
                 [lb_old, ub_old] = load_optim_boundries(pars, patient_idx, p2lf);
                 %Small size pars domain for optim solver
+                % Preparar optpars_0 con la subselección de parámetros a optimizar
                 pars_values = pars.values;
                 idx_optpars_old = find(~cellfun(@isequal, ub_old, lb_old));                
                 optpars_0_old{file_idx} = pars_values(idx_optpars_old);  
@@ -342,6 +412,12 @@ function [setup_out] = ...
 
     %read fast data from each pacient
     %if strcmp(hipoxia_state, 'normoxia') || strcmp(hipoxia_state, 'hipoxia')
+
+
+    % ---------------------------------------------------------------------
+    % 12) Carga de datos del paciente y cálculo de condiciones iniciales
+    %    Se lee el archivo preprocesado y se toman valores iniciales promedios.
+    % ---------------------------------------------------------------------
     
     fast_data_filename = sprintf('../fast_data/%d/%s_data_preprocessed.mat', patient_idx, hipoxia_state);
     load(fast_data_filename, 'texp', 'yexp', 'VO2_poly', 'VCO2_poly', 'fO2_poly', 'TI_poly', 'Tresp_poly', 'basal', 'VO2_ladder_points', 'VCO2_ladder_points', 'AT', 'simulation_time_from_data');
@@ -362,7 +438,8 @@ function [setup_out] = ...
     disp(AT);
     %end
     pars('AT') = AT;
-    
+
+    % Guardar metabolismos basales en pars (algunos sobrescritos luego)    
     pars('MRtO2_basal') = basal(1);%0.4;%basal(1); %this is making trouble
     pars('MRtCO2_basal') = basal(2);%0.33;%basal(2); %this is making trouble
     pars('MRO2') = pars('MRtO2_basal');
@@ -374,6 +451,11 @@ function [setup_out] = ...
     %disp('MRtO2_basal:');
     %disp(basal(1));
 
+
+     % ---------------------------------------------------------------------
+    % 13) Guardar polinomios externos en pars si VO2_external habilitado
+    %    Estos coeficientes son usados por la entrada externa del modelo.
+    % ---------------------------------------------------------------------
     %save input coefficients in pars
     if VO2_external
         %[~, ~, VO2_poly, VCO2_poly, fO2_poly] = data_preprocessing(patient_idx, hipoxia_state, ascend_state,0);
@@ -453,6 +535,9 @@ function [setup_out] = ...
     end
 
     %
+      % ---------------------------------------------------------------------
+    % 14) Guardar hiperparámetros en pars (tau, dt, type_of_input, etc.)
+    % ---------------------------------------------------------------------
 
     %save hyperparams in pars
     pars('tau') = taus('tau_gases');
@@ -462,7 +547,13 @@ function [setup_out] = ...
     units_table = readtable('variables_units.xlsx');
     disp('stop');
 
+     % ---------------------------------------------------------------------
+    % 15) Cargar condiciones iniciales pre-calc. y reasignarlas en init
+    %    Lee un fichero .mat con x_vars y struct_vars y actualiza init (containers.Map)
+    % ---------------------------------------------------------------------
+
     %Load initial conditions in init
+
     if ~only_plot
         if strcmp(initial_condition_filename, 'old-classic')
             preloaded_vars = load('../Simulations/only_simulation/90sec_simulation.mat');
@@ -516,6 +607,11 @@ function [setup_out] = ...
         
         
     end
+
+    % ---------------------------------------------------------------------
+    % 16) Ajustes adicionales luego de estimated_newton
+    % ---------------------------------------------------------------------
+
     %init('MRtO2') = pars('MRtO2_basal');
     %init('MRtCO2') = pars('MRtCO2_basal');
     %init('V_total_e_v') = 1000;
@@ -540,6 +636,10 @@ function [setup_out] = ...
         pars('phi_max') = 13;
     end
 
+    % ---------------------------------------------------------------------
+    % 17) Construcción de nombres de ficheros de salida (simulaciones, fittings)
+    % ---------------------------------------------------------------------
+
     %Simulation savings
     currentDate = datetime('today');  
     formattedDate = datestr(currentDate, 'dd-mm-yyyy');
@@ -548,6 +648,10 @@ function [setup_out] = ...
     else
         simulation_filename = sprintf('../Simulations/%s/%d/%d_sec_%s-%s.mat',simulation_folder, patient_idx, simulation_time, hipoxia_state,formattedDate);
     end
+
+    % ---------------------------------------------------------------------
+    % 18) Rutas y nombres para sensibilidad y optimización
+    % ---------------------------------------------------------------------
     
     %Sensitivity    
     sensitivity_write_all_filename = sprintf('../Sens_analysis/%d/sensitivities_%s_%s.mat', patient_idx, hipoxia_state, formattedDate); 
@@ -596,6 +700,10 @@ function [setup_out] = ...
     end
 
     sensitivities = cell(1, n_params_sens);
+
+    % ---------------------------------------------------------------------
+    % 19) Identificador único para nodos de cálculo (e.g., cluster)
+    % ---------------------------------------------------------------------
     
     %id for particle-swarm
     timestamp = round(posixtime(datetime('now')) * 1000);    
@@ -605,6 +713,9 @@ function [setup_out] = ...
     node_id = timestamp * 1000000 + randomNum; % Multiplico por 1M para hacer espacio
        
     
+    % ---------------------------------------------------------------------
+    % 20) Montar la estructura de salida 'setup_out' con todo lo necesario
+    % ---------------------------------------------------------------------
     
     setup_out.model = model;
     setup_out.run_ode_fun = run_ode_fun;
@@ -666,6 +777,11 @@ function [setup_out] = ...
     end
     
 
+    % ---------------------------------------------------------------------
+    % 21) Funciones locales anidadas: load_optim_boundries
+    %    Devuelve lb y ub como celdas (values) para uso por optimizadores.
+    % ---------------------------------------------------------------------
+
     function [lb, ub] = load_optim_boundries(pars, patient_idx, pars2loadfolder)
         lb = containers.Map(pars.keys, pars.values);
         ub = containers.Map(pars.keys, pars.values);
@@ -699,6 +815,10 @@ function [setup_out] = ...
         lb = values(lb);
         ub = values(ub);
     end
+
+    % ---------------------------------------------------------------------
+    % 22) Función auxiliar boundries_factor: devuelve factores para límites
+    % ---------------------------------------------------------------------
 function  [b,l, pars] = boundries_factor(key, pars)
     %b = 10;
     b = 2.5;
@@ -740,6 +860,10 @@ function  [b,l, pars] = boundries_factor(key, pars)
     end
     
 end
+    % ---------------------------------------------------------------------
+    % 23) getLatestFittingDateStr: devuelve la última carpeta Fitting-... con archivos
+    % ---------------------------------------------------------------------
+function latestDateStr = getLatestFittingDateStr(basePath)
 
 function latestDateStr = getLatestFittingDateStr(basePath)
 %GETLATESTFITTINGDATESTR Returns the latest dd-MM-yyyy string from Fitting-dd-MM-yyyy folders,
