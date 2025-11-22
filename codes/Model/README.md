@@ -1,84 +1,89 @@
-# Cardiorespiratory control computational model: Simulation and fitting
+# Modelo computacional de control cardiorrespiratorio: Simulación y ajuste
 
-This folder is composed of a series of files which try to execute the simulation of a cardio respiratory control model, also its fitting with data. So there are mixed files, ones dedicated just for the simulation, others just for fitting, others for data processing, and others for analysis of results.
+Este repositorio contiene archivos para ejecutar la simulación de un modelo de control cardiorrespiratorio y su ajuste con datos experimentales. Los archivos se dividen en cuatro categorías: simulación, ajuste, procesamiento de datos y análisis de resultados.
 
-### Simulation
+---
 
-For the simulation the following files are needed:
+## Simulación
 
-- `ForwardModel`: it's like the `main` for the simulation, it contains:
-  - `run_ode`: it's the solver's driver:
-    - `model_basic`: it's the model, is the code which contains all the equations that are used within the solver
-      
-*IMPORTANT:
+Archivos necesarios:
 
+- **`ForwardModel`**: Archivo principal de simulación. Contiene:
+  - **`run_ode`**: Driver del solver, que ejecuta:
+    - **`model_basic`**: Contiene todas las ecuaciones del modelo utilizadas por el solver
 
-To run ForwardModel, is very important the hyperparameters assigned in the set_up functions. To run the simulation with the fitted parameters the dates of the fitted parameters must be assigned.
-Also, if respiratory times will be given, it has to be specified. The default for the moment is this:
-[setup] = set_up("simulation", patient_idx, state, "mix", "dt", 0.1,'pars_from_fitting', 1, 'fitting_mat_file', {'07-09-2025', '30-09-2025', '20-10-2025', '24-10-2025', '02-11-2025'}, 'time_from_data', 1);
+### Configuración importante
 
+Para ejecutar `ForwardModel`, es fundamental configurar correctamente los hiperparámetros en las funciones `set_up`. 
 
--"pars_from_fitting" allows loading parameters from fitted file
+**Ejemplo de configuración por defecto:**
+```matlab
+[setup] = set_up("simulation", patient_idx, state, "mix", "dt", 0.1, ...
+    'pars_from_fitting', 1, ...
+    'fitting_mat_file', {'07-09-2025', '30-09-2025', '20-10-2025', '24-10-2025', '02-11-2025'}, ...
+    'time_from_data', 1);
+```
 
--"fitting_mat_file" are all the fitting dates from which the parameters will be loaded
+**Parámetros clave:**
+- `'pars_from_fitting'`: Permite cargar parámetros desde archivos de ajuste
+- `'fitting_mat_file'`: Fechas de los ajustes desde donde se cargarán los parámetros
+- `'time_from_data'`: Permite tomar tiempos respiratorios desde los datos experimentales
 
--"time_from_data" allows to take respiratory times from data.
-  
- 
-### Sensitivity Analysis
+---
 
-To run sensitivity analysis use the function  `parameter_analysis_fun` which recieves: 
-patient_number: char (1,2,3,4);
-pindex: char; the parameter index of the parameter to be perturbed
-load_rb: char (1,0); is 1 if results_base will be loaded and 0 if it will be computed and saved as a new results_base.
- This function calls:
-     -  `sens_functions`: the driver for all the senstivities computations: run base, compute perturbed simulations and sensitivities, build STensor. It calls:
-          -  `data_processing`
-          -  `run_ode`
+## Análisis de sensibilidad
 
-### Fitting
+Utiliza la función **`parameter_analysis_fun`** con los siguientes argumentos:
 
-`ForwardModelFitting`: it runs the fitting operation, contains:
+- `patient_number`: char ('1', '2', '3', '4')
+- `pindex`: char - índice del parámetro a perturbar
+- `load_rb`: char ('1', '0') - '1' para cargar `results_base` existente, '0' para computarlo y guardarlo como nuevo
 
-* `data_preprocessing`: Gives the data preprocessed for fitting
-* `obj_fun`: it is the objective function which computes the error of simulation vs experimental data, runs:
+Esta función llama a:
+- **`sens_functions`**: Driver principal para cálculo de sensibilidades. Ejecuta simulación base, calcula simulaciones perturbadas y sensibilidades, y construye el tensor de sensibilidad (STensor). Llama a:
+  - `data_processing`
+  - `run_ode`
 
-  * `run_ode`
+---
 
+## Ajuste de parámetros
 
-### Data processing
+**`ForwardModelFitting`**: Ejecuta el proceso de ajuste. Contiene:
 
-`data_preprocessing`: recieves the original data and tries to read it and process it, to generate a decent dataset to fit. It also computes the polynomial estimations for VO2, VCO2 and fiO2:
+- **`data_preprocessing`**: Preprocesa datos experimentales para el ajuste
+- **`obj_fun`**: Función objetivo que calcula el error entre simulación y datos experimentales. Ejecuta:
+  - `run_ode`
 
-* `bestPolynomialFit`: it computes the polynomial estimation. It allows to plot the data and the polynomial function
+---
 
+## Procesamiento de datos
 
-### Others
+**`data_preprocessing`**: Recibe datos originales, los lee y procesa para generar un dataset adecuado para el ajuste. También calcula estimaciones polinómicas para VO2, VCO2 y fiO2:
 
-#### Data related
+- **`bestPolynomialFit`**: Calcula la estimación polinómica y permite graficar datos con la función ajustada
 
-    `estimate_newton_ohm` :Reads parameters file, and using ohm newton equation based on simple parameters of each subject, estimate a bunch of parameters of vasculature.
+---
 
-    `readBeatscopeData20`: Its an special file to read data from FINAPRES results.
+## Otros archivos
 
-#### Parameter pre-estimation
+### Datos
 
-    `sensitivity_analysis`: Its a code similar to `ForwardModel` with the difference that runs multiple instances with parallel computing to perfome the sensitivity analysis of the model
+- **`estimate_newton_ohm`**: Lee archivo de parámetros y estima parámetros vasculares usando la ecuación de Newton-Ohm
+- **`readBeatscopeData20`**: Archivo especializado para leer datos de resultados FINAPRES
 
-    `sensitivity_lab`: a tool to test the variation of parameters in the model
+### Pre-estimación de parámetros
 
-    `identificability_analysis`: as it says, computes the FIM from the sensitivity matrix, to reveal the amount of correlation between parameters.
+- **`sensitivity_analysis`**: Similar a `ForwardModel`, pero ejecuta múltiples instancias con computación paralela para análisis de sensibilidad
+- **`sensitivity_lab`**: Herramienta para probar variaciones de parámetros en el modelo
+- **`identificability_analysis`**: Calcula la matriz de información de Fisher (FIM) a partir de la matriz de sensibilidad para revelar correlaciones entre parámetros
 
-#### Setting up
+### Configuración
 
-    `vectorize_dicts`: it transforms both solver's driver and the model from dictionary based structures to vector based structures, using:
+- **`vectorize_dicts`**: Transforma las estructuras basadas en diccionarios (solver y modelo) a estructuras basadas en vectores. Utiliza:
+  - **`transformation_imported_dict`**: Usa expresiones regulares para actualizar líneas en `run_ode` y `model_basic` a tipo vector
+- **`Optimize_percentages`**: Define porcentajes de diferentes condiciones vasculares para estimar parámetros correctamente usando ecuaciones de Newton-Ohm. Ya no es necesario después de su uso inicial
 
-`transformation_imported_dict`: using regex, it goes all into `run_ode` and `model_basic` to know which lines to update into vector type
+### Gráficos
 
-`Optimize_percentages:` its a code to know which percentages of different vascular conditions have to be defined in order to estimate correctly the parameters using newton ohm equations. It's not needed anymore, after is already used.
-
-#### Plots
-
-    `plot_for_document:` Different codes for plotting figures that will go into the document
-
-    `deploy_papers_results`: For plotting the steady state simulation
+- **`plot_for_document`**: Códigos para generar figuras que irán en el documento
+- **`deploy_papers_results`**: Grafica resultados de simulación en estado estacionario
