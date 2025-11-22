@@ -9,7 +9,7 @@ For the simulation the following files are needed:
 - `ForwardModel`: it's like the `main` for the simulation, it contains:
   - `run_ode`: it's the solver's driver:
     - `model_basic`: it's the model, is the code which contains all the equations that are used within the solver
-  - `load_global_easy`: it's a python file which contains all the parameters and initial conditions for the model
+  - `load_global_easy`: Contains all the parameters and initial conditions for the model
 
 ### Fitting
 
