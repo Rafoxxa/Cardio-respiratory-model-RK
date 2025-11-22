@@ -9,13 +9,20 @@ For the simulation the following files are needed:
 - `ForwardModel`: it's like the `main` for the simulation, it contains:
   - `run_ode`: it's the solver's driver:
     - `model_basic`: it's the model, is the code which contains all the equations that are used within the solver
+      
 *IMPORTANT:
+
+
 To run ForwardModel, is very important the hyperparameters assigned in the set_up functions. To run the simulation with the fitted parameters the dates of the fitted parameters must be assigned.
 Also, if respiratory times will be given, it has to be specified. The default for the moment is this:
 [setup] = set_up("simulation", patient_idx, state, "mix", "dt", 0.1,'pars_from_fitting', 1, 'fitting_mat_file', {'07-09-2025', '30-09-2025', '20-10-2025', '24-10-2025', '02-11-2025'}, 'time_from_data', 1);
-"pars_from_fitting" allows loading parameters from fitted files
-"fitting_mat_file" are all the fitting dates from which the parameters will be loaded
-"time_from_data" allows to take respiratory times from data.
+
+
+-"pars_from_fitting" allows loading parameters from fitted file
+
+-"fitting_mat_file" are all the fitting dates from which the parameters will be loaded
+
+-"time_from_data" allows to take respiratory times from data.
   
  
 ### Sensitivity Analysis
