@@ -22,11 +22,14 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
     %TINY_INDEX = containers.Map(TINY_X_KEYS, num2cell(1:length(TINY_X_KEYS)));
     %OPTIONS = ddeset('AbsTol',1e-8,'RelTol',1e-5); 
     if isa(pars, 'containers.Map')
-        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
+        %OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
+        OPTIONS_CENTRAL = odeset('AbsTol',1e-9,'RelTol',1e-8, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
     else
-        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
+        %OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
+        OPTIONS_CENTRAL = odeset('AbsTol',1e-9,'RelTol',1e-8, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
     end
-    OPTIONS = odeset('AbsTol',1e-3,'RelTol',1e-2);
+    %OPTIONS = odeset('AbsTol',1e-3,'RelTol',1e-2);
+    OPTIONS = odeset('AbsTol',1e-9,'RelTol',1e-8);
     SIMULATION_TIME = simulation_time;
     DT = dt;
     
@@ -63,6 +66,9 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         [PARS, stacked, cycle] = cycle_driver(stacked, cycle, DT, INDEX, PARS);
         
         cycle.real_time = cycle.real_time +  toc;
+        %disp('cycle t end');
+        %disp(cycle.t_end);
+        
         %disp('tiempo real:');
         %disp(cycle.real_time);
         
@@ -109,6 +115,10 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         %cycle.init_vars_values = [cycle.x_vars(:, end)];% ; squeeze(delays_global(:,:,end))];        
         %cycle.init_taus = cycle.init_taus;  %this is unnecesary, because tau is not variable
         
+        newTresp = obtain_resp_times('Tresp', cycle.t_end, PARS); %obtain respiratory time, from polyomial
+        newTI = obtain_resp_times('TI', cycle.t_end, PARS);
+        PARS('TE') = newTresp - newTI;
+        PARS('TI') = newTI;
         PARS_ = PARS;
 
         if control_on
@@ -120,12 +130,18 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             %disp('args_optimal')
             %disp(args_optimal);
 
-            cycle.init_vars('TI') = args_optimal(1);
-            cycle.init_vars('TE') = args_optimal(2);
+            cycle.init_vars('TI') = newTI;%args_optimal(1);%newTI;%
+            cycle.init_vars('TE') = newTresp - newTI;%args_optimal(2);%newTresp - newTI;%
             %cycle.init_vars('a0') = args_optimal(3);
-            cycle.init_vars('a1') = args_optimal(3);
-            cycle.init_vars('a2') = args_optimal(4);
-            cycle.init_vars('tau') = args_optimal(5);
+            
+            cycle.init_vars('a1') = args_optimal(1);
+            cycle.init_vars('a2') = args_optimal(2);
+            % disp('a1');
+            % disp(cycle.init_vars('a1'))
+            % disp('a2');
+            % disp(cycle.init_vars('a2'))
+            
+            cycle.init_vars('tau') = args_optimal(3);
         end
         cycle.init_vars('Tresp') = cycle.init_vars('TI') + cycle.init_vars('TE'); 
         Tresp = cycle.init_vars('Tresp');
@@ -148,12 +164,12 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         %DT = pars('dt');
         %optim_init = cycle.init_vars;
         optim_pars = PARS;
-        optim_pars('TI') = args(1);
-        optim_pars('TE') = args(2);
+        %optim_pars('TI') = args(1);
+        %optim_pars('TE') = args(2);
         optim_pars('a0') = 0;  %fixed by authors
-        optim_pars('a1') = args(3);
-        optim_pars('a2') = args(4);
-        optim_pars('tau') = args(5);
+        optim_pars('a1') = args(1);
+        optim_pars('a2') = args(2);
+        optim_pars('tau') = args(3);
         
         optim_pars('Tresp') = optim_pars('TI') + optim_pars('TE');
         state_var = [cycle.init_vars('V'), cycle.init_vars('dV'), cycle.init_vars('dVua'), cycle.init_vars('Pua')];
@@ -314,7 +330,7 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             a2_check = var_inside_boundries(a2, optim_pars('ub_a2'), optim_pars('lb_a2'));
             tau_check = var_inside_boundries(tau, optim_pars('ub_tau'), optim_pars('lb_tau'));
             vars_inside_boundries = TI_check && TE_check && a1_check && a2_check && tau_check;
-            if vars_inside_boundries
+            %if vars_inside_boundries
                 Tresp = TI + TE;
                 time_interval = 0: DT: Tresp;
 
@@ -346,8 +362,8 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
                     t = t(1:end-1);
                     
                     %compute zheta 1 and zheta 2 parameters for optimization
-                    zheta1 = (1 - Pmusc/Pmax) .* (Pmax > Pmusc) + 0.01 * (Pmax <= Pmusc); %this is for handling off limits cases
-                    zheta2 = (1 - dPmusc_dt/dPmax) .* (dPmax > dPmusc_dt) + 0.01 * (dPmax <= dPmusc_dt); %this is for handling off limits cases
+                    zheta1 = 1;%(1 - Pmusc/Pmax) .* (Pmax > Pmusc) + 0.01 * (Pmax <= Pmusc); %this is for handling off limits cases
+                    zheta2 = 1;%(1 - dPmusc_dt/dPmax) .* (dPmax > dPmusc_dt) + 0.01 * (dPmax <= dPmusc_dt); %this is for handling off limits cases
 
                     % obtain the integrals and the respiratory work: all vectorial
                     insp_integrand = Pmusc./(zheta1.^n .* zheta2.^n) + lambda1 * ddV_ddt.^2;
@@ -356,11 +372,13 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
                     exp_work_power =  1/Tresp * DT * sum(exp_integrand .* (t > TI)); %it should be until Tresp, but that happens at the end of the cycle
                     J = insp_work_power + lambda2 * exp_work_power; 
                 catch
+                    disp('error')
                     J = 10^10;
+                    l = djvnsn;
                 end 
-            else
-                J = 10^10;
-            end          
+            %else
+            %    J = 10^10;
+            %end          
         end
 
 
@@ -369,12 +387,12 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
 
     function args_optimal = control_optimization(cycle, OPTIONS, PARS, dVE)
         % Define initial values for optimization parameters
-        initial_TI_value = cycle.init_vars('TI')  ;
-        initial_TE_value = cycle.init_vars('TE');
+        initial_TI_value = PARS('TI');
+        initial_TE_value = PARS('TE');
         initial_a1_value = cycle.init_vars('a1') ;
         initial_a2_value = cycle.init_vars('a2')  ;
         initial_tau_value = cycle.init_vars('tau') ;
-        args_init = [initial_TI_value, initial_TE_value, initial_a1_value, initial_a2_value, initial_tau_value];
+        args_init = [initial_a1_value, initial_a2_value, initial_tau_value];
     
         % Set up optimization options
         %options = optimoptions('fmincon', 'Display', 'iter', 'Algorithm', 'sqp');
@@ -385,10 +403,17 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         %%options.TolX = 10^-3;
         %%options.TolFun = 10^-3; 
         options.MaxIter = 3;
+
+        
     
         % Set lower and upper bounds for the optimization parameters
-        lb = [PARS('lb_TI'), PARS('lb_TE'), PARS('lb_a1'), PARS('lb_a2'), PARS('lb_tau')];
-        ub = [PARS('ub_TI'), PARS('ub_TE'), PARS('ub_a1'), PARS('ub_a2'), PARS('ub_tau')];
+        lb = [PARS('lb_a1'), PARS('lb_a2'), PARS('lb_tau')];
+        ub = [PARS('ub_a1'), PARS('ub_a2'), PARS('ub_tau')];
+
+        % disp('lb');
+        % disp(lb);
+        % disp('ub');
+        % disp(ub);
     
         %Contraints
         % Tresp > TI
@@ -466,18 +491,18 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
             El = PARS('El');            
             Ers = Ecw + El;
 
-            TI = args(1);
-            TE = args(2);
-            a1 = args(3);
-            a2 = args(4);
+            TI = PARS('TI');
+            TE = PARS('TE');
+            a1 = args(1);
+            a2 = args(2);
 
-            TI_check = var_inside_boundries(TI, PARS('ub_TI'), PARS('lb_TI'));
-            TE_check = var_inside_boundries(TE, PARS('ub_TE'), PARS('lb_TE'));
-            a1_check = var_inside_boundries(a1, PARS('ub_a1'), PARS('lb_a1'));
-            a2_check = var_inside_boundries(a2, PARS('ub_a2'), PARS('lb_a2'));
+            % TI_check = var_inside_boundries(TI, PARS('ub_TI'), PARS('lb_TI'));
+            % TE_check = var_inside_boundries(TE, PARS('ub_TE'), PARS('lb_TE'));
+            % a1_check = var_inside_boundries(a1, PARS('ub_a1'), PARS('lb_a1'));
+            % a2_check = var_inside_boundries(a2, PARS('ub_a2'), PARS('lb_a2'));
 
-            vars_inside_boundries = TI_check && TE_check && a1_check && a2_check;
-            if vars_inside_boundries
+            %vars_inside_boundries = TI_check && TE_check && a1_check && a2_check;
+            %if vars_inside_boundries
 
                 fast_tiny_model = @(t, init) fast_tiny_system(t, init, PARS, a1, a2); 
                 time_interval = 0:DT:TI;
@@ -500,10 +525,11 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
                 ceq = VT/(TE + TI) - dVE;
                 
                 %ceq = (TE + TI)*dVE * Ers + Pao - a1 * TI + a2 * TI^2; 
-            else
-                c = [];
-                ceq = 10^10;
-            end
+            %else
+            %    c = [];
+            %    ceq = 10^10;
+            %    disp('error');
+            %end
 
         end
      
@@ -575,6 +601,14 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
         d = sign(value) * 0.001;
         logical_output = (value > upper * (1 + d)) || (value < lower * (1 - d));         
         logical_output = ~logical_output;
+    end
+
+    function newTime = obtain_resp_times(time_name, time, PARS)
+        if strcmp(time_name, 'Tresp')
+            newTime = PARS('Tresp_poly_0')*time^0 + PARS('Tresp_poly_1')*time^1 + PARS('Tresp_poly_2')*time^2 + PARS('Tresp_poly_3')*time^3 + PARS('Tresp_poly_4')*time^4 + PARS('Tresp_poly_5')*time^5 + PARS('Tresp_poly_6')*time^6 + PARS('Tresp_poly_7')*time^7 + PARS('Tresp_poly_8')*time^8 + PARS('Tresp_poly_9')*time^9 + PARS('Tresp_poly_10')*time^10 + PARS('Tresp_poly_11')*time^11 + PARS('Tresp_poly_12')*time^12 + PARS('Tresp_poly_13')*time^13 + PARS('Tresp_poly_14')*time^14 + PARS('Tresp_poly_15')*time^15;
+        elseif strcmp(time_name, 'TI')
+            newTime = PARS('TI_poly_0')*time^0 + PARS('TI_poly_1')*time^1 + PARS('TI_poly_2')*time^2 + PARS('TI_poly_3')*time^3 + PARS('TI_poly_4')*time^4 + PARS('TI_poly_5')*time^5 + PARS('TI_poly_6')*time^6 + PARS('TI_poly_7')*time^7 + PARS('TI_poly_8')*time^8 + PARS('TI_poly_9')*time^9 + PARS('TI_poly_10')*time^10 + PARS('TI_poly_11')*time^11 + PARS('TI_poly_12')*time^12 + PARS('TI_poly_13')*time^13 + PARS('TI_poly_14')*time^14 + PARS('TI_poly_15')*time^15;
+        end
     end
 
     

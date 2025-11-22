@@ -12,9 +12,9 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
     end
     
     %Basic parameters    
-    dt = pars(280);
-    %tau = pars(350);
-    t0 = pars(349);
+    dt = pars('dt');
+    %tau = pars('tau');
+    t0 = pars('t0');
     t = time;
     
 
@@ -65,7 +65,7 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
     %Cardiovascular
     [internal_variables, test] =                                                                                  muscle_pump(t, y, pars, internal_variables, test); % [5]
     [internal_variables, test] =                                                                                  vena_cava(t, y, pars, internal_variables, test); % [2]       
-    [internal_variables, dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart,dQ_i_lv, dQ_lv, dP_max_lv, test] = heart(t, y, pars, internal_variables, test); % [0][2][10]
+    [internal_variables, dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart, test] = heart(t, y, pars, internal_variables, test); % [0][2][10]
     [internal_variables, dP_sa, dQ_sa, test] =                                                             systemic_arteries(t, y, pars, internal_variables, test); %[2][5] 
     [internal_variables, dQ_pa, dV_total_pp, dV_total_pv, dV_total_pa, dQpp, test] =                              pulmonary_circulation(t, y, pars, internal_variables, test); %[2][5]
     [internal_variables, dV_total_vc, dV_total_v, dP_sp, dQbp, test__vascular_checking__28_06_24] =                                            systemic_peripheric_and_venous_circulation(t, y, pars, internal_variables, test__vascular_checking__28_06_24); % [2][5]
@@ -94,129 +94,129 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
     else
         xdot = zeros(1, length(y));  
     end
-    xdot(56) =                    dPmusc;
-    xdot(57) =                      dPpl;
-    xdot(85) =                        dV;
-    xdot(109) =                       ddV;
-    xdot(111) =                     ddVua;
+    xdot_dict('Pmusc') =                    dPmusc;
+    xdot_dict('Ppl') =                      dPpl;
+    xdot_dict('V') =                        dV;
+    xdot_dict('dV') =                       ddV;
+    xdot_dict('dVua') =                     ddVua;
     %xdot_dict('Vua') =                      dVua;
-    xdot(21) =                      dGaw;   %fake derivative
-    %xdot(58) =                     dPua;   
-    %xdot(30) =                      y(30); %fake derivative
-    xdot(110) =                      ddVE; %fake derivative
-    xdot(23) =                        Iout;      %fake derivative
-    xdot(135) =                      dv(1);
-    xdot(134) =                     dv(2);
-    xdot(27) =                    dMRtgas(1);
-    xdot(26) =                   dMRtgas(2);
-    xdot(59) =                   dPvbCO2;
-    xdot(33) =                  dPCSFCO2;    
-    xdot(32) =                     dPAgas(1);
-    xdot(31) =                    dPAgas(2);
-    xdot(108) =                    ddPa(1);
-    xdot(107) =                   ddPa(2);
-    xdot(54) =                     y(108);
-    xdot(53) =                    y(107);
-    xdot(106) =                      a(1);   %fake derivative
-    xdot(105) =                     a(2);  %fake derivative
-    xdot(35) =                    dP_1(1);
-    xdot(34) =                   dP_1(2);
-    xdot(37) =                    dP_2(1);
-    xdot(36) =                   dP_2(2);
-    xdot(39) =                    dP_3(1);
-    xdot(38) =                   dP_3(2);
-    xdot(41) =                    dP_4(1);
-    xdot(40) =                   dP_4(2);
-    xdot(43) =                    dP_5(1);
-    xdot(42) =                   dP_5(2);
-    xdot(25) =                      dMRR;
-    xdot(29) =                     dM_Rv;
-    xdot(28) =                      dMRv;
-    xdot(126) =                mean_dPaO2; 
-    xdot(125) =               mean_dPaCO2; 
-    xdot(127) =               mean_dPbCO2; 
-    xdot(124) =                mean_dP_sa; 
-    xdot(116) =                  y(82); %fake derivative
-    xdot(117) =               y(84); %fake derivative
-    xdot(65) =                     dQ_pa; 
-    xdot(94) =               dV_total_pp;
-    xdot(95) =               dV_total_pv;
-    xdot(93) =               dV_total_pa;
-    xdot(100) =               dV_total_vc;
-    xdot(68) =                     dQ_sa;
-    xdot(46) =                     dP_sa;
-    xdot(89) =              dV_total_v(1);
-    xdot(99) =              dV_total_v(2);
-    xdot(88) =              dV_total_v(3);
-    xdot(90) =              dV_total_v(4);
-    xdot(97) =             dV_total_v(5);
-    xdot(87) =             dV_total_v(6);
-    xdot(47) =                     dP_sp;
-    xdot(98) =               dV_total_rv;
-    xdot(96) =               dV_total_ra;
-    xdot(91) =               dV_total_la;
-    xdot(92) =               dV_total_lv;
-    xdot(160) =              dzheta_heart;
-    xdot(45) =                   dP_mean;
-    xdot(114) =                     df_ac;
-    xdot(115) =                     df_ap;
-    xdot(152) =                    dxO2_b;
-    xdot(145) =                   dxCO2_b;
-    xdot(154) =                    dxO2(1);
-    xdot(156) =                   dxO2(2);
-    xdot(147) =                   dxCO2(1);
-    xdot(149) =                  dxCO2(2);
-    xdot(101) =                       dWh;
-    xdot(151) =                   dxO2_am;
-    xdot(159) =                    dx_met;
-    xdot(158) =                      dx_M;
-    xdot(4) =             dDThetaO2_s(1);
-    xdot(5) =             dDThetaO2_s(2);
-    xdot(6) =             dDThetaO2_s(3);
-    xdot(1) =            dDThetaCO2_s(1);
-    xdot(2) =            dDThetaCO2_s(2);
-    xdot(3) =            dDThetaCO2_s(3);
-    xdot(17) =                    dDTsym;
-    xdot(18) =                  dDTvagal;
-    xdot(10) =             dDTheta(1);
-    xdot(12) =             dDTheta(2);
-    xdot(11) =          dDTheta(3);
-    xdot(9) =          dDTheta(4);
-    xdot(14) =  dDTheta(5);
-    xdot(16) =  dDTheta(6);
-    xdot(15) = dDTheta(7);
-    xdot(13) = dDTheta(8);
-    xdot(7) =           dDTheta(9);
-    xdot(8) =           dDTheta(10);
-    xdot(128) =                  dphi_met;
-    xdot(71) =                      dQpp;  %forced derivative
-    xdot(69) =                      dQbp;  %forced derivative
-    xdot(70) =                      dQla;  %forced derivative
-    xdot(83) =                   dTheart;
-    xdot(118) =                     dfh_s;    
-    xdot(119) =                     dfp_s;    
-    xdot(121) =                     dfv_s;
-    xdot(120) =                       dfv;    
-    xdot(75) =                     dR_bp; 
-    xdot(153) =                     dxO2_e;
-    xdot(157) =                     dxO2_s;
-    xdot(155) =                     dxO2_p;     
-    % xdot(61) =                      test__vascular_checking__28_06_24('dQ_e');
-    % xdot(67) =                      test__vascular_checking__28_06_24('dQ_s');
-    % xdot(62) =                      test__vascular_checking__28_06_24('dQ_h');
-    % xdot(66) =                     test__vascular_checking__28_06_24('dQ_rm');
-    % xdot(60) =                     test__vascular_checking__28_06_24('dQ_am');
-    % xdot(49) =                    test__vascular_checking__28_06_24('dP_v_e');
-    % xdot(52) =                    test__vascular_checking__28_06_24('dP_v_s');
-    % xdot(50) =                    test__vascular_checking__28_06_24('dP_v_h');
-    % xdot(51) =                   test__vascular_checking__28_06_24('dP_v_rm');
-    % xdot(48) =                   test__vascular_checking__28_06_24('dP_v_am');
-    % xdot(76) =                    test__vascular_checking__28_06_24('dR_e_p');
-    % xdot(80) =                    test__vascular_checking__28_06_24('dR_s_p');
-    % xdot(74) =                    test__vascular_checking__28_06_24('dR_b_p');
-    % xdot(77) =                    test__vascular_checking__28_06_24('dR_h_p');
-    % xdot(78) =                   test__vascular_checking__28_06_24('dR_rm_p');
-    % xdot(72) =                   test__vascular_checking__28_06_24('dR_am_p'); 
+    xdot_dict('Gaw') =                      dGaw;   %fake derivative
+    %xdot_dict('Pua') =                     dPua;   
+    %xdot_dict('Nt') =                      y('Nt'); %fake derivative
+    xdot_dict('dVE') =                      ddVE; %fake derivative
+    xdot_dict('I') =                        Iout;      %fake derivative
+    xdot_dict('vO2') =                      dv(1);
+    xdot_dict('vCO2') =                     dv(2);
+    xdot_dict('MRtO2') =                    dMRtgas(1);
+    xdot_dict('MRtCO2') =                   dMRtgas(2);
+    xdot_dict('PvbCO2') =                   dPvbCO2;
+    xdot_dict('PCSFCO2') =                  dPCSFCO2;    
+    xdot_dict('PAO2') =                     dPAgas(1);
+    xdot_dict('PACO2') =                    dPAgas(2);
+    xdot_dict('dPaO2') =                    ddPa(1);
+    xdot_dict('dPaCO2') =                   ddPa(2);
+    xdot_dict('PaO2') =                     y('dPaO2');
+    xdot_dict('PaCO2') =                    y('dPaCO2');
+    xdot_dict('aO2') =                      a(1);   %fake derivative
+    xdot_dict('aCO2') =                     a(2);  %fake derivative
+    xdot_dict('P_1O2') =                    dP_1(1);
+    xdot_dict('P_1CO2') =                   dP_1(2);
+    xdot_dict('P_2O2') =                    dP_2(1);
+    xdot_dict('P_2CO2') =                   dP_2(2);
+    xdot_dict('P_3O2') =                    dP_3(1);
+    xdot_dict('P_3CO2') =                   dP_3(2);
+    xdot_dict('P_4O2') =                    dP_4(1);
+    xdot_dict('P_4CO2') =                   dP_4(2);
+    xdot_dict('P_5O2') =                    dP_5(1);
+    xdot_dict('P_5CO2') =                   dP_5(2);
+    xdot_dict('MRR') =                      dMRR;
+    xdot_dict('M_Rv') =                     dM_Rv;
+    xdot_dict('MRv') =                      dMRv;
+    xdot_dict('mean_PaO2') =                mean_dPaO2; 
+    xdot_dict('mean_PaCO2') =               mean_dPaCO2; 
+    xdot_dict('mean_PbCO2') =               mean_dPbCO2; 
+    xdot_dict('mean_P_sa') =                mean_dP_sa; 
+    xdot_dict('fake_TI') =                  y('TI'); %fake derivative
+    xdot_dict('fake_Tresp') =               y('Tresp'); %fake derivative
+    xdot_dict('Q_pa') =                     dQ_pa; 
+    xdot_dict('V_total_pp') =               dV_total_pp;
+    xdot_dict('V_total_pv') =               dV_total_pv;
+    xdot_dict('V_total_pa') =               dV_total_pa;
+    xdot_dict('V_total_vc') =               dV_total_vc;
+    xdot_dict('Q_sa') =                     dQ_sa;
+    xdot_dict('P_sa') =                     dP_sa;
+    xdot_dict('V_total_e_v') =              dV_total_v(1);
+    xdot_dict('V_total_s_v') =              dV_total_v(2);
+    xdot_dict('V_total_b_v') =              dV_total_v(3);
+    xdot_dict('V_total_h_v') =              dV_total_v(4);
+    xdot_dict('V_total_rm_v') =             dV_total_v(5);
+    xdot_dict('V_total_am_v') =             dV_total_v(6);
+    xdot_dict('P_sp') =                     dP_sp;
+    xdot_dict('V_total_rv') =               dV_total_rv;
+    xdot_dict('V_total_ra') =               dV_total_ra;
+    xdot_dict('V_total_la') =               dV_total_la;
+    xdot_dict('V_total_lv') =               dV_total_lv;
+    xdot_dict('zheta_heart') =              dzheta_heart;
+    xdot_dict('P_mean') =                   dP_mean;
+    xdot_dict('f_ac') =                     df_ac;
+    xdot_dict('f_ap') =                     df_ap;
+    xdot_dict('xO2_b') =                    dxO2_b;
+    xdot_dict('xCO2_b') =                   dxCO2_b;
+    xdot_dict('xO2_h') =                    dxO2(1);
+    xdot_dict('xO2_rm') =                   dxO2(2);
+    xdot_dict('xCO2_h') =                   dxCO2(1);
+    xdot_dict('xCO2_rm') =                  dxCO2(2);
+    xdot_dict('Wh') =                       dWh;
+    xdot_dict('xO2_am') =                   dxO2_am;
+    xdot_dict('x_met') =                    dx_met;
+    xdot_dict('x_M') =                      dx_M;
+    xdot_dict('DThetaO2_h_s') =             dDThetaO2_s(1);
+    xdot_dict('DThetaO2_p_s') =             dDThetaO2_s(2);
+    xdot_dict('DThetaO2_v_s') =             dDThetaO2_s(3);
+    xdot_dict('DThetaCO2_h_s') =            dDThetaCO2_s(1);
+    xdot_dict('DThetaCO2_p_s') =            dDThetaCO2_s(2);
+    xdot_dict('DThetaCO2_v_s') =            dDThetaCO2_s(3);
+    xdot_dict('DTsym') =                    dDTsym;
+    xdot_dict('DTvagal') =                  dDTvagal;
+    xdot_dict('DTheta_R_e_p') =             dDTheta(1);
+    xdot_dict('DTheta_R_s_p') =             dDTheta(2);
+    xdot_dict('DTheta_R_rm_p_n') =          dDTheta(3);
+    xdot_dict('DTheta_R_am_p_n') =          dDTheta(4);
+    xdot_dict('DTheta_V_unstressed_e_v') =  dDTheta(5);
+    xdot_dict('DTheta_V_unstressed_s_v') =  dDTheta(6);
+    xdot_dict('DTheta_V_unstressed_rm_v') = dDTheta(7);
+    xdot_dict('DTheta_V_unstressed_am_v') = dDTheta(8);
+    xdot_dict('DTheta_Emax_lv') =           dDTheta(9);
+    xdot_dict('DTheta_Emax_rv') =           dDTheta(10);
+    xdot_dict('phi_met') =                  dphi_met;
+    xdot_dict('Qpp') =                      dQpp;  %forced derivative
+    xdot_dict('Qbp') =                      dQbp;  %forced derivative
+    xdot_dict('Qla') =                      dQla;  %forced derivative
+    xdot_dict('Theart') =                   dTheart;
+    xdot_dict('fh_s') =                     dfh_s;    
+    xdot_dict('fp_s') =                     dfp_s;    
+    xdot_dict('fv_s') =                     dfv_s;
+    xdot_dict('fv') =                       dfv;    
+    xdot_dict('R_bp') =                     dR_bp; 
+    xdot_dict('xO2_e') =                     dxO2_e;
+    xdot_dict('xO2_s') =                     dxO2_s;
+    xdot_dict('xO2_p') =                     dxO2_p;   
+    % xdot_dict('Q_e') =                      test__vascular_checking__28_06_24('dQ_e');
+    % xdot_dict('Q_s') =                      test__vascular_checking__28_06_24('dQ_s');
+    % xdot_dict('Q_h') =                      test__vascular_checking__28_06_24('dQ_h');
+    % xdot_dict('Q_rm') =                     test__vascular_checking__28_06_24('dQ_rm');
+    % xdot_dict('Q_am') =                     test__vascular_checking__28_06_24('dQ_am');
+    % xdot_dict('P_v_e') =                    test__vascular_checking__28_06_24('dP_v_e');
+    % xdot_dict('P_v_s') =                    test__vascular_checking__28_06_24('dP_v_s');
+    % xdot_dict('P_v_h') =                    test__vascular_checking__28_06_24('dP_v_h');
+    % xdot_dict('P_v_rm') =                   test__vascular_checking__28_06_24('dP_v_rm');
+    % xdot_dict('P_v_am') =                   test__vascular_checking__28_06_24('dP_v_am');
+    % xdot_dict('R_e_p') =                    test__vascular_checking__28_06_24('dR_e_p');
+    % xdot_dict('R_s_p') =                    test__vascular_checking__28_06_24('dR_s_p');
+    % xdot_dict('R_b_p') =                    test__vascular_checking__28_06_24('dR_b_p');
+    % xdot_dict('R_h_p') =                    test__vascular_checking__28_06_24('dR_h_p');
+    % xdot_dict('R_rm_p') =                   test__vascular_checking__28_06_24('dR_rm_p');
+    % xdot_dict('R_am_p') =                   test__vascular_checking__28_06_24('dR_am_p'); 
 
     %Transforming dictionary to matlab vector, only for dict mode
     %%if length(xdot_dict) > 2
@@ -256,19 +256,19 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
 function  [internal_variables_, test_] = respiratory_pump(t, y, pars, internal_variables, test)
         
     %pars definition
-    Pthormax_n = pars(128);
-    Pthormin_n = pars(129);
-    Pabdmax_n = pars(122);
-    Pabdmin_n = pars(123);
-    VTn = pars(206);
-    gthor = pars(320);
-    gabd = pars(308);
-    t0 = pars(349);
+    Pthormax_n = pars('Pthormax');
+    Pthormin_n = pars('Pthormin');
+    Pabdmax_n = pars('Pabdmax');
+    Pabdmin_n = pars('Pabdmin');
+    VTn = pars('VTn');
+    gthor = pars('gthor');
+    gabd = pars('gabd');
+    t0 = pars('t0');
 
     %var definition
-    TI = y(82);
-    Tresp = y(84);
-    VT = y(85);
+    TI = y('TI');
+    Tresp = y('Tresp');
+    VT = y('V');
 
     %Equations   
     s = (t - t0)/Tresp;
@@ -299,8 +299,8 @@ function  [internal_variables_, test_] = respiratory_pump(t, y, pars, internal_v
         Pabd = Pabdmax;
     end 
     
-    internal_variables(44) = Pabd;
-    internal_variables(35) = Ptor;
+    internal_variables('Pabd') = Pabd;
+    internal_variables('Ptor') = Ptor;
     internal_variables_ = internal_variables;    
     test_ = test;
 end
@@ -308,26 +308,26 @@ end
 function [y_, ddVua, dGaw, dVua, internal_variables_, test_] = upper_airways(t, y, pars, internal_variables, test)
     
     %pars
-    R_trachea = pars(155);    
-    Rl = pars(153);
-    Rcw = pars(152);  
-    Raw = pars(151);
-    Cua = pars(30);
-    bua = pars(263);
-    Pcrit_min = pars(126);
-    A0ua = pars(2);
-    Kua = pars(78);
+    R_trachea = pars('Rtrachea');    
+    Rl = pars('Rl');
+    Rcw = pars('Rcw');  
+    Raw = pars('Raw');
+    Cua = pars('Cua');
+    bua = pars('bua');
+    Pcrit_min = pars('Pcrit_min');
+    A0ua = pars('A0ua');
+    Kua = pars('Kua');
     
     %vars
-    Ppl = y(57);
-    dV = y(109);
-    dVua = y(111);
+    Ppl = y('Ppl');
+    dV = y('dV');
+    dVua = y('dVua');
     
     %Equations   
     Rrs = Raw + Rl + Rcw;
     dVla = dVua + dV;
     Pua = Ppl + dVla * Rrs;        
-    dPua_dt = (Pua - y(58))/dt;
+    dPua_dt = (Pua - y('Pua'))/dt;
     ddVua = -1/R_trachea * (dPua_dt + dVua/Cua);    
 
     if 10 <= -1/(Cua * bua)
@@ -346,32 +346,32 @@ function [y_, ddVua, dGaw, dVua, internal_variables_, test_] = upper_airways(t, 
         Gaw = A0ua * Kua;   
     end
 
-    dGaw = (Gaw - y(21))/dt;
-    internal_variables(4) = Gaw;
+    dGaw = (Gaw - y('Gaw'))/dt;
+    internal_variables('Gaw') = Gaw;
     internal_variables_ = internal_variables; 
     y_ = y;
     test_ = test;
 end
 function [y_, dPmusc, dPpl, dV, ddV, test_] = pulmonary_mechanics(t, y, pars, internal_variables, test)
     %pars 
-    Ecw = pars(34);
-    El = pars(35);
-    kaw1  = pars(328);
-    kaw2 = pars(329);
-    Rcw = pars(152);
-    Rrs = pars(154);
-    Pao = pars(124);
-    dt = pars(280);
-    t0 = pars(349);
+    Ecw = pars('Ecw');
+    El = pars('El');
+    kaw1  = pars('kaw1');
+    kaw2 = pars('kaw2');
+    Rcw = pars('Rcw');
+    Rrs = pars('Rrs');
+    Pao = pars('Pao');
+    dt = pars('dt');
+    t0 = pars('t0');
 
     %vars    
-    V = y(85);    
-    a0 = y(102);
-    a1 = y(103);
-    a2 = y(104);
-    tau = y(132);
-    TI = y(82);
-    Gaw = internal_variables(4);  
+    V = y('V');    
+    a0 = y('a0');
+    a1 = y('a1');
+    a2 = y('a2');
+    tau = y('tau');
+    TI = y('TI');
+    Gaw = internal_variables('Gaw');  
 
     %Equations
     Ers = Ecw + El;    
@@ -387,7 +387,7 @@ function [y_, dPmusc, dPpl, dV, ddV, test_] = pulmonary_mechanics(t, y, pars, in
     %dV
     dV =  Gaw/Rrs * ((Pmusc - Pao) - Ers * V);   
     %dV =  1/Rrs * ((Pmusc - Pao) - Ers * V);   
-    ddV = (dV - y(109))/dt;
+    ddV = (dV - y('dV'))/dt;
     %Pcw
     if dV < 0
         Pcw = Ecw * V - 1;
@@ -401,8 +401,8 @@ function [y_, dPmusc, dPpl, dV, ddV, test_] = pulmonary_mechanics(t, y, pars, in
     %Ppl
     Ppl = Pcw + Pa - Pmusc; 
  
-    dPpl = (Ppl - y(57))/dt;
-    dPmusc = (Pmusc - y(56))/dt;   
+    dPpl = (Ppl - y('Ppl'))/dt;
+    dPmusc = (Pmusc - y('Pmusc'))/dt;   
 
     y_ = y;
     test_ = test;
@@ -413,21 +413,21 @@ end
 function [y_, internal_variables_, test_] = neuromuscular_drive(t, y, pars, internal_variables, index, tiny_y_keys, test)
     
     %pars
-    dt = pars(280);
-    t0 = pars(349);
+    dt = pars('dt');
+    t0 = pars('t0');
 
     %vars
-    TI = y(82);
+    TI = y('TI');
     
     %Equations
     t_cycle = t - t0; 
     Nt = eps;
     if t_cycle < TI
-        dVE_historic = all_global(1, round(t0/dt) + 1: round(t/dt) + 1);
+        dVE_historic = all_global(index(tiny_y_keys, 'dVE'), round(t0/dt) + 1: round(t/dt) + 1);
         Nt = trapz(dVE_historic, 2) * dt;
         
     end 
-    internal_variables(99) = Nt;  %dejar derivada en 0 y guardar todas las variables externas en una 
+    internal_variables('Nt') = Nt;  %dejar derivada en 0 y guardar todas las variables externas en una 
     internal_variables_ = internal_variables; 
     y_ = y;
     test_ = test;
@@ -435,11 +435,11 @@ function [y_, internal_variables_, test_] = neuromuscular_drive(t, y, pars, inte
 end
 function [I, internal_variables_, test_] = metabolic_regulation(t, y, pars, internal_variables, test)
     %pars
-    MRtCO2_basal = pars(111);
-    AT = pars(5);
+    MRtCO2_basal = pars('MRtCO2_basal');
+    AT = pars('AT');
 
     %vars
-    MRtCO2 = y(26);
+    MRtCO2 = y('MRtCO2');
 
     %Equations
     %I = (MRtCO2 + 0.01 - MRtCO2_basal)/(AT - MRtCO2_basal);
@@ -448,7 +448,7 @@ function [I, internal_variables_, test_] = metabolic_regulation(t, y, pars, inte
     %MRtCO2_ = MRtCO2 * (MRtCO2 > 0.3) + 0.3 * (MRtCO2 <= 0.3); %this is a correction to avoid negative values in the metabolic rate of CO2, which is not possible
     %I = (MRtCO2_ - 0.3)/(AT - 0.3);
     
-    internal_variables(97) = I;
+    internal_variables('I') = I;
     internal_variables_ = internal_variables;
     test_ = test;
 
@@ -458,17 +458,17 @@ end
 function gas = dissociation(P, pars)
 
     %pars
-    A1 = pars(3); % parameter in O2 dissociation equation
-    A2 = pars(4); % parameter in CO3 dissociation equation
-    alpha1 = pars(259); % parameter in O3 dissociation equation
-    alpha2 = pars(260); % parameter in CO3 dissociation equation
-    K1 = pars(59); % parameter in O3 dissociation equation
-    K2 = pars(61); % parameter in CO3 dissociation equation
-    beta1 = pars(261); % parameter in O3 dissociation equation
-    beta2 = pars(262); % parameter in CO3 dissociation equation
-    C1 = pars(10);
-    C2 = pars(11);
-    Z = pars(254);        
+    A1 = pars('A1'); % parameter in O2 dissociation equation
+    A2 = pars('A2'); % parameter in CO3 dissociation equation
+    alpha1 = pars('alpha1'); % parameter in O3 dissociation equation
+    alpha2 = pars('alpha2'); % parameter in CO3 dissociation equation
+    K1 = pars('K1'); % parameter in O3 dissociation equation
+    K2 = pars('K2'); % parameter in CO3 dissociation equation
+    beta1 = pars('beta1'); % parameter in O3 dissociation equation
+    beta2 = pars('beta2'); % parameter in CO3 dissociation equation
+    C1 = pars('C1');
+    C2 = pars('C2');
+    Z = pars('Z');        
     CO2a_ = C2 * Z;
     O2a_ = C1 * Z;
     
@@ -489,42 +489,42 @@ end
 function [y_, dPAgas, ddPa, dP_1, dP_2, dP_3, dP_4, dP_5, a, test_] = exchange_mixing(t, y, pars, index, test)
 
     %pars
-    %fO2 = pars(282);
-    fCO2 = pars(281);
-    Patm = pars(125);
-    Pws = pars(130);
-    Vdead = pars(235);
-    VLO2 = pars(205);
-    VLCO2 = pars(204);
-    T1 = pars(159);
-    T2 = pars(160);
-    LCTV = pars(79);
-    settling_time = pars(348);
-    type_of_input = pars(377);
+    %fO2 = pars('fO2');
+    fCO2 = pars('fCO2');
+    Patm = pars('Patm');
+    Pws = pars('Pws');
+    Vdead = pars('Vdead');
+    VLO2 = pars('VLO2');
+    VLCO2 = pars('VLCO2');
+    T1 = pars('T1');
+    T2 = pars('T2');
+    LCTV = pars('LCTV');
+    settling_time = pars('settling_time');
+    type_of_input = pars('type_of_input');
 
     %vars    
-    P_1O2 = y(35);
-    P_1CO2 = y(34);
-    P_2O2 = y(37);
-    P_2CO2 = y(36);
-    P_3O2 = y(39);
-    P_3CO2 = y(38);
-    P_4O2 = y(41);
-    P_4CO2 = y(40);
-    P_5O2 = y(43);
-    P_5CO2 = y(42);
-    PAO2 = y(32);
-    PACO2 = y(31);
-    dV = y(109);
-    V = y(85);
-    vO2 = y(135);
-    vCO2 = y(134);    
-    Qpp = y(71);
-    Qla = y(70);
-    PaO2 = y(54);
-    PaCO2 = y(53);
-    dPaO2 = y(108);
-    dPaCO2 = y(107);
+    P_1O2 = y('P_1O2');
+    P_1CO2 = y('P_1CO2');
+    P_2O2 = y('P_2O2');
+    P_2CO2 = y('P_2CO2');
+    P_3O2 = y('P_3O2');
+    P_3CO2 = y('P_3CO2');
+    P_4O2 = y('P_4O2');
+    P_4CO2 = y('P_4CO2');
+    P_5O2 = y('P_5O2');
+    P_5CO2 = y('P_5CO2');
+    PAO2 = y('PAO2');
+    PACO2 = y('PACO2');
+    dV = y('dV');
+    V = y('V');
+    vO2 = y('vO2');
+    vCO2 = y('vCO2');    
+    Qpp = y('Qpp');
+    Qla = y('Qla');
+    PaO2 = y('PaO2');
+    PaCO2 = y('PaCO2');
+    dPaO2 = y('dPaO2');
+    dPaCO2 = y('dPaCO2');
 
     %fgas = [fO2, fCO2];
     P_1 = [P_1O2, P_1CO2];
@@ -536,8 +536,8 @@ function [y_, dPAgas, ddPa, dP_1, dP_2, dP_3, dP_4, dP_5, a, test_] = exchange_m
     Ta = 1000 * LCTV/(Qla + 250);    %this has a stop limit because Qla could drop, making the delay truly huge.  
     if t > Ta
         try
-            PACO2_delayed = all_global(2, round((t-Ta)/dt) + 1);
-            PAO2_delayed = all_global(3, round((t-Ta)/dt) + 1);
+            PACO2_delayed = all_global(index(tiny_y_keys, 'PACO2'), round((t-Ta)/dt) + 1);
+            PAO2_delayed = all_global(index(tiny_y_keys, 'PAO2'), round((t-Ta)/dt) + 1);
 
         catch
             PACO2_delayed = PACO2;
@@ -558,11 +558,11 @@ function [y_, dPAgas, ddPa, dP_1, dP_2, dP_3, dP_4, dP_5, a, test_] = exchange_m
     
     %Inspired air
     %Computation from data
-    fO2p_0 = pars(295);
-    fO2p_1 = pars(296);
-    fO2p_2 = pars(297);
-    fO2p_3 = pars(298);
-    fO2p_4 = pars(299);
+    fO2p_0 = pars('fiO2_poly_0');
+    fO2p_1 = pars('fiO2_poly_1');
+    fO2p_2 = pars('fiO2_poly_2');
+    fO2p_3 = pars('fiO2_poly_3');
+    fO2p_4 = pars('fiO2_poly_4');
 
     if type_of_input > 6
         if t >= settling_time
@@ -577,7 +577,7 @@ function [y_, dPAgas, ddPa, dP_1, dP_2, dP_3, dP_4, dP_5, a, test_] = exchange_m
             fO2 = 100 * 0.17;
         end
     else
-        fO2 = pars(282);
+        fO2 = pars('fO2');
     end
     
     fgas = [fO2, fCO2];
@@ -614,8 +614,8 @@ function [y_, dPAgas, ddPa, dP_1, dP_2, dP_3, dP_4, dP_5, a, test_] = exchange_m
     % mixing
     ddPa = 1/(T1 * T2) * (PAgas_delayed - (T1 + T2)*dPa - Pa);    %momentary removal
 
-    y(106) = a(1);
-    y(105) = a(2);
+    y('aO2') = a(1);
+    y('aCO2') = a(2);
     y_ = y;
     test_ = test;
 end
@@ -627,27 +627,27 @@ function [dPvbCO2, dPCSFCO2, internal_variables_ , test_] = brain(t, y, pars, in
 
 
     %pars
-    KCSFCO2 = pars(66);
-    KCCO2 = pars(63);
-    dc = pars(266);
-    h = pars(321);
-    SCO2 = pars(156);
-    SbCO2 = pars(157);
-    MRbCO2 = pars(109);
-    dt = pars(280);
+    KCSFCO2 = pars('KCSFCO2');
+    KCCO2 = pars('KCCO2');
+    dc = pars('dc');
+    h = pars('h');
+    SCO2 = pars('SCO2');
+    SbCO2 = pars('SbCO2');
+    MRbCO2 = pars('MRbCO2');
+    dt = pars('dt');
 
     %vars
-    PvbCO2 = y(59);
-    PCSFCO2 = y(33);
-    PaCO2 = y(53);    
-    Qbp = y(69);
+    PvbCO2 = y('PvbCO2');
+    PCSFCO2 = y('PCSFCO2');
+    PaCO2 = y('PaCO2');    
+    Qbp = y('Qbp');
 
     %Equations
     dPvbCO2 = (MRbCO2 * 1 + Qbp * SCO2 * (PaCO2 - PvbCO2) - h)/SbCO2;  %UNIT CORRECTION, now is avoided 
     dPCSFCO2 = (PvbCO2 - PCSFCO2)/KCSFCO2;
     PbCO2 = PvbCO2 + (PCSFCO2 - PvbCO2) * exp(-dc * (Qbp * KCCO2)^0.5);
     %PbCO2 = 40;
-    internal_variables(8) = PbCO2;
+    internal_variables('PbCO2') = PbCO2;
     internal_variables_ = internal_variables; 
     test_ = test;
 end
@@ -658,21 +658,21 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
     pars = input_consumption(t, y, pars); %in this inside function we control the input
 
     %pars
-    tauMR = pars(351);    
-    Vtissue_CO2 = pars(236);
-    Vtissue_O2 = pars(237);
-    MRO2 = pars(99);   %This parameters correspond to the input values.  
-    MRCO2 = pars(89); %This parameters correspond to the input values.
+    tauMR = pars('tauMR');    
+    Vtissue_CO2 = pars('Vtissue_CO2');
+    Vtissue_O2 = pars('Vtissue_O2');
+    MRO2 = pars('MRO2');   %This parameters correspond to the input values.  
+    MRCO2 = pars('MRCO2'); %This parameters correspond to the input values.
 
     %vars
-    MRtO2 = y(27);
-    MRtCO2 = y(26);    
-    vO2 = y(135);
-    vCO2 = y(134);
-    aO2 = y(106);
-    aCO2 = y(105);
-    Qpp = y(71);
-    Qbp = y(69);    
+    MRtO2 = y('MRtO2');
+    MRtCO2 = y('MRtCO2');    
+    vO2 = y('vO2');
+    vCO2 = y('vCO2');
+    aO2 = y('aO2');
+    aCO2 = y('aCO2');
+    Qpp = y('Qpp');
+    Qbp = y('Qbp');    
     
     MRtgas = [MRtO2, MRtCO2];  %l/min
     MRgas = [MRO2, MRCO2];
@@ -688,18 +688,18 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
 
     function pars_ = input_consumption(t, y, pars)
         %Here you can define the input types        
-        type_of_input = pars(377);
+        type_of_input = pars('type_of_input');
 
         %pars
-        MRO2 = pars(99);
-        MRCO2 = pars(89);
-        MRtO2_basal = pars(112);
-        MRtCO2_basal = pars(111);
+        MRO2 = pars('MRO2');
+        MRCO2 = pars('MRCO2');
+        MRtO2_basal = pars('MRtO2_basal');
+        MRtCO2_basal = pars('MRtCO2_basal');
         
         
         if type_of_input == 0
-            pars(99) = MRO2;
-            pars(89) = MRCO2;
+            pars('MRO2') = MRO2;
+            pars('MRCO2') = MRCO2;
             
         end
 
@@ -742,8 +742,8 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
 
         if type_of_input == 3 %deploy_results
             
-            pars(99) = MRO2;
-            pars(89) = MRCO2;
+            pars('MRO2') = MRO2;
+            pars('MRCO2') = MRCO2;
 
         end
 
@@ -768,7 +768,7 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
         end
 
         if type_of_input == 5 %fitting
-            settling_time = pars(348);
+            settling_time = pars('settling_time');
             tt = t - settling_time;
             MRO2 = 0.02 + MRtO2_basal; %10 * MRtO2_basal;
             MRCO2 = 0.02 + MRtCO2_basal; %10 * MRtCO2_basal;
@@ -797,28 +797,28 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
         
         
         if type_of_input == 6 || type_of_input == 7 % vo2 and vco2 external 
-            settling_time = pars(348);
+            settling_time = pars('settling_time');
             tt = t - settling_time;
             if t >= settling_time
-                MRO2p_0 = pars(100);
-                MRO2p_1 = pars(101);
-                MRO2p_2 = pars(102);
-                MRO2p_3 = pars(103);
-                MRO2p_4 = pars(104);
-                MRO2p_5 = pars(105);
-                MRO2p_6 = pars(106);
-                MRO2p_7 = pars(107);
-                MRO2p_8 = pars(108);
+                MRO2p_0 = pars('MRO2_poly_0');
+                MRO2p_1 = pars('MRO2_poly_1');
+                MRO2p_2 = pars('MRO2_poly_2');
+                MRO2p_3 = pars('MRO2_poly_3');
+                MRO2p_4 = pars('MRO2_poly_4');
+                MRO2p_5 = pars('MRO2_poly_5');
+                MRO2p_6 = pars('MRO2_poly_6');
+                MRO2p_7 = pars('MRO2_poly_7');
+                MRO2p_8 = pars('MRO2_poly_8');
 
-                MRCO2p_0 = pars(90);
-                MRCO2p_1 = pars(91);
-                MRCO2p_2 = pars(92);
-                MRCO2p_3 = pars(93);
-                MRCO2p_4 = pars(94);
-                MRCO2p_5 = pars(95);
-                MRCO2p_6 = pars(96);
-                MRCO2p_7 = pars(97);
-                MRCO2p_8 = pars(98);
+                MRCO2p_0 = pars('MRCO2_poly_0');
+                MRCO2p_1 = pars('MRCO2_poly_1');
+                MRCO2p_2 = pars('MRCO2_poly_2');
+                MRCO2p_3 = pars('MRCO2_poly_3');
+                MRCO2p_4 = pars('MRCO2_poly_4');
+                MRCO2p_5 = pars('MRCO2_poly_5');
+                MRCO2p_6 = pars('MRCO2_poly_6');
+                MRCO2p_7 = pars('MRCO2_poly_7');
+                MRCO2p_8 = pars('MRCO2_poly_8');
                 
 
                 MRO2 = MRO2p_0 + MRO2p_1*tt + MRO2p_2*tt^2 + MRO2p_3*tt^3 + MRO2p_4*tt^4 + MRO2p_5*tt^5 + MRO2p_6*tt^6 + MRO2p_7*tt^7 + MRO2p_8*tt^8;          
@@ -827,9 +827,6 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
                 MRO2 = MRO2 * (MRO2 > MRtO2_basal) + MRtO2_basal * (MRO2 <= MRtO2_basal);
                 MRCO2 = MRCO2 * (MRCO2 > MRtCO2_basal) + MRtCO2_basal * (MRCO2 <= MRtCO2_basal); 
 
-                %MRO2__ = MRO2 * (MRO2 < 0.45) + 0.45 * (MRO2 >= 0.45); 
-                %MRCO2__ = MRCO2 * (MRCO2 < 0.35) + 0.35 * (MRCO2 >= 0.35); 
-
                 
             end               
 
@@ -837,8 +834,8 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
 
 
         
-        pars(99) = MRO2;%MRtO2_basal;
-        pars(89) = MRCO2;%MRtCO2_basal;
+        pars('MRO2') = MRO2;
+        pars('MRCO2') = MRCO2;
 
         pars_ = pars;      
         
@@ -848,17 +845,17 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
 end
 function [dMRR, dM_Rv, dMRv, test_] = metabolism_dynamics(t, y, pars, test)
     %pars
-    dt = pars(280);    
-    MRbCO2 = pars(109);
-    MRbO2 = pars(110);
-    MRtCO2_basal = pars(111);
-    MRtO2_basal = pars(112);
-    tauMRv = pars(352);
+    dt = pars('dt');    
+    MRbCO2 = pars('MRbCO2');
+    MRbO2 = pars('MRbO2');
+    MRtCO2_basal = pars('MRtCO2_basal');
+    MRtO2_basal = pars('MRtO2_basal');
+    tauMRv = pars('tauMRv');
 
     %vars 
-    M_Rv = y(29);
-    MRtO2 = y(27);
-    MRtCO2 = y(26);
+    M_Rv = y('M_Rv');
+    MRtO2 = y('MRtO2');
+    MRtCO2 = y('MRtCO2');
     %MRtO2_ = MRtO2 * (MRtO2 > 0.33) + 0.33 * (MRtO2 <= 0.33); %this is a correction to avoid negative values in the metabolic rate of O2, which is not possible
     %MRtCO2_ = MRtCO2 * (MRtCO2 > 0.3) + 0.3 * (MRtCO2 <= 0.3); %this is a correction to avoid negative values in the metabolic rate of CO2, which is not possible
     %Equations
@@ -872,7 +869,7 @@ function [dMRR, dM_Rv, dMRv, test_] = metabolism_dynamics(t, y, pars, test)
         MRR = 1;
     end
 
-    dMRR = (MRR - y(25))/dt;
+    dMRR = (MRR - y('MRR'))/dt;
     dM_Rv = ((MRR - 1) - M_Rv)/tauMRv;
 
     if M_Rv >= 0 && MRR > 1
@@ -881,7 +878,7 @@ function [dMRR, dM_Rv, dMRv, test_] = metabolism_dynamics(t, y, pars, test)
         MRv = 0;
     end
 
-    dMRv = (MRv - y(28))/dt;
+    dMRv = (MRv - y('MRv'))/dt;
     test_ = test;
 end
 
@@ -889,22 +886,22 @@ end
 function  [ddVE, test_] = ventilation_control(t, y, pars, internal_variables, test)
     
     %pars    
-    KpCO2 = pars(76);
-    KpO2 = pars(77);
-    KcMRv = pars(75);
-    KcCO2 = pars(74);
-    Kbg = pars(73);
-    dV_rest = pars(265);
-    V0dead = pars(235);
-    GVdead = pars(40);
-    dt = pars(280);
+    KpCO2 = pars('KpCO2');
+    KpO2 = pars('KpO2');
+    KcMRv = pars('KcMRv');
+    KcCO2 = pars('KcCO2');
+    Kbg = pars('Kbg');
+    dV_rest = pars('dV_rest');
+    V0dead = pars('Vdead');
+    GVdead = pars('GVdead');
+    dt = pars('dt');
 
     %vars
-    Tresp = y(84);
-    MRv = y(28);
-    mean_PaO2 = y(126);
-    mean_PaCO2 = y(125);
-    mean_PbCO2 = y(127);
+    Tresp = y('Tresp');
+    MRv = y('MRv');
+    mean_PaO2 = y('mean_PaO2');
+    mean_PaCO2 = y('mean_PaCO2');
+    mean_PbCO2 = y('mean_PbCO2');
     
     dVA_ = dV_rest * (KpCO2 * mean_PaCO2 + KcCO2 * mean_PbCO2 + (KpO2 * (104 - mean_PaO2)^4.9) * (mean_PaO2 < 104) + KcMRv * MRv - Kbg); %This should be alveolar minute volume, and it's part of the minute ventilation we want the lungs to adquire
     dVA = dVA_ * (dVA_ > 0); % as minute ventilation is a positive value, we must take the absolute value, we will never be able to remove air from the lungs, the minimum volume value will always be dead space volume 
@@ -915,9 +912,9 @@ function  [ddVE, test_] = ventilation_control(t, y, pars, internal_variables, te
     dVE = dVA + dVd;    %dVE corresponds to minute ventilation (how much volume do I want to exchange over a minute, it's a indicator of respiration flow and its different than instant flow)
     %dVE = dVE * (dVE > 0.1) + 0.1 * (dVE <= 0.1); %this is a correction to avoid negative values in the minute ventilation, which is not possible, and also to avoid very low values that are not physiological (0.11 l/s, which are indeed 7 l/min, reported as common minute ventilation values)
     
-    ddVE = (dVE - y(110))/dt;
+    ddVE = (dVE - y('dVE'))/dt;
 
-    %all_global(1, round(t/dt) + 1) = dVE;
+    %all_global(index(tiny_y_keys, 'dVE'), round(t/dt) + 1) = dVE;
     
     
     
@@ -932,14 +929,14 @@ function [mean_dPaO2, mean_dPaCO2, mean_dPbCO2, mean_dP_sa, test_] = mean_values
     
     
     %vars
-    PaO2 = y(54);
-    PaCO2 = y(53);
-    P_sa = y(46);    
-    PbCO2 = internal_variables(8);
-    mean_PaO2 = y(126);
-    mean_PaCO2 = y(125);
-    mean_P_sa = y(124);
-    mean_PbCO2 = y(127);
+    PaO2 = y('PaO2');
+    PaCO2 = y('PaCO2');
+    P_sa = y('P_sa');    
+    PbCO2 = internal_variables('PbCO2');
+    mean_PaO2 = y('mean_PaO2');
+    mean_PaCO2 = y('mean_PaCO2');
+    mean_P_sa = y('mean_P_sa');
+    mean_PbCO2 = y('mean_PbCO2');
 
     %means - we want a cut off filter that leaves signals at 0.1Hz range (to take the mean value)
     mean_dPaO2 = (PaO2 - mean_PaO2)/5;
@@ -960,9 +957,9 @@ end
 function [internal_variables_, test_] = muscle_pump(t, y, pars, internal_variables, test)
     %-------------------------
     %pars
-        Aim = pars(6);
-        Tc = pars(180);
-        Tim = pars(185);
+        Aim = pars('Aim');
+        Tc = pars('Tc');
+        Tim = pars('Tim');
     
     %-----------------------
     %vars
@@ -975,7 +972,7 @@ function [internal_variables_, test_] = muscle_pump(t, y, pars, internal_variabl
         P_im = Aim * phi;
     %---------------------------
     %Saving computations
-        internal_variables(55) = P_im;
+        internal_variables('P_im') = P_im;
         internal_variables_ = internal_variables;
     test_ = test;
 end
@@ -985,19 +982,19 @@ function [internal_variables_, test_] = vena_cava(t, y, pars, internal_variables
     %----------------------
     %pars
     %vena_cava
-        D1 = pars(32);
-        D2 = pars(33);
-        K1_vc = pars(60);
-        K2_vc = pars(62);
-        K_r_vc = pars(72);
-        R_vc_n = pars(150);
-        V_unstressed_vc = pars(232);
-        V_vc_max = pars(233);
-        V_vc_min = pars(234);
+        D1 = pars('D1');
+        D2 = pars('D2');
+        K1_vc = pars('K1_vc');
+        K2_vc = pars('K2_vc');
+        K_r_vc = pars('K_r_vc');
+        R_vc_n = pars('R_vc_n');
+        V_unstressed_vc = pars('V_unstressed_vc');
+        V_vc_max = pars('V_vc_max');
+        V_vc_min = pars('V_vc_min');
     
     %pulmonary
-        V_unstressed_ra = pars(225);
-        C_ra = pars(24);
+        V_unstressed_ra = pars('V_unstressed_ra');
+        C_ra = pars('C_ra');
 
     %-----------------------
     %vars
@@ -1009,11 +1006,10 @@ function [internal_variables_, test_] = vena_cava(t, y, pars, internal_variables
         % Q_rm_v = y('Q_rm_v'); %resting muscular venous
         % Q_am_v = y('Q_am_v'); %active muscular venous    
         %Q_v = [Q_e_v, Q_s_v, Q_b_v, Q_h_v, Q_rm_v, Q_am_v];
-    V_total_vc = y(100);
-    V_total_ra = y(96);
-    Ptor = internal_variables(35);  %this is in mmHg
+    V_total_vc = y('V_total_vc');
+    V_total_ra = y('V_total_ra');
+    Ptor = internal_variables('Ptor');  %this is in mmHg
     % Ptor = y('Ptor');
-    %Ptor = 0;
 
     %-----------------------
     %Equations
@@ -1047,76 +1043,76 @@ function [internal_variables_, test_] = vena_cava(t, y, pars, internal_variables
     %-----------------------------
     %Saving computations
 
-        internal_variables(56) = P_vc;
-        internal_variables(53) = V_vc;
-        internal_variables(45) = Q_ra;
-        internal_variables(19) = P_ra;
-        internal_variables(46) = V_ra;
+        internal_variables('P_vc') = P_vc;
+        internal_variables('V_vc') = V_vc;
+        internal_variables('Q_ra') = Q_ra;
+        internal_variables('P_ra') = P_ra;
+        internal_variables('V_ra') = V_ra;
         internal_variables_ = internal_variables;
     test_ = test;
 end
 
 
-function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart, dQ_i_lv, dQ_lv, dP_max_lv, test_] = heart(t, y, pars, internal_variables, test)
+function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart, test_] = heart(t, y, pars, internal_variables, test)
 
     %--------------------------------
     %pars
         %heart
-            C_la = pars(20);
-            K_E_lv = pars(70);
-            K_E_rv = pars(71);
-            KR_lv = pars(68);
-            KR_rv = pars(69);
-            ksys = pars(337);
-            P0_lv = pars(114);
-            P0_rv = pars(115);
-            R_la = pars(139);
-            R_ra = pars(144);
-            Tsys_0 = pars(203);
-            V_unstressed_la = pars(220);
-            V_unstressed_lv = pars(221);
-            V_unstressed_rv = pars(228);
+            C_la = pars('C_la');
+            K_E_lv = pars('K_E_lv');
+            K_E_rv = pars('K_E_rv');
+            KR_lv = pars('KR_lv');
+            KR_rv = pars('KR_rv');
+            ksys = pars('ksys');
+            P0_lv = pars('P0_lv');
+            P0_rv = pars('P0_rv');
+            R_la = pars('R_la');
+            R_ra = pars('R_ra');
+            Tsys_0 = pars('Tsys_0');
+            V_unstressed_la = pars('V_unstressed_la');
+            V_unstressed_lv = pars('V_unstressed_lv');
+            V_unstressed_rv = pars('V_unstressed_rv');
             %for other modules
-                %C_ra = pars(24);
-                %V_unstressed_ra = pars(225);
+                %C_ra = pars('C_ra');
+                %V_unstressed_ra = pars('V_unstressed_ra');
         
         %pulmonary
-            V_unstressed_pa = pars(222);
-            C_pa = pars(21);
-            V_unstressed_pv = pars(224);
-            C_pv = pars(23);
-            R_pv = pars(143);
+            V_unstressed_pa = pars('V_unstressed_pa');
+            C_pa = pars('C_pa');
+            V_unstressed_pv = pars('V_unstressed_pv');
+            C_pv = pars('C_pv');
+            R_pv = pars('R_pv');
         
         %general
-        dt = pars(280);
+        dt = pars('dt');
     
     %------------------------------------- 
     %vars    
     %for other modules
-        %V_total_ra = y(96);
+        %V_total_ra = y('V_total_ra');
      %this should come from internal variables
-    V_total_lv = y(92);
-    V_total_la = y(91);
-    V_total_rv = y(98);
-    V_total_pa = y(93);
-    V_total_pv = y(95);
-    P_sa = y(46);              
-    zheta_heart = y(160);
+    V_total_lv = y('V_total_lv');
+    V_total_la = y('V_total_la');
+    V_total_rv = y('V_total_rv');
+    V_total_pa = y('V_total_pa');
+    V_total_pv = y('V_total_pv');
+    P_sa = y('P_sa');              
+    zheta_heart = y('zheta_heart');
 
     
     
     
     %------------------------------------
     %internal_variables
-    Theart = internal_variables(132);
-    Ptor = internal_variables(35);  
-    Q_ra = internal_variables(45);
-    P_ra = internal_variables(19);
-    E_max_lv = internal_variables(130);
-    E_max_rv = internal_variables(131);
+    Theart = internal_variables('Theart');
+    Ptor = internal_variables('Ptor');  
+    Q_ra = internal_variables('Q_ra');
+    P_ra = internal_variables('P_ra');
+    E_max_lv = internal_variables('Emax_lv');
+    E_max_rv = internal_variables('Emax_rv');
     if t == 0
-        E_max_lv = y(19);
-        E_max_rv = y(20);
+        E_max_lv = y('E_max_lv');
+        E_max_rv = y('E_max_rv');
     end
 
     %--------------------------------------
@@ -1125,8 +1121,8 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
     %Cardiac oscilator
 
         try  %to avoid the non existent first value
-            t0_heart = all_global(5, round(t/dt));
-            u_t0 = all_global(6, round(t/dt));
+            t0_heart = all_global(index(tiny_y_keys, 't0_heart'), round(t/dt));
+            u_t0 = all_global(index(tiny_y_keys, 'u_t0'), round(t/dt));
         catch
             t0_heart = 0;
             u_t0 = 0;
@@ -1136,20 +1132,20 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
 
         %Activation function
             HR = 1/Theart;
-            %all_global(7, round(t/dt) + 1) = HR;
+            %all_global(index(tiny_y_keys, 'HR'), round(t/dt) + 1) = HR;
             
-            HR_integral = dt * sum(all_global(7, round(t0_heart/dt) + 1: round(t/dt) + 1));
+            HR_integral = dt * sum(all_global(index(tiny_y_keys, 'HR'), round(t0_heart/dt) + 1: round(t/dt) + 1));
             dzheta_heart = HR;
             U = HR_integral + u_t0 - floor(HR_integral + u_t0); %fractional part
             u = zheta_heart - floor(zheta_heart); %fractional part
             
             if U == 0        
-                all_global(5, round(t/dt) + 1) = t;        
-                all_global(6, round(t/dt) + 1) = u;
+                all_global(index(tiny_y_keys, 't0_heart'), round(t/dt) + 1) = t;        
+                all_global(index(tiny_y_keys, 'u_t0'), round(t/dt) + 1) = u;
                 
             else
-                all_global(5, round(t/dt) + 1) = t0_heart;         
-                all_global(6, round(t/dt) + 1) = u_t0;
+                all_global(index(tiny_y_keys, 't0_heart'), round(t/dt) + 1) = t0_heart;         
+                all_global(index(tiny_y_keys, 'u_t0'), round(t/dt) + 1) = u_t0;
                 
             end 
                 
@@ -1159,7 +1155,6 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
     %Left ventricle    
         V_lv = (V_total_lv - V_unstressed_lv) * ((V_total_lv - V_unstressed_lv) > 0);
         P_max_lv = phi * E_max_lv * (V_total_lv - V_unstressed_lv) + (1 - phi) * P0_lv * (exp(K_E_lv * V_total_lv) - 1);  
-        
         
         R_lv = KR_lv * P_max_lv;
         Q_lv = 1/R_lv * (P_max_lv - P_sa) * ((P_max_lv - P_sa) > 0);
@@ -1188,7 +1183,7 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
 
     %Right ventricle
         V_rv = (V_total_rv - V_unstressed_rv) * ((V_total_rv - V_unstressed_rv) > 0);
-        P_max_rv = phi * E_max_rv * (V_total_rv - V_unstressed_rv) +(1 - phi) * P0_rv *(exp(K_E_rv * V_total_rv) - 1);
+        P_max_rv = phi * E_max_rv * (V_total_rv - V_unstressed_rv) +(1 - phi) * P0_rv * (exp(K_E_rv * V_total_rv) - 1);
         R_rv = KR_rv * P_max_rv;
         Q_rv = 1/(R_rv) * (P_max_rv - P_pa) * ((P_max_rv - P_pa) > 0);
         P_rv = P_max_rv - R_rv * Q_rv + Ptor;
@@ -1208,39 +1203,31 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
         dV_total_ra = Q_ra - Q_i_rv;
         dV_total_la = Q_la - Q_i_lv;
         dV_total_lv = Q_i_lv - Q_lv;
-
-        
-        
-
         
         %for correct internal_variables handling
-        dQla = (Q_la - y(70))/dt;
-        dTheart = (Theart - y(83))/dt;
-        dQ_lv = (Q_lv - y(64))/dt;
-        dQ_i_lv = (Q_i_lv - y(63))/dt;
-        dP_max_lv = (P_max_lv- y(44))/dt;
+        dQla = (Q_la - y('Qla'))/dt;
+        dTheart = (Theart - y('Theart'))/dt;
 
-        
-
-
-    
+    % y('Q_lv') = Q_lv;
+    % y('Q_rv') = Q_rv;
+    % y('P_la') = P_la;
     y_ = y;
 
     %------------------------------
     % Saving computations
-        internal_variables(36) = Q_lv;
-        internal_variables(39) = Q_la;
-        internal_variables(38) = Q_rv;
-        internal_variables(25) = P_la;
-        internal_variables(40) = P_pv;
-        internal_variables(41) = P_pa;
-        internal_variables(50) = V_pa;
-        internal_variables(52) = V_pv;
-        internal_variables(48) = V_la;
-        internal_variables(49) = V_lv;
-        internal_variables(47) = V_rv;
-        internal_variables(84) = Wh_lv;
-        internal_variables(85) = Wh_rv;
+        internal_variables('Q_lv') = Q_lv;
+        internal_variables('Q_la') = Q_la;
+        internal_variables('Q_rv') = Q_rv;
+        internal_variables('P_la') = P_la;
+        internal_variables('P_pv') = P_pv;
+        internal_variables('P_pa') = P_pa;
+        internal_variables('V_pa') = V_pa;
+        internal_variables('V_pv') = V_pv;
+        internal_variables('V_la') = V_la;
+        internal_variables('V_lv') = V_lv;
+        internal_variables('V_rv') = V_rv;
+        internal_variables('Wh_lv') = Wh_lv;
+        internal_variables('Wh_rv') = Wh_rv;
         internal_variables_ = internal_variables;
 
     % -------------------------------
@@ -1263,23 +1250,23 @@ function [internal_variables_, dP_sa, dQ_sa, test_] = systemic_arteries(t, y, pa
     
     %---------------------------
     %pars
-    C_sa = pars(29);
-    L_sa = pars(81);
-    R_sa = pars(149);
-    V_unstressed_sa = pars(231);
+    C_sa = pars('C_sa');
+    L_sa = pars('L_sa');
+    R_sa = pars('R_sa');
+    V_unstressed_sa = pars('V_unstressed_sa');
     
     %-----------------------------
     %vars    
-    P_sa = y(46);
-    Q_sa = y(68); 
+    P_sa = y('P_sa');
+    Q_sa = y('Q_sa'); 
     %Ptor = y('Ptor');
-    P_sp = y(47);
+    P_sp = y('P_sp');
     
 
     %------------------------------
     %internal_variables
-    Ptor = internal_variables(35);
-    Q_lv = internal_variables(36);
+    Ptor = internal_variables('Ptor');
+    Q_lv = internal_variables('Q_lv');
     
     %----------------------------
     % Equations
@@ -1290,13 +1277,13 @@ function [internal_variables_, dP_sa, dQ_sa, test_] = systemic_arteries(t, y, pa
         
     %Derivatives
         dvar3 = V_total_sa;
-        dP_sa = 1/(C_sa) * (Q_lv - Q_sa);       
-        dQ_sa = 1/(L_sa) * ((P_sa - Ptor) - R_sa * Q_sa - P_sp); %Careful with L_sa, it's too sensitive
+        dP_sa = 1/C_sa * (Q_lv - Q_sa); 
+        dQ_sa = 1/L_sa * ((P_sa - Ptor) - R_sa * Q_sa - P_sp); %Careful with L_sa, it's too sensitive
         
         
     %-----------------------------
     %Saving computations
-    internal_variables(54) = V_sa;
+    internal_variables('V_sa') = V_sa;
     internal_variables_ = internal_variables;
     
     y_ = y;
@@ -1306,36 +1293,36 @@ end
 function [internal_variables_, dQ_pa, dV_total_pp, dV_total_pv, dV_total_pa, dQpp, test_] = pulmonary_circulation(t, y, pars, internal_variables, test)
     %------------------------------------
     %pars
-    dt = pars(280);
-    C_pp = pars(22);
-    %R_pp = pars(142); now is calculated from internal variables (HIPOXIA)
-    L_pa = pars(80);
-    R_pa = pars(141);
+    dt = pars('dt');
+    C_pp = pars('C_pp');
+    %R_pp = pars('R_pp'); now is calculated from internal variables (HIPOXIA)
+    L_pa = pars('L_pa');
+    R_pa = pars('R_pa');
     
-    V_unstressed_pp = pars(223);
+    V_unstressed_pp = pars('V_unstressed_pp');
     % for other modules
-        %C_pa = pars(21);
-        %C_pv = pars(23);
-        %R_pv = pars(143);
-        %V_unstressed_pa = pars(222);
-        %V_unstressed_pv = pars(224);
+        %C_pa = pars('C_pa');
+        %C_pv = pars('C_pv');
+        %R_pv = pars('R_pv');
+        %V_unstressed_pa = pars('V_unstressed_pa');
+        %V_unstressed_pv = pars('V_unstressed_pv');
 
     %-------------------------------------
     %vars
     % for other modules
         %Ptor = y('Ptor');
-        %V_total_pa = y(93);
-        %V_total_pv = y(95);    
-    Q_pa = y(65);
-    V_total_pp = y(94);
+        %V_total_pa = y('V_total_pa');
+        %V_total_pv = y('V_total_pv');    
+    Q_pa = y('Q_pa');
+    V_total_pp = y('V_total_pp');
 
     %------------------------------------
     %internal_variables   
-    Q_rv = internal_variables(38);
-    Q_la = internal_variables(39);  
-    P_pv = internal_variables(40);
-    P_pa = internal_variables(41);
-    R_pp = internal_variables(139);
+    Q_rv = internal_variables('Q_rv');
+    Q_la = internal_variables('Q_la');  
+    P_pv = internal_variables('P_pv');
+    P_pa = internal_variables('P_pa');
+    R_pp = internal_variables('R_p_p');
     
     %-----------------------------------
     %Equations
@@ -1363,11 +1350,11 @@ function [internal_variables_, dQ_pa, dV_total_pp, dV_total_pv, dV_total_pa, dQp
         dV_total_pa = Q_rv - Q_pa;
 
         %for correct internal_variables handling
-        dQpp = (Q_pp - y(71))/dt;
+        dQpp = (Q_pp - y('Qpp'))/dt;
     
     %---------------------------------------
     %Saving computations
-        internal_variables(51) = V_pp;
+        internal_variables('V_pp') = V_pp;
         internal_variables_ = internal_variables;
 
         y_ = y;
@@ -1378,91 +1365,91 @@ end
 function [internal_variables_, dV_total_vc, dV_total_v, dP_sp, dQbp, test_] = systemic_peripheric_and_venous_circulation(t, y, pars, internal_variables, test)
     %---------------------------------
     %pars
-    dt = pars(280);
+    dt = pars('dt');
     %compartment order: e,s,b,h,rm,am
         %systemic_peripheric_and_venous_circulation    
-            k_r_am = pars(325);
-            P0 = pars(113);
-            C_e_p = pars(16);
-            C_s_p = pars(27);
-            C_b_p = pars(14);
-            C_h_p = pars(18);
-            C_rm_p = pars(25);
-            C_am_p = pars(12);
-            C_e_v = pars(17);
-            C_s_v = pars(28);
-            C_b_v = pars(15);
-            C_h_v = pars(19);
-            C_rm_v = pars(26);
-            C_am_v = pars(13);
-            R_e_n = pars(135);
-            R_s_n = pars(147);
-            R_b_n = pars(133);
-            R_h_n = pars(137);
-            R_rm_n = pars(145);
-            R_am_n = pars(131);
-            V_unstressed_e_p = pars(216);
-            V_unstressed_s_p = pars(229); 
-            V_unstressed_b_p = pars(214);
-            V_unstressed_h_p = pars(218);
-            V_unstressed_rm_p = pars(226);
-            V_unstressed_am_p = pars(212);
-            %V_unstressed_e_v = pars(217);    %this is actually a var from carfiac control
-            %V_unstressed_s_v = pars(230);    %this is actually a var from carfiac control
-            V_unstressed_b_v = pars(215);
-            V_unstressed_h_v = pars(219);
-            %V_unstressed_rm_v = pars(227);  %this is actually a var from carfiac control
-            %V_unstressed_am_v = pars(213);  %this is actually a var from carfiac control
-            V_tot = pars(207);
+            k_r_am = pars('k_r_am');
+            P0 = pars('P0');
+            C_e_p = pars('C_e_p');
+            C_s_p = pars('C_s_p;');
+            C_b_p = pars('C_b_p');
+            C_h_p = pars('C_h_p');
+            C_rm_p = pars('C_rm_p');
+            C_am_p = pars('C_am_p');
+            C_e_v = pars('C_e_v');
+            C_s_v = pars('C_s_v');
+            C_b_v = pars('C_b_v');
+            C_h_v = pars('C_h_v');
+            C_rm_v = pars('C_rm_v');
+            C_am_v = pars('C_am_v');
+            R_e_n = pars('R_e_n');
+            R_s_n = pars('R_s_n');
+            R_b_n = pars('R_b_n');
+            R_h_n = pars('R_h_n');
+            R_rm_n = pars('R_rm_n');
+            R_am_n = pars('R_am_n');
+            V_unstressed_e_p = pars('V_unstressed_e_p');
+            V_unstressed_s_p = pars('V_unstressed_s_p'); 
+            V_unstressed_b_p = pars('V_unstressed_b_p');
+            V_unstressed_h_p = pars('V_unstressed_h_p');
+            V_unstressed_rm_p = pars('V_unstressed_rm_p');
+            V_unstressed_am_p = pars('V_unstressed_am_p');
+            %V_unstressed_e_v = pars('V_unstressed_e_v');    %this is actually a var from carfiac control
+            %V_unstressed_s_v = pars('V_unstressed_s_v');    %this is actually a var from carfiac control
+            V_unstressed_b_v = pars('V_unstressed_b_v');
+            V_unstressed_h_v = pars('V_unstressed_h_v');
+            %V_unstressed_rm_v = pars('V_unstressed_rm_v');  %this is actually a var from carfiac control
+            %V_unstressed_am_v = pars('V_unstressed_am_v');  %this is actually a var from carfiac control
+            V_tot = pars('V_tot');
 
         %systemic arteries
-            V_unstressed_sa = pars(231);
+            V_unstressed_sa = pars('V_unstressed_sa');
         %pulmonary
-            V_unstressed_pa = pars(222);
-            V_unstressed_pp = pars(223);
-            V_unstressed_pv = pars(224);
+            V_unstressed_pa = pars('V_unstressed_pa');
+            V_unstressed_pp = pars('V_unstressed_pp');
+            V_unstressed_pv = pars('V_unstressed_pv');
         %heart
-            V_unstressed_ra = pars(225);
-            V_unstressed_la = pars(220);
+            V_unstressed_ra = pars('V_unstressed_ra');
+            V_unstressed_la = pars('V_unstressed_la');
 
     %-----------------------------------------        
     %vars
-    Q_sa = y(68);
-    I = y(23);
-    V_total_e_v = y(89);
-    V_total_s_v = y(99);
-    V_total_b_v = y(88);
-    V_total_h_v = y(90);
-    V_total_rm_v = y(97);
-    V_total_am_v = y(87);
-    P_sp = y(47);
+    Q_sa = y('Q_sa');
+    I = y('I');
+    V_total_e_v = y('V_total_e_v');
+    V_total_s_v = y('V_total_s_v');
+    V_total_b_v = y('V_total_b_v');
+    V_total_h_v = y('V_total_h_v');
+    V_total_rm_v = y('V_total_rm_v');
+    V_total_am_v = y('V_total_am_v');
+    P_sp = y('P_sp');
     
     %internal_variables
-    Pabd = internal_variables(44);
-    Q_ra = internal_variables(45);
-    V_ra = internal_variables(46); 
-    V_rv = internal_variables(47);
-    V_la = internal_variables(48);
-    V_lv = internal_variables(49);
-    V_pa = internal_variables(50);
-    V_pp = internal_variables(51); 
-    V_pv = internal_variables(52); 
-    V_vc = internal_variables(53); 
-    V_sa = internal_variables(54); 
-    P_im = internal_variables(55); 
-    P_vc = internal_variables(56); 
+    Pabd = internal_variables('Pabd');
+    Q_ra = internal_variables('Q_ra');
+    V_ra = internal_variables('V_ra'); 
+    V_rv = internal_variables('V_rv');
+    V_la = internal_variables('V_la');
+    V_lv = internal_variables('V_lv');
+    V_pa = internal_variables('V_pa');
+    V_pp = internal_variables('V_pp'); 
+    V_pv = internal_variables('V_pv'); 
+    V_vc = internal_variables('V_vc'); 
+    V_sa = internal_variables('V_sa'); 
+    P_im = internal_variables('P_im'); 
+    P_vc = internal_variables('P_vc'); 
 
-    R_e_p = internal_variables(137);
-    R_s_p = internal_variables(138);
-    R_b_p = internal_variables(136);
-    R_h_p = internal_variables(134);
-    R_rm_p = internal_variables(135);
-    R_am_p = internal_variables(133);
+    R_e_p = internal_variables('R_e_p');
+    R_s_p = internal_variables('R_s_p');
+    R_b_p = internal_variables('R_b_p');
+    R_h_p = internal_variables('R_h_p');
+    R_rm_p = internal_variables('R_rm_p');
+    R_am_p = internal_variables('R_am_p');
 
-    V_unstressed_e_v = internal_variables(126);
-    V_unstressed_s_v = internal_variables(127);
-    V_unstressed_rm_v = internal_variables(128);
-    V_unstressed_am_v = internal_variables(129);
+    V_unstressed_e_v = internal_variables('V_unstressed_e_v');
+    V_unstressed_s_v = internal_variables('V_unstressed_s_v');
+    V_unstressed_rm_v = internal_variables('V_unstressed_rm_v');
+    V_unstressed_am_v = internal_variables('V_unstressed_am_v');
     
     index = {'e','s','b','h','rm','am'};
     
@@ -1510,7 +1497,7 @@ function [internal_variables_, dV_total_vc, dV_total_v, dP_sp, dQbp, test_] = sy
 
     %for correct intenal_variables handling:
     Q_bp = Q_p(3);
-    dQbp = (Q_bp - y(69))/dt;
+    dQbp = (Q_bp - y('Qbp'))/dt;
 
     %['e','s','b','h','rm','am'];
     Q_e = Q_p(1);
@@ -1518,27 +1505,27 @@ function [internal_variables_, dV_total_vc, dV_total_v, dP_sp, dQbp, test_] = sy
     Q_h = Q_p(4);
     Q_rm = Q_p(5);
     Q_am = Q_p(6);
-    dQ_e = (Q_e - y(61))/dt;
-    dQ_s = (Q_s - y(67))/dt;
-    dQ_h = (Q_h - y(62))/dt;
-    dQ_rm = (Q_rm - y(66))/dt;
-    dQ_am = (Q_am - y(60))/dt;
+    dQ_e = (Q_e - y('Q_e'))/dt;
+    dQ_s = (Q_s - y('Q_s'))/dt;
+    dQ_h = (Q_h - y('Q_h'))/dt;
+    dQ_rm = (Q_rm - y('Q_rm'))/dt;
+    dQ_am = (Q_am - y('Q_am'))/dt;
     P_v_e = P_v(1);
     P_v_s = P_v(2);
     P_v_h = P_v(4);
     P_v_rm = P_v(5);
     P_v_am = P_v(6);
-    dP_v_e = (P_v_e - y(49))/dt;
-    dP_v_s = (P_v_s - y(52))/dt;
-    dP_v_h = (P_v_h - y(50))/dt;
-    dP_v_rm = (P_v_rm - y(51))/dt;
-    dP_v_am = (P_v_am - y(48))/dt;
-    dR_e_p = (R_e_p - y(76))/dt;
-    dR_s_p = (R_s_p - y(80))/dt;
-    dR_b_p = (R_b_p - y(74))/dt;
-    dR_h_p = (R_h_p - y(77))/dt;
-    dR_rm_p = (R_rm_p - y(78))/dt;
-    dR_am_p = (R_am_p - y(72))/dt;
+    dP_v_e = (P_v_e - y('P_v_e'))/dt;
+    dP_v_s = (P_v_s - y('P_v_s'))/dt;
+    dP_v_h = (P_v_h - y('P_v_h'))/dt;
+    dP_v_rm = (P_v_rm - y('P_v_rm'))/dt;
+    dP_v_am = (P_v_am - y('P_v_am'))/dt;
+    dR_e_p = (R_e_p - y('R_e_p'))/dt;
+    dR_s_p = (R_s_p - y('R_s_p'))/dt;
+    dR_b_p = (R_b_p - y('R_b_p'))/dt;
+    dR_h_p = (R_h_p - y('R_h_p'))/dt;
+    dR_rm_p = (R_rm_p - y('R_rm_p'))/dt;
+    dR_am_p = (R_am_p - y('R_am_p'))/dt;
 
     test('dQ_e') = dQ_e;
     test('dQ_s') = dQ_s;
@@ -1558,12 +1545,12 @@ function [internal_variables_, dV_total_vc, dV_total_v, dP_sp, dQbp, test_] = sy
     test('dR_am_p') = dR_am_p;
 
     %Saving computations    
-    internal_variables(91) = Q_p(6);
-    internal_variables(86) = Q_p(4);
-    internal_variables(87) = Q_p(5);
-    internal_variables(74) = Q_p(3);
-    internal_variables(78) = Q_p(1);
-    internal_variables(79) = Q_p(2);
+    internal_variables('Q_am_p') = Q_p(6);
+    internal_variables('Q_h_p') = Q_p(4);
+    internal_variables('Q_rm_p') = Q_p(5);
+    internal_variables('Q_b_p') = Q_p(3);
+    internal_variables('Q_e_p') = Q_p(1);
+    internal_variables('Q_s_p') = Q_p(2);
     internal_variables_ = internal_variables;
     test_ = test;
 end
@@ -1571,16 +1558,16 @@ end
 function [dP_mean, internal_variables_] = afferent_barorreflex(t,y,pars, internal_variables, dP_sa)
 
     %pars
-    f_ab_min = pars(284);
-    f_ab_max = pars(283);
-    kab = pars(326);
-    P_n = pars(119);
-    tau_p = pars(373);
-    tau_z = pars(375);
+    f_ab_min = pars('f_ab_min');
+    f_ab_max = pars('f_ab_max');
+    kab = pars('kab');
+    P_n = pars('P_n');
+    tau_p = pars('tau_p');
+    tau_z = pars('tau_z');
     
     %vars
-    P_mean = y(45);
-    P_sa = y(46);
+    P_mean = y('P_mean');
+    P_sa = y('P_sa');
 
 
     %Equations
@@ -1592,7 +1579,7 @@ function [dP_mean, internal_variables_] = afferent_barorreflex(t,y,pars, interna
     fab = 1/(1 + exp((P_mean - P_n)/kab)) * (f_ab_min + f_ab_max * exp((P_mean - P_n)/kab));
 
     %Saving computations
-    internal_variables(98) = fab;
+    internal_variables('fab') = fab;
     internal_variables_ = internal_variables;
     
 end
@@ -1600,20 +1587,20 @@ end
 function  [df_ac] = afferent_chemoreceptor(t,y,internal_variables)
 
     %pars
-    f_ac_CO2_n = pars(285);
-    f_ac_max = pars(286);
-    f_ac_min = pars(287);
-    kac = pars(327);
-    KH = pars(67);
-    PaO2_ac_n = pars(121);
-    PaCO2_n = pars(120);
-    tau_ac = pars(368);
+    f_ac_CO2_n = pars('f_ac_CO2_n');
+    f_ac_max = pars('f_ac_max');
+    f_ac_min = pars('f_ac_min');
+    kac = pars('kac');
+    KH = pars('KH');
+    PaO2_ac_n = pars('PaO2_ac_n');
+    PaCO2_n = pars('PaCO2_n');
+    tau_ac = pars('tau_ac');
 
 
     %vars
-    f_ac = y(114);
-    PaO2 = y(54);
-    PaCO2 = y(53);
+    f_ac = y('f_ac');
+    PaO2 = y('PaO2');
+    PaCO2 = y('PaCO2');
 
     %Equations
     if PaO2 > 80
@@ -1633,12 +1620,12 @@ end
 function [df_ap] = afferent_pulmonary_stretch(t,y,pars, internal_variables)
 
     %pars
-    G_ap = pars(51);
-    tau_ap = pars(369);
+    G_ap = pars('G_ap');
+    tau_ap = pars('tau_ap');
 
     %vars
-    f_ap = y(115);
-    V = y(85);
+    f_ap = y('f_ap');
+    V = y('V');
 
     %Equations
     phi_ap = G_ap * V;
@@ -1649,28 +1636,28 @@ end
 function [dxO2_b, dxCO2_b, dR_bp, internal_variables_] = cerebral_blood_flow(t, y, pars, internal_variables)
 
     %pars
-    A = pars(1);
-    B = pars(7);
-    C = pars(9);
-    D = pars(31);
-    dt = pars(280);
-    vO2_b_n = pars(384);
-    gO2_b = pars(301);
-    MO2_bp = pars(83);
-    R_bmp = pars(134);
-    tau_CO2 = pars(353);
-    tau_O2 = pars(357);
-    PaCO2_n = pars(120);
+    A = pars('A');
+    B = pars('B');
+    C = pars('C');
+    D = pars('D');
+    dt = pars('dt');
+    vO2_b_n = pars('vO2_b_n');
+    gO2_b = pars('gO2_b');
+    MO2_bp = pars('MO2_bp');
+    R_bmp = pars('R_bmp');
+    tau_CO2 = pars('tau_CO2');
+    tau_O2 = pars('tau_O2');
+    PaCO2_n = pars('PaCO2_n');
 
     %vars
-    xO2_b = y(152);
-    xCO2_b = y(145);
-    aO2 = y(106);
-    PaCO2 = y(53);
+    xO2_b = y('xO2_b');
+    xCO2_b = y('xCO2_b');
+    aO2 = y('aO2');
+    PaCO2 = y('PaCO2');
 
     %internal variables
-    %Q_b_p = internal_variables(74);
-    Q_b_p = y(69);
+    %Q_b_p = internal_variables('Q_b_p');
+    Q_b_p = y('Qbp');
 
     %Equations
     G_bp = 1/R_bmp * (1 + xO2_b + xCO2_b);    
@@ -1684,9 +1671,9 @@ function [dxO2_b, dxCO2_b, dR_bp, internal_variables_] = cerebral_blood_flow(t, 
     dxO2_b = 1/tau_O2 * (-xO2_b - gO2_b * (vO2_b - vO2_b_n));
     dxCO2_b = 1/tau_CO2 * (-xCO2_b - phi_b);
 
-    internal_variables(75) = R_bp;
+    internal_variables('R_bp') = R_bp;
     
-    dR_bp =  (R_bp - y(75))/dt;
+    dR_bp =  (R_bp - y('R_bp'))/dt;
     internal_variables_ = internal_variables;
     
     
@@ -1699,39 +1686,39 @@ function [dxO2_e, dxO2_s, dxO2_p, internal_variables_] = hipoxia_local_regulatio
     % local control splacnic + extrasplacnic
 
     %pars    
-    dt = pars(280);
-    vO2_e_n = pars(385);
-    vO2_s_n = pars(388);
-    aO2_n = pars(258);
+    dt = pars('dt');
+    vO2_e_n = pars('vO2_e_n');
+    vO2_s_n = pars('vO2_s_n');
+    aO2_n = pars('aO2_n');
 
-    gO2_e = pars(302);
-    gO2_s = pars(306);
-    gO2_p = pars(304);
+    gO2_e = pars('gO2_e');
+    gO2_s = pars('gO2_s');
+    gO2_p = pars('gO2_p');
 
-    MO2_e = pars(84);
-    MO2_s = pars(88);
-    MO2_p = pars(86);
+    MO2_e = pars('MO2_e');
+    MO2_s = pars('MO2_s');
+    MO2_p = pars('MO2_p');
 
-    R_e_p_n = internal_variables(122);
-    R_s_p_n = internal_variables(123);
-    R_p_p_n = pars(140);
+    R_e_p_n = internal_variables('R_e_p_n');
+    R_s_p_n = internal_variables('R_s_p_n');
+    R_p_p_n = pars('R_p_p_n');
     
-    tau_CO2 = pars(353);
-    tau_O2 = pars(357);
+    tau_CO2 = pars('tau_CO2');
+    tau_O2 = pars('tau_O2');
 
     %vars
-    xO2_e = y(153);
-    xCO2_e = y(146);
-    xO2_s = y(157);
-    xCO2_s = y(150);
-    xO2_p = y(155);
-    xCO2_p = y(148);
-    aO2 = y(106);
+    xO2_e = y('xO2_e');
+    xCO2_e = y('xCO2_e');
+    xO2_s = y('xO2_s');
+    xCO2_s = y('xCO2_s');
+    xO2_p = y('xO2_p');
+    xCO2_p = y('xCO2_p');
+    aO2 = y('aO2');
     
 
     %internal variables
-    Q_e_p = internal_variables(78);
-    Q_s_p = internal_variables(79);
+    Q_e_p = internal_variables('Q_e_p');
+    Q_s_p = internal_variables('Q_s_p');
     %we are going asume that levels of oxygen that affect pulmonary resistances are not affected by pulmonary work   
       
     R_ep = R_e_p_n * 1/(1 + xO2_e);
@@ -1746,9 +1733,9 @@ function [dxO2_e, dxO2_s, dxO2_p, internal_variables_] = hipoxia_local_regulatio
     dxO2_s = 1/tau_O2 * (-xO2_s - gO2_s * (vO2_s - vO2_s_n) );
     dxO2_p = 1/tau_O2 * (-xO2_p - gO2_p * (aO2 - aO2_n) );
 
-    internal_variables(137) = R_ep;
-    internal_variables(138) = R_sp;
-    internal_variables(139) = R_pp;
+    internal_variables('R_e_p') = R_ep;
+    internal_variables('R_s_p') = R_sp;
+    internal_variables('R_p_p') = R_pp;
 
     internal_variables_ = internal_variables;
 
@@ -1763,22 +1750,22 @@ end
 function  [dxO2, dxCO2, dWh, internal_variables_] = coronary_and_resting_muscle_blood_flow(t, y, pars, internal_variables)
 
     %pars
-    vO2_h_n = pars(386);   
-    vO2_rm_n = pars(387);   
-    gO2_h = pars(303);  
-    gO2_rm = pars(305);  
-    KCO2_h = pars(64);   
-    KCO2_rm = pars(65);   
-    MO2_h_p_n = pars(85);   
-    MO2_rm_p = pars(87);   
-    R_h_p_n = pars(138);   
+    vO2_h_n = pars('vO2_h_n');   
+    vO2_rm_n = pars('vO2_rm_n');   
+    gO2_h = pars('gO2_h');  
+    gO2_rm = pars('gO2_rm');  
+    KCO2_h = pars('KCO2_h');   
+    KCO2_rm = pars('KCO2_rm');   
+    MO2_h_p_n = pars('MO2_h_p_n');   
+    MO2_rm_p = pars('MO2_rm_p');   
+    R_h_p_n = pars('R_h_p_n');   
     %R_rm_p_n = pars('R_rm_p_n');   
-    R_rm_p_n = internal_variables(124);   
-    tau_w = pars(374);   
-    tau_O2 = pars(357);
-    tau_CO2 = pars(353);
-    Whn = pars(245); 
-    PaCO2_n = pars(120); 
+    R_rm_p_n = internal_variables('R_rm_p_n');   
+    tau_w = pars('tau_w');   
+    tau_O2 = pars('tau_O2');
+    tau_CO2 = pars('tau_CO2');
+    Whn = pars('Whn'); 
+    PaCO2_n = pars('PaCO2_n'); 
     
 
     vO2_n = [vO2_h_n, vO2_rm_n];
@@ -1788,22 +1775,22 @@ function  [dxO2, dxCO2, dWh, internal_variables_] = coronary_and_resting_muscle_
     MO2_p = [MO2_h_p_n, MO2_rm_p]; %this changes afterwards in the code
     
     %vars
-    xO2_h = y(154);
-    xO2_rm = y(156);
-    xCO2_h = y(147);
-    xCO2_rm = y(149);
-    Wh = y(101);
-    PaCO2 = y(53);
-    aO2 = y(106);
+    xO2_h = y('xO2_h');
+    xO2_rm = y('xO2_rm');
+    xCO2_h = y('xCO2_h');
+    xCO2_rm = y('xCO2_rm');
+    Wh = y('Wh');
+    PaCO2 = y('PaCO2');
+    aO2 = y('aO2');
 
     xO2 = [xO2_h, xO2_rm];
     xCO2 = [xCO2_h, xCO2_rm];
 
     %internal variables
-    Wh_lv = internal_variables(84);
-    Wh_rv = internal_variables(85);
-    Q_h_p = internal_variables(86);
-    Q_rm_p = internal_variables(87);
+    Wh_lv = internal_variables('Wh_lv');
+    Wh_rv = internal_variables('Wh_rv');
+    Q_h_p = internal_variables('Q_h_p');
+    Q_rm_p = internal_variables('Q_rm_p');
     Q_p = [Q_h_p, Q_rm_p];
 
     %Equations
@@ -1820,8 +1807,8 @@ function  [dxO2, dxCO2, dWh, internal_variables_] = coronary_and_resting_muscle_
     dxCO2 = 1/tau_CO2 * (-xCO2 + phi);   %vectorial
     dWh = 1/tau_w * (wh - Wh);
     
-    internal_variables(134) = Rp(1);
-    internal_variables(135) = Rp(2);
+    internal_variables('R_h_p') = Rp(1);
+    internal_variables('R_rm_p') = Rp(2);
     internal_variables_ = internal_variables;
 
 
@@ -1832,33 +1819,33 @@ end
 function [dxO2_am, dx_met, dx_M, dphi_met, internal_variables_] = active_muscle_blood_flow(t,y,pars, internal_variables, index_fun)
     
     %pars
-    vO2_am_n = pars(383);
-    delay_met = pars(279);
-    gO2_am = pars(300);
-    g_M = pars(307);
-    I0_met = pars(54);
-    kmet = pars(336);
-    MO2_am_p_n = pars(82);
-    phi_max = pars(346);
-    phi_min = pars(347);
-    tau_M = pars(356);
-    tau_O2 = pars(357);
-    tau_CO2 = pars(353);
-    tau_met = pars(372);
+    vO2_am_n = pars('vO2_am_n');
+    delay_met = pars('delay_met');
+    gO2_am = pars('gO2_am');
+    g_M = pars('g_M');
+    I0_met = pars('I0_met');
+    kmet = pars('kmet');
+    MO2_am_p_n = pars('MO2_am_p_n');
+    phi_max = pars('phi_max');
+    phi_min = pars('phi_min');
+    tau_M = pars('tau_M');
+    tau_O2 = pars('tau_O2');
+    tau_CO2 = pars('tau_CO2');
+    tau_met = pars('tau_met');
 
     %vars
-    aO2 = y(106);
-    xO2_am  = y(151);
-    x_M = y(158);
-    x_met = y(159);
+    aO2 = y('aO2');
+    xO2_am  = y('xO2_am');
+    x_M = y('x_M');
+    x_met = y('x_met');
     %phi_met_delayed = all_global(:,round(t - delay_met/dt) + 1:end);  %we have to put the dictionary here
-    phi_met_delayed = get_delayed_value(tiny_y_keys, t, delay_met, dt, all_global, index_fun, 0, 8);
+    phi_met_delayed = get_delayed_value(tiny_y_keys, t, delay_met, dt, all_global, index_fun,0, 'phi_met');
     
     %internal variables
-    I = internal_variables(97);
-    Q_am_p = internal_variables(91);
+    I = internal_variables('I');
+    Q_am_p = internal_variables('Q_am_p');
     %Equations
-    R_amp_n = internal_variables(125);
+    R_amp_n = internal_variables('R_am_p_n');
     R_am_p = R_amp_n/(1 + xO2_am + x_met);
     MO2_am_p = MO2_am_p_n * (1 + x_M);
     vO2_am = aO2 - MO2_am_p/Q_am_p;
@@ -1868,12 +1855,11 @@ function [dxO2_am, dx_met, dx_M, dphi_met, internal_variables_] = active_muscle_
 
     %Derivatives
     dxO2_am = 1/tau_O2 * (-xO2_am - gO2_am * (vO2_am - vO2_am_n));
-    dx_M = 1/tau_M * (-x_M + g_M * (I*(I>0.3) + 0.3*(I<=0.3)));
-    %dx_M = 1/tau_M * (-x_M + g_M * I);
+    dx_M = 1/tau_M * (-x_M + g_M * I);
     dx_met = 1/tau_met * (-x_met + phi_met_delayed);
-    internal_variables(133) = R_am_p;
+    internal_variables('R_am_p') = R_am_p;
     internal_variables_  = internal_variables;
-    dphi_met = phi_met - y(128);
+    dphi_met = phi_met - y('phi_met');
 
     function delayed_value = get_delayed_value(tiny_y_keys, t, delay, dt, all_global, index_fun, fj_init, fs)
         if delay > t
@@ -1881,7 +1867,7 @@ function [dxO2_am, dx_met, dx_M, dphi_met, internal_variables_] = active_muscle_
             delayed_value = fj_init;
         else
             % Otherwise, calculate the delayed value using the original code
-            delayed_value = all_global(fs, round((t - delay)/dt) + 1);
+            delayed_value = all_global(index_fun(tiny_y_keys, fs), round((t - delay)/dt) + 1);
         end
     
 
@@ -1894,24 +1880,24 @@ end
 
 function [dDThetaO2_s, dDThetaCO2_s, internal_variables_] = cns_ischemic_response(t, y, pars, internal_variables)
      %pars
-     gcc_h_s  = pars(317);
-     gcc_p_s = pars(318);
-     gcc_v_s = pars(319);
-     k_isc_h_s = pars(322);
-     k_isc_p_s = pars(323);
-     k_isc_v_s = pars(324);
-     PO2_ref_h_s = pars(116);
-     PO2_ref_p_s = pars(117);
-     PO2_ref_v_s = pars(118);
-     tau_cc = pars(370);
-     tau_isc = pars(371);
-     Theta_h_s_n = pars(181);
-     Theta_p_s_n = pars(182);
-     Theta_v_s_n = pars(184);
-     x_h_s = pars(389);
-     x_p_s = pars(390);
-     x_v_s = pars(391);
-     PaCO2_n = pars(120);
+     gcc_h_s  = pars('gcc_h_s');
+     gcc_p_s = pars('gcc_p_s');
+     gcc_v_s = pars('gcc_v_s');
+     k_isc_h_s = pars('k_isc_h_s');
+     k_isc_p_s = pars('k_isc_p_s');
+     k_isc_v_s = pars('k_isc_v_s');
+     PO2_ref_h_s = pars('PO2_ref_h_s');
+     PO2_ref_p_s = pars('PO2_ref_p_s');
+     PO2_ref_v_s = pars('PO2_ref_v_s');
+     tau_cc = pars('tau_cc');
+     tau_isc = pars('tau_isc');
+     Theta_h_s_n = pars('Theta_h_s_n');
+     Theta_p_s_n = pars('Theta_p_s_n');
+     Theta_v_s_n = pars('Theta_v_s_n');
+     x_h_s = pars('x_h_s');
+     x_p_s = pars('x_p_s');
+     x_v_s = pars('x_v_s');
+     PaCO2_n = pars('PaCO2_n');
 
      gcc_s = [gcc_h_s, gcc_p_s, gcc_v_s];
      k_isc_s = [k_isc_h_s, k_isc_p_s, k_isc_v_s];
@@ -1920,14 +1906,14 @@ function [dDThetaO2_s, dDThetaCO2_s, internal_variables_] = cns_ischemic_respons
      xs = [x_h_s, x_p_s, x_v_s];
 
      %vars
-     PaO2 = y(54); 
-     PaCO2 = y(53);
-     DThetaO2_h_s = y(4);
-     DThetaO2_p_s = y(5);
-     DThetaO2_v_s = y(6);
-     DThetaCO2_h_s = y(1);
-     DThetaCO2_p_s = y(2);
-     DThetaCO2_v_s = y(3);
+     PaO2 = y('PaO2'); 
+     PaCO2 = y('PaCO2');
+     DThetaO2_h_s = y('DThetaO2_h_s');
+     DThetaO2_p_s = y('DThetaO2_p_s');
+     DThetaO2_v_s = y('DThetaO2_v_s');
+     DThetaCO2_h_s = y('DThetaCO2_h_s');
+     DThetaCO2_p_s = y('DThetaCO2_p_s');
+     DThetaCO2_v_s = y('DThetaCO2_v_s');
      DThetaCO2_s = [DThetaCO2_h_s, DThetaCO2_p_s, DThetaCO2_v_s];
      DThetaO2_s = [DThetaO2_h_s, DThetaO2_p_s, DThetaO2_v_s];
 
@@ -1941,9 +1927,9 @@ function [dDThetaO2_s, dDThetaCO2_s, internal_variables_] = cns_ischemic_respons
      dDThetaCO2_s = 1/tau_cc * (-DThetaCO2_s + gcc_s * (PaCO2 - PaCO2_n)); %vectorial
      dDThetaO2_s = 1/tau_isc * (-DThetaO2_s + ws); %vectorial
 
-     internal_variables(100) = Theta_s(1);
-     internal_variables(101) = Theta_s(2);
-     internal_variables(102) = Theta_s(3);
+     internal_variables('Theta_h_s') = Theta_s(1);
+     internal_variables('Theta_p_s') = Theta_s(2);
+     internal_variables('Theta_v_s') = Theta_s(3);
 
      internal_variables_ = internal_variables;
 
@@ -1952,46 +1938,46 @@ end
 function [internal_variables_] = efferent_pathways(t, y, pars, internal_variables)
     
     %pars
-    fab_0 = pars(288);
-    fes_0 = pars(289);
-    fes_inf = pars(290);
-    fes_max = pars(291);
-    fev_0 = pars(293);
-    fev_inf = pars(294);
-    kes = pars(334);
-    kev = pars(335);
-    I_0_h_s = pars(55);
-    I_0_p_s = pars(56);
-    I_0_v_s = pars(58);
-    I_0_v = pars(57);
-    kcc_h_s = pars(330);
-    kcc_p_s = pars(331);
-    kcc_v_s = pars(333);
-    kcc_v = pars(332);
-    gamma_h_s_max = pars(309);
-    gamma_p_s_max = pars(311);
-    gamma_v_s_max = pars(315);
-    gamma_v_max = pars(313);
-    gamma_h_s_min = pars(310);
-    gamma_p_s_min = pars(312);
-    gamma_v_s_min = pars(316);
-    gamma_v_min = pars(314);
-    Theta_v = pars(183);
-    Wb_h_s = pars(238);
-    Wb_p_s = pars(239);
-    Wb_v_s = pars(240);
-    Wc_h_s = pars(241);
-    Wc_p_s = pars(242);
-    Wc_v_s = pars(244);
-    Wc_v = 0.9*pars(243);
-    Wp_h_s = pars(246);
-    Wp_p_s = pars(247);
-    Wp_v_s = pars(249);
-    Wp_v = pars(248);
-    Wt_h_s = pars(250);
-    Wt_p_s = pars(251);
-    Wt_v_s = pars(253);
-    Wt_v = pars(252);
+    fab_0 = pars('fab_0');
+    fes_0 = pars('fes_0');
+    fes_inf = pars('fes_inf');
+    fes_max = pars('fes_max');
+    fev_0 = pars('fev_0');
+    fev_inf = pars('fev_inf');
+    kes = pars('kes');
+    kev = pars('kev');
+    I_0_h_s = pars('I_0_h_s');
+    I_0_p_s = pars('I_0_p_s');
+    I_0_v_s = pars('I_0_v_s');
+    I_0_v = pars('I_0_v');
+    kcc_h_s = pars('kcc_h_s');
+    kcc_p_s = pars('kcc_p_s');
+    kcc_v_s = pars('kcc_v_s');
+    kcc_v = pars('kcc_v');
+    gamma_h_s_max = pars('gamma_h_s_max');
+    gamma_p_s_max = pars('gamma_p_s_max');
+    gamma_v_s_max = pars('gamma_v_s_max');
+    gamma_v_max = pars('gamma_v_max');
+    gamma_h_s_min = pars('gamma_h_s_min');
+    gamma_p_s_min = pars('gamma_p_s_min');
+    gamma_v_s_min = pars('gamma_v_s_min');
+    gamma_v_min = pars('gamma_v_min');
+    Theta_v = pars('Theta_v');
+    Wb_h_s = pars('Wb_h_s');
+    Wb_p_s = pars('Wb_p_s');
+    Wb_v_s = pars('Wb_v_s');
+    Wc_h_s = pars('Wc_h_s');
+    Wc_p_s = pars('Wc_p_s');
+    Wc_v_s = pars('Wc_v_s');
+    Wc_v = 0.9*pars('Wc_v');
+    Wp_h_s = pars('Wp_h_s');
+    Wp_p_s = pars('Wp_p_s');
+    Wp_v_s = pars('Wp_v_s');
+    Wp_v = pars('Wp_v');
+    Wt_h_s = pars('Wt_h_s');
+    Wt_p_s = pars('Wt_p_s');
+    Wt_v_s = pars('Wt_v_s');
+    Wt_v = pars('Wt_v');
     
     I_0 = [I_0_h_s, I_0_p_s, I_0_v_s];
     kcc = [kcc_h_s, kcc_p_s, kcc_v_s];
@@ -2003,17 +1989,17 @@ function [internal_variables_] = efferent_pathways(t, y, pars, internal_variable
     Wt_s = [Wt_h_s, Wt_p_s, Wt_v_s]; 
 
     %vars
-    fac = y(114);
-    fap = y(115);
+    fac = y('f_ac');
+    fap = y('f_ap');
 
     %internal variables
-    I = internal_variables(97);
-    fab = internal_variables(98);
-    Nt = internal_variables(99);    
+    I = internal_variables('I');
+    fab = internal_variables('fab');
+    Nt = internal_variables('Nt');    
     
-    Theta_h_s = internal_variables(100);
-    Theta_p_s = internal_variables(101);
-    Theta_v_s = internal_variables(102);
+    Theta_h_s = internal_variables('Theta_h_s');
+    Theta_p_s = internal_variables('Theta_p_s');
+    Theta_v_s = internal_variables('Theta_v_s');
 
     Theta_s = [Theta_h_s, Theta_p_s, Theta_v_s];
 
@@ -2026,10 +2012,10 @@ function [internal_variables_] = efferent_pathways(t, y, pars, internal_variable
     fv = (fev_0 + fev_inf * exp((fab - fab_0)/(kev)))/(1 + exp((fab - fab_0)/(kev))) - Wt_v * Nt + Wc_v * fac + Wp_v * fap - Theta_v + gamma_v;
     
     %internal variables
-    internal_variables(120) = fs(1);
-    internal_variables(108) = fs(2);
-    internal_variables(109) = fs(3);
-    internal_variables(121) = fv;
+    internal_variables('f_h_s') = fs(1);
+    internal_variables('f_p_s') = fs(2);
+    internal_variables('f_v_s') = fs(3);
+    internal_variables('fv') = fv;
 
     internal_variables_ = internal_variables;
     
@@ -2039,85 +2025,85 @@ end
 function [dDTheta, dfh_s, dfp_s, dfv_s, internal_variables_] = reflex_control_R_Vu_E(t, y, pars, internal_variables, index_fun)
 
     %pars
-    delay_Emax_lv = pars(267);
-    delay_Emax_rv = pars(268);
-    delay_R_am_p = pars(269);
-    delay_R_e_p = pars(270);
-    delay_R_rm_p = pars(271);
-    delay_R_s_p = pars(272);
-    delay_V_u_am_v = pars(275);
-    delay_V_u_e_v = pars(276);
-    delay_V_u_rm_v = pars(277);
-    delay_V_u_s_v = pars(278);
-    Emax_lv_0 = pars(36);
-    Emax_rv_0 = pars(37);
-    R_am_p_0 = pars(132);
-    R_e_p_0 = pars(136);
-    R_rm_p_0 = pars(146);
-    R_s_p_0 = pars(148);
-    V_u_am_v_0 = pars(208);
-    V_u_rm_v_0 = pars(210);
-    V_u_e_v_0 = pars(209);
-    V_u_s_v_0 = pars(211);
-    G_Emax_lv = pars(41);
-    G_Emax_rv = pars(42);
-    G_R_am_p = pars(43);
-    G_R_e_p = pars(44);
-    G_R_rm_p = pars(45);
-    G_R_s_p = pars(46);
-    G_V_u_am_v = pars(47);
-    G_V_u_e_v = pars(48);
-    G_V_u_rm_v = pars(49);
-    G_V_u_s_v = pars(50);
-    tau_Emax_lv = pars(354);
-    tau_Emax_rv = pars(355);
-    tau_R_am_p = pars(358);
-    tau_R_e_p = pars(359);
-    tau_R_rm_p = pars(360);
-    tau_R_s_p = pars(361);
-    tau_V_u_am_v = pars(364);
-    tau_V_u_e_v = pars(365);
-    tau_V_u_rm_v = pars(366);
-    tau_V_u_s_v = pars(367);
-    fes_min = pars(292);
+    delay_Emax_lv = pars('delay_Emax_lv');
+    delay_Emax_rv = pars('delay_Emax_rv');
+    delay_R_am_p = pars('delay_R_am_p');
+    delay_R_e_p = pars('delay_R_e_p');
+    delay_R_rm_p = pars('delay_R_rm_p');
+    delay_R_s_p = pars('delay_R_s_p');
+    delay_V_u_am_v = pars('delay_V_u_am_v');
+    delay_V_u_e_v = pars('delay_V_u_e_v');
+    delay_V_u_rm_v = pars('delay_V_u_rm_v');
+    delay_V_u_s_v = pars('delay_V_u_s_v');
+    Emax_lv_0 = pars('Emax_lv_0');
+    Emax_rv_0 = pars('Emax_rv_0');
+    R_am_p_0 = pars('R_am_p_0');
+    R_e_p_0 = pars('R_e_p_0');
+    R_rm_p_0 = pars('R_rm_p_0');
+    R_s_p_0 = pars('R_s_p_0');
+    V_u_am_v_0 = pars('V_u_am_v_0');
+    V_u_rm_v_0 = pars('V_u_rm_v_0');
+    V_u_e_v_0 = pars('V_u_e_v_0');
+    V_u_s_v_0 = pars('V_u_s_v_0');
+    G_Emax_lv = pars('G_Emax_lv');
+    G_Emax_rv = pars('G_Emax_rv');
+    G_R_am_p = pars('G_R_am_p');
+    G_R_e_p = pars('G_R_e_p');
+    G_R_rm_p = pars('G_R_rm_p');
+    G_R_s_p = pars('G_R_s_p');
+    G_V_u_am_v = pars('G_V_u_am_v');
+    G_V_u_e_v = pars('G_V_u_e_v');
+    G_V_u_rm_v = pars('G_V_u_rm_v');
+    G_V_u_s_v = pars('G_V_u_s_v');
+    tau_Emax_lv = pars('tau_Emax_lv');
+    tau_Emax_rv = pars('tau_Emax_rv');
+    tau_R_am_p = pars('tau_R_am_p');
+    tau_R_e_p = pars('tau_R_e_p');
+    tau_R_rm_p = pars('tau_R_rm_p');
+    tau_R_s_p = pars('tau_R_s_p');
+    tau_V_u_am_v = pars('tau_V_u_am_v');
+    tau_V_u_e_v = pars('tau_V_u_e_v');
+    tau_V_u_rm_v = pars('tau_V_u_rm_v');
+    tau_V_u_s_v = pars('tau_V_u_s_v');
+    fes_min = pars('fes_min');
     
     tauTheta = [tau_R_e_p, tau_R_s_p, tau_R_rm_p, tau_R_am_p, tau_V_u_e_v, tau_V_u_s_v, tau_V_u_rm_v, tau_V_u_am_v, tau_Emax_lv, tau_Emax_rv];
     Theta0 = [R_e_p_0, R_s_p_0, R_rm_p_0, R_am_p_0, V_u_e_v_0, V_u_s_v_0, V_u_rm_v_0, V_u_am_v_0, Emax_lv_0, Emax_rv_0];
     GTheta = [G_R_e_p, G_R_s_p, G_R_rm_p, G_R_am_p, G_V_u_e_v, G_V_u_s_v, G_V_u_rm_v, G_V_u_am_v, G_Emax_lv, G_Emax_rv];
 
     %vars
-    DTheta_R_e_p = y(10);
-    DTheta_R_s_p = y(12);
-    DTheta_R_rm_p_n = y(11);
-    DTheta_R_am_p_n = y(9);
-    DTheta_V_unstressed_e_v = y(14);
-    DTheta_V_unstressed_s_v = y(16);
-    DTheta_V_unstressed_rm_v = y(15);
-    DTheta_V_unstressed_am_v = y(13);
-    DTheta_Emax_lv = y(7);
-    DTheta_Emax_rv = y(8);
+    DTheta_R_e_p = y('DTheta_R_e_p');
+    DTheta_R_s_p = y('DTheta_R_s_p');
+    DTheta_R_rm_p_n = y('DTheta_R_rm_p_n');
+    DTheta_R_am_p_n = y('DTheta_R_am_p_n');
+    DTheta_V_unstressed_e_v = y('DTheta_V_unstressed_e_v');
+    DTheta_V_unstressed_s_v = y('DTheta_V_unstressed_s_v');
+    DTheta_V_unstressed_rm_v = y('DTheta_V_unstressed_rm_v');
+    DTheta_V_unstressed_am_v = y('DTheta_V_unstressed_am_v');
+    DTheta_Emax_lv = y('DTheta_Emax_lv');
+    DTheta_Emax_rv = y('DTheta_Emax_rv');
     
 
     DTheta = [DTheta_R_e_p, DTheta_R_s_p, DTheta_R_rm_p_n, DTheta_R_am_p_n, DTheta_V_unstressed_e_v, DTheta_V_unstressed_s_v, DTheta_V_unstressed_rm_v, DTheta_V_unstressed_am_v, DTheta_Emax_lv, DTheta_Emax_rv];
     %internal variables
-    f_h_s_actual = internal_variables(120);  
-    f_p_s_actual = internal_variables(108);
-    f_v_s_actual = internal_variables(109);
+    f_h_s_actual = internal_variables('f_h_s');  
+    f_p_s_actual = internal_variables('f_p_s');
+    f_v_s_actual = internal_variables('f_v_s');
 
-    f_h_s_delayed_Emaxlv = get_delayed_value(tiny_y_keys, t, delay_Emax_lv, dt, all_global, index_fun, f_h_s_actual, 9);
-    f_h_s_delayed_Emaxrv = get_delayed_value(tiny_y_keys, t, delay_Emax_rv, dt, all_global, index_fun, f_h_s_actual, 9);
-    f_p_s_delayed_Rep = get_delayed_value(tiny_y_keys, t, delay_R_e_p, dt, all_global, index_fun, f_p_s_actual, 10);
-    f_p_s_delayed_Rsp = get_delayed_value(tiny_y_keys, t, delay_R_s_p, dt, all_global, index_fun, f_p_s_actual, 10);
-    f_p_s_delayed_Rrmpn = get_delayed_value(tiny_y_keys, t, delay_R_rm_p, dt, all_global, index_fun, f_p_s_actual, 10);
-    f_p_s_delayed_Rampn = get_delayed_value(tiny_y_keys, t, delay_R_am_p, dt, all_global, index_fun, f_p_s_actual, 10);
-    f_v_s_delayed_Vuev = get_delayed_value(tiny_y_keys, t, delay_V_u_e_v, dt, all_global, index_fun, f_v_s_actual, 11);
-    f_v_s_delayed_Vusv = get_delayed_value(tiny_y_keys, t, delay_V_u_s_v, dt, all_global, index_fun, f_v_s_actual, 11);
-    f_v_s_delayed_Vurmv = get_delayed_value(tiny_y_keys, t, delay_V_u_rm_v, dt, all_global, index_fun, f_v_s_actual, 11);
-    f_v_s_delayed_Vuamv = get_delayed_value(tiny_y_keys, t, delay_V_u_am_v, dt, all_global, index_fun, f_v_s_actual, 11);
+    f_h_s_delayed_Emaxlv = get_delayed_value(tiny_y_keys, t, delay_Emax_lv, dt, all_global, index_fun, f_h_s_actual, 'fh_s');
+    f_h_s_delayed_Emaxrv = get_delayed_value(tiny_y_keys, t, delay_Emax_rv, dt, all_global, index_fun, f_h_s_actual, 'fh_s');
+    f_p_s_delayed_Rep = get_delayed_value(tiny_y_keys, t, delay_R_e_p, dt, all_global, index_fun, f_p_s_actual, 'fp_s');
+    f_p_s_delayed_Rsp = get_delayed_value(tiny_y_keys, t, delay_R_s_p, dt, all_global, index_fun, f_p_s_actual, 'fp_s');
+    f_p_s_delayed_Rrmpn = get_delayed_value(tiny_y_keys, t, delay_R_rm_p, dt, all_global, index_fun, f_p_s_actual, 'fp_s');
+    f_p_s_delayed_Rampn = get_delayed_value(tiny_y_keys, t, delay_R_am_p, dt, all_global, index_fun, f_p_s_actual, 'fp_s');
+    f_v_s_delayed_Vuev = get_delayed_value(tiny_y_keys, t, delay_V_u_e_v, dt, all_global, index_fun, f_v_s_actual, 'fv_s');
+    f_v_s_delayed_Vusv = get_delayed_value(tiny_y_keys, t, delay_V_u_s_v, dt, all_global, index_fun, f_v_s_actual, 'fv_s');
+    f_v_s_delayed_Vurmv = get_delayed_value(tiny_y_keys, t, delay_V_u_rm_v, dt, all_global, index_fun, f_v_s_actual, 'fv_s');
+    f_v_s_delayed_Vuamv = get_delayed_value(tiny_y_keys, t, delay_V_u_am_v, dt, all_global, index_fun, f_v_s_actual, 'fv_s');
 
-    dfh_s = (f_h_s_actual - y(118))/dt;   
-    dfp_s = (f_p_s_actual - y(119))/dt;    
-    dfv_s = (f_v_s_actual - y(121))/dt;
+    dfh_s = (f_h_s_actual - y('fh_s'))/dt;   
+    dfp_s = (f_p_s_actual - y('fp_s'))/dt;    
+    dfv_s = (f_v_s_actual - y('fv_s'))/dt;
     
     fs_delayed = [f_p_s_delayed_Rep, f_p_s_delayed_Rsp, f_p_s_delayed_Rrmpn, f_p_s_delayed_Rampn, f_v_s_delayed_Vuev, f_v_s_delayed_Vusv, f_v_s_delayed_Vurmv, f_v_s_delayed_Vuamv, f_h_s_delayed_Emaxlv, f_h_s_delayed_Emaxrv];
     fs_actual = [f_p_s_actual, f_p_s_actual, f_p_s_actual, f_p_s_actual, f_v_s_actual, f_v_s_actual, f_v_s_actual, f_v_s_actual, f_h_s_actual, f_h_s_actual];
@@ -2132,16 +2118,16 @@ function [dDTheta, dfh_s, dfp_s, dfv_s, internal_variables_] = reflex_control_R_
     %Derivatives 
     dDTheta = (tauTheta.^(-1)).* (-DTheta + sigmaTheta);  %vectorial
 
-    internal_variables(137) = Theta(1);
-    internal_variables(138) = Theta(2);
-    internal_variables(124) = Theta(3);
-    internal_variables(125) = Theta(4);
-    internal_variables(126) = Theta(5);
-    internal_variables(127) = Theta(6);
-    internal_variables(128) = Theta(7);
-    internal_variables(129) = Theta(8);
-    internal_variables(130) = Theta(9);
-    internal_variables(131) = Theta(10);
+    internal_variables('R_e_p') = Theta(1);
+    internal_variables('R_s_p') = Theta(2);
+    internal_variables('R_rm_p_n') = Theta(3);
+    internal_variables('R_am_p_n') = Theta(4);
+    internal_variables('V_unstressed_e_v') = Theta(5);
+    internal_variables('V_unstressed_s_v') = Theta(6);
+    internal_variables('V_unstressed_rm_v') = Theta(7);
+    internal_variables('V_unstressed_am_v') = Theta(8);
+    internal_variables('Emax_lv') = Theta(9);
+    internal_variables('Emax_rv') = Theta(10);
 
     internal_variables_ = internal_variables;
 
@@ -2152,34 +2138,34 @@ function [dDTheta, dfh_s, dfp_s, dfv_s, internal_variables_] = reflex_control_R_
             delayed_value = fj_init;
         else
             % Otherwise, calculate the delayed value using the original code
-            delayed_value = all_global(fs, round((t - delay)/dt) + 1);
+            delayed_value = all_global(index_fun(init_keys, fs), round((t - delay)/dt) + 1);
         end
     end
 end
 
 function [dDTsym, dDTvagal, dfv, internal_variables_] = reflex_control_HR(t, y, pars, internal_variables, index_fun)
     %pars
-    delay_Tsym = pars(273);
-    delay_Tvagal = pars(274);
-    GTsym = pars(38);
-    GTvagal = pars(39);
-    tau_Tsym = pars(362);
-    tau_Tvagal = pars(363);
-    fes_min = pars(292);
+    delay_Tsym = pars('delay_Tsym');
+    delay_Tvagal = pars('delay_Tvagal');
+    GTsym = pars('GTsym');
+    GTvagal = pars('GTvagal');
+    tau_Tsym = pars('tau_Tsym');
+    tau_Tvagal = pars('tau_Tvagal');
+    fes_min = pars('fes_min');
     %vars
-    DTsym = y(17);
-    DTvagal = y(18);
+    DTsym = y('DTsym');
+    DTvagal = y('DTvagal');
     %internal variables
-    f_h_s_actual = internal_variables(120);
-    f_v_actual = internal_variables(121);
+    f_h_s_actual = internal_variables('f_h_s');
+    f_v_actual = internal_variables('fv');
     %if t < 10
     %    f_h_s_actual = 3.85;
     %    f_v_actual = 4.27;
     %end
-    f_h_s_delayed = get_delayed_value(tiny_y_keys, t, delay_Tsym, dt, all_global, index_fun, f_h_s_actual, 9); %replace f_s_h_actual
-    fv_delayed = get_delayed_value(tiny_y_keys, t, delay_Tvagal, dt, all_global, index_fun, f_v_actual, 12);    %replace f_v_actual
+    f_h_s_delayed = get_delayed_value(tiny_y_keys, t, delay_Tsym, dt, all_global, index_fun, f_h_s_actual, 'fh_s'); %replace f_s_h_actual
+    fv_delayed = get_delayed_value(tiny_y_keys, t, delay_Tvagal, dt, all_global, index_fun,  f_v_actual, 'fv');    %replace f_v_actual
 
-    dfv = (f_v_actual - y(120))/dt;
+    dfv = (f_v_actual - y('fv'))/dt;
 
     %f_h_s_delayed = f_h_s_actual;
     %fv_delayed = f_v_actual;
@@ -2203,7 +2189,7 @@ function [dDTsym, dDTvagal, dfv, internal_variables_] = reflex_control_HR(t, y, 
             delayed_value = fj_init;
         else
             % Otherwise, calculate the delayed value using the original code
-            delayed_value = all_global(fs, round((t - delay)/dt) + 1);
+            delayed_value = all_global(index_fun(init_keys, fs), round((t - delay)/dt) + 1);
         end
     end
 
@@ -2212,53 +2198,53 @@ end
 function [internal_variables_] = adding_base_values_in_control_variables(t, y, pars, internal_variables)
 
 
-    Emax_lv_0 = pars(36);
-    Emax_rv_0 = pars(37);
-    R_am_p_0 = pars(132);
-    R_e_p_0 = pars(136);
-    R_rm_p_0 = pars(146);
-    R_s_p_0 = pars(148);
-    V_u_am_v_0 = pars(208);
-    V_u_rm_v_0 = pars(210);
-    V_u_e_v_0 = pars(209);
-    V_u_s_v_0 = pars(211);
-    T0 = pars(158);
-    R_bmp = pars(134);
-    R_h_p_n = pars(138);  
+    Emax_lv_0 = pars('Emax_lv_0');
+    Emax_rv_0 = pars('Emax_rv_0');
+    R_am_p_0 = pars('R_am_p_0');
+    R_e_p_0 = pars('R_e_p_0');
+    R_rm_p_0 = pars('R_rm_p_0');
+    R_s_p_0 = pars('R_s_p_0');
+    V_u_am_v_0 = pars('V_u_am_v_0');
+    V_u_rm_v_0 = pars('V_u_rm_v_0');
+    V_u_e_v_0 = pars('V_u_e_v_0');
+    V_u_s_v_0 = pars('V_u_s_v_0');
+    T0 = pars('T0');
+    R_bmp = pars('R_bmp');
+    R_h_p_n = pars('R_h_p_n');  
     
     %HIPOXIA    
-    R_p_p_n =  pars(140); % pars(142);
+    R_p_p_n =  pars('R_p_p_n'); % pars('R_pp');
 
     Theta0 = [R_e_p_0, R_s_p_0, R_rm_p_0, R_am_p_0, V_u_e_v_0, V_u_s_v_0, V_u_rm_v_0, V_u_am_v_0, Emax_lv_0, Emax_rv_0];
     
     %vars
-    DTheta_R_e_p = y(10);
-    DTheta_R_s_p = y(12);
-    DTheta_R_rm_p_n = y(11);
-    DTheta_R_am_p_n = y(9);
-    DTheta_V_unstressed_e_v = y(14);
-    DTheta_V_unstressed_s_v = y(16);
-    DTheta_V_unstressed_rm_v = y(15);
-    DTheta_V_unstressed_am_v = y(13);
-    DTheta_Emax_lv = y(7);
-    DTheta_Emax_rv = y(8);
-    DTsym = y(17);
-    DTvagal = y(18);
-    xO2_am  = y(151);
-    x_met = y(159);
-    xO2_h = y(154);
-    xO2_rm = y(156);
-    xCO2_h = y(147);
-    xCO2_rm = y(149);
-    xO2_b = y(152);
-    xCO2_b = y(145);
-    xO2_e = y(153);
-    xCO2_e = y(146);
-    xO2_s = y(157);
-    xCO2_s = y(150);
-    xO2_p = y(155);
-    xCO2_p = y(148);
-    aO2 = y(106);
+    DTheta_R_e_p = y('DTheta_R_e_p');
+    DTheta_R_s_p = y('DTheta_R_s_p');
+    DTheta_R_rm_p_n = y('DTheta_R_rm_p_n');
+    DTheta_R_am_p_n = y('DTheta_R_am_p_n');
+    DTheta_V_unstressed_e_v = y('DTheta_V_unstressed_e_v');
+    DTheta_V_unstressed_s_v = y('DTheta_V_unstressed_s_v');
+    DTheta_V_unstressed_rm_v = y('DTheta_V_unstressed_rm_v');
+    DTheta_V_unstressed_am_v = y('DTheta_V_unstressed_am_v');
+    DTheta_Emax_lv = y('DTheta_Emax_lv');
+    DTheta_Emax_rv = y('DTheta_Emax_rv');
+    DTsym = y('DTsym');
+    DTvagal = y('DTvagal');
+    xO2_am  = y('xO2_am');
+    x_met = y('x_met');
+    xO2_h = y('xO2_h');
+    xO2_rm = y('xO2_rm');
+    xCO2_h = y('xCO2_h');
+    xCO2_rm = y('xCO2_rm');
+    xO2_b = y('xO2_b');
+    xCO2_b = y('xCO2_b');
+    xO2_e = y('xO2_e');
+    xCO2_e = y('xCO2_e');
+    xO2_s = y('xO2_s');
+    xCO2_s = y('xCO2_s');
+    xO2_p = y('xO2_p');
+    xCO2_p = y('xCO2_p');
+    aO2 = y('aO2');
 
     xO2 = [xO2_h, xO2_rm];
     xCO2 = [xCO2_h, xCO2_rm];
@@ -2271,7 +2257,7 @@ function [internal_variables_] = adding_base_values_in_control_variables(t, y, p
     R_am_p = R_am_p_n/(1 + xO2_am + x_met);    
     Theart = DTvagal + DTsym + T0;    
     R_rm_p_n = Theta(3);
-    Rp_n = [R_h_p_n, R_rm_p_n];  
+    Rp_n = [R_h_p_n, R_rm_p_n];   %%%THIS EQUATION MUST CHANGE
     Rp = Rp_n .* (1 + xCO2) ./ (1 + xO2);   
     G_bp = 1/R_bmp * (1 + xO2_b + xCO2_b);
     R_bp = 1/G_bp; 
@@ -2286,25 +2272,25 @@ function [internal_variables_] = adding_base_values_in_control_variables(t, y, p
 
 
 
-    internal_variables(122) = R_e_p_n;
-    internal_variables(123) = R_s_p_n;
-    internal_variables(124) = R_rm_p_n;
-    internal_variables(125) = R_am_p_n;
-    internal_variables(126) = Theta(5);
-    internal_variables(127) = Theta(6);
-    internal_variables(128) = Theta(7);
-    internal_variables(129) = Theta(8);
-    internal_variables(130) = Theta(9);
-    internal_variables(131) = Theta(10);
-    internal_variables(132) = Theart;    
-    internal_variables(133) = R_am_p;
-    internal_variables(134) = Rp(1);
-    internal_variables(135) = Rp(2);
-    internal_variables(136) = R_bp;
+    internal_variables('R_e_p_n') = R_e_p_n;
+    internal_variables('R_s_p_n') = R_s_p_n;
+    internal_variables('R_rm_p_n') = R_rm_p_n;
+    internal_variables('R_am_p_n') = R_am_p_n;
+    internal_variables('V_unstressed_e_v') = Theta(5);
+    internal_variables('V_unstressed_s_v') = Theta(6);
+    internal_variables('V_unstressed_rm_v') = Theta(7);
+    internal_variables('V_unstressed_am_v') = Theta(8);
+    internal_variables('Emax_lv') = Theta(9);
+    internal_variables('Emax_rv') = Theta(10);
+    internal_variables('Theart') = Theart;    
+    internal_variables('R_am_p') = R_am_p;
+    internal_variables('R_h_p') = Rp(1);
+    internal_variables('R_rm_p') = Rp(2);
+    internal_variables('R_b_p') = R_bp;
     %HIPOXIA
-    internal_variables(137) = R_ep;
-    internal_variables(138) = R_sp;
-    internal_variables(139) = R_pp_;
+    internal_variables('R_e_p') = R_ep;
+    internal_variables('R_s_p') = R_sp;
+    internal_variables('R_p_p') = R_pp_;
 
     internal_variables_ = internal_variables;
 end

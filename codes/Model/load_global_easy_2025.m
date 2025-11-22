@@ -1,4 +1,4 @@
-function [pars, init, taus] = load_global_easy()
+function [pars, init, taus] = load_global_easy_2025()
   
 init = dictionary();  
 pars = dictionary();  

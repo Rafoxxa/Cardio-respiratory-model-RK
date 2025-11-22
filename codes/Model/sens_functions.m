@@ -24,18 +24,27 @@ function out = sens_functions(mode, fun, setup)
         if length(s) > 1
             %sens_cell  = {};
             %sens_ = {};
-            s_total = 0;
+            S_total = [];  % inicializar fuera del loop
             
             for s_index = 1: length(s)
                 s_i = s{s_index};
                 results_base_i = run_base(s_i);
                 s_i.results_base = results_base_i;
-                sens_matrix_i = run_LSA(s_i, s_i.pars, s_i.variables_of_interest);
+                sensitivities = run_LSA(s_i, s_i.pars, s_i.variables_of_interest);
+                S_tensor_i = build_LSA_tensor(s_i, s_i.variables_of_interest, sensitivities);
+                if isempty(S_total)
+                    S_total = S_tensor_i;  % primer caso
+                else
+                    S_total = cat(3, S_total, S_tensor_i);
+                end
+
                 %sens_cell{s_index} = sens_matrix_i;
-                s_i.sens_final_time_matrix = sens_matrix_i;
-                save_sens(s_i);
-                s_total = (sens_matrix_i + s_total)/2;
+                %s_i.sens_final_time_matrix = sens_matrix_i;
+                %save_sens(s_i);
+                %s_total = (sens_matrix_i + s_total)/2;
             end
+            s_i.S_tensor = S_total;
+            save_sens(s_i);
 
 
 
@@ -50,7 +59,7 @@ function out = sens_functions(mode, fun, setup)
             %s_i.sens_final_time_matrix = sens_matrix;        
             %save_sens(s_i);
             %out = {s_i.sens_matrix, sens_, error_i, perturbed_i, s_i.pars_to_sens};
-            out = {s_total, s_i.pars_to_sens};
+            out = {S_total, s_i.pars_to_sens};
            
         else
             if s.params_sample_size == 0
@@ -66,7 +75,7 @@ function out = sens_functions(mode, fun, setup)
             else
                 for i = 1:s.params_sample_size
                     % Create a copy of the parameter set
-                    %I think this whole code is wrong, so if use fix
+                    %I think this whole section is wrong, so if use fix
                     %please!
                     params_base = s.pars;
                     pars_free2move = s.pars_free2move;
@@ -97,14 +106,15 @@ function out = sens_functions(mode, fun, setup)
         write_path = s.sensitivity_write_filename;
 
         %sensitivities = s.sensitivities;
-        sens_final_time_matrix = s.sens_final_time_matrix;
+        %sens_final_time_matrix = s.sens_final_time_matrix;
+        S_tensor = s.S_tensor;
         pars_to_sens = s.pars_to_sens;
         
         
         if s.params_sample_size == 0
         
         %save(write_path_all, 'sensitivities');  
-        save(write_path, 'sens_final_time_matrix', 'pars_to_sens'); 
+        save(write_path, 'S_tensor', 'pars_to_sens'); 
         else
             new_pars = s.new_pars;
             % Save the parameters and sensitivities for each sample
@@ -126,12 +136,38 @@ function out = sens_functions(mode, fun, setup)
 
     function results_base_ =  run_base(s)
         params_base = s.pars;
-        [t, ~, x_base, ~, ~] = s.run_ode_fun(s.model, params_base, s.init, s.simulation_time, s.dt);
-        results_base = x_base;
-        results_base_ = data_processing('add-desired', {results_base, s.init}, t);
+        
+        if s.load_rb
+            if strcmp(s.hipoxia_state, 'normoxia')
+               load_results_base_ = load('results_base_local_normoxia.mat');
+            else
+                load_results_base_ = load('results_base_local_hipoxia.mat');
+            end
+            results_base_ = load_results_base_.results_base_;
+            disp('logrado!');
+        else
+
+            [t, ~, x_base, ~, ~] = s.run_ode_fun(s.model, params_base, s.init, s.simulation_time, s.dt);
+            results_base = x_base;
+            results_base_ = data_processing('add-desired', {results_base, s.init}, t);
+            initius = s.init;
+            if strcmp(s.hipoxia_state, 'normoxia')
+                save('results_base_local_normoxia.mat', 'results_base_', 't');
+            else
+                save('results_base_local_hipoxia.mat', 'results_base_', 't');
+            end
+
+            disp('stop1');
+
+            
+            
+
+        end
+        
+        
     end
 
-    function [sens_final_time_matrix] = run_LSA(s, params_base, variables_of_interest)
+    function [sensitivities] = run_LSA(s, params_base, variables_of_interest)
         pars_to_sens = s.pars_to_sens;        
         perturbed = cell(1, s.n_params_sens);
         error = cell(1, s.n_params_sens);
@@ -142,7 +178,7 @@ function out = sens_functions(mode, fun, setup)
         model = s.model;
         run_ode_fun = s.run_ode_fun;
         init = s.init;
-        dt = s.dt;
+        dt = s.dt;        
         simulation_time = s.simulation_time;
         results_base_ = s.results_base;
 
@@ -176,6 +212,7 @@ function out = sens_functions(mode, fun, setup)
                           
                 params_perturbed(param_key) = params_base(param_key)*(1+ epsilon);        
                 params_perturbed = estimate_newton_ohm(percentages, params_perturbed);
+                params_perturbed('R_p_p_n') = 0.0894;
                 % Run the ODE solver with the perturbed parameter set
                 [t, ~, x_perturbed, ~, ~] = run_ode_fun(model, params_perturbed, init, simulation_time, dt);            
                 
@@ -191,13 +228,44 @@ function out = sens_functions(mode, fun, setup)
                 
                 %sensitivities{i} = (x_perturbed__ - results_base__)/(epsilon) ./ (results_base__ + epsilon);
                 sensitivities_ = (x_perturbed__ - results_base__)/(epsilon) ./ (results_base__ + epsilon);
+
+                disp('stop2');
                 %error{i} = 0;
-                if size(x_perturbed__, 1) <= 1
+                if size(x_perturbed__,1) <= 1
                     disp('error-size');
-                    %error{i} = 2;
+                    disp('error in index: ')
+                    disp(i);
                 else                       
+                    %{
                     N = size(sensitivities_,2); 
                     sens_final_time_matrix(i,:) = 1/N * sqrt(sum(sensitivities_(target_variable_idx_arr,:).^2,2));                  
+                    %}
+                
+                    %% NUEVO: subsampleo con media móvil
+                    n_target_points = 500;   % <-- cambia este número si quieres otro tamaño
+                    n_timepoints    = size(sensitivities_, 2);
+                
+                    if n_timepoints > n_target_points
+                        % índices centrales de cada ventana
+                        idx = round(linspace(1, n_timepoints, n_target_points));
+                        % tamaño de ventana proporcional al espaciado
+                        win = max(1, round(n_timepoints / n_target_points / 2));
+                
+                        sensitivities_sub = zeros(size(sensitivities_,1), n_target_points);
+                        for k = 1:n_target_points
+                            low  = max(1, idx(k) - win);
+                            high = min(n_timepoints, idx(k) + win);
+                            sensitivities_sub(:,k) = mean(sensitivities_(:,low:high), 2);
+                        end
+                    else
+                        sensitivities_sub = sensitivities_; % ya es suficientemente pequeño
+                    end
+                
+                    % Guardar subsampleado en el cell
+                    sensitivities{i} = sensitivities_sub;
+                    txt = sprintf('done for parameter %d', i);
+                    disp(txt);
+                    disp('revision');
                 end
 
                 
@@ -205,9 +273,9 @@ function out = sens_functions(mode, fun, setup)
             catch ME
                 disp(ME.message);
                 disp('error-simulation');
-                %sensitivities{i} = 0;
+                sensitivities{i} = 0;
                 %perturbed{i} = 0;
-                %error{i} = 1;
+                error{i} = 1;
             end
         end
 
@@ -259,6 +327,58 @@ function out = sens_functions(mode, fun, setup)
     disp('LSA finished');
 
     end
+
+    function S_tensor = build_LSA_tensor(s, variables_of_interest, sensitivities)
+        % build_LSA_tensor: genera el tensor de sensibilidades S(p,v,t)
+        %
+        % INPUTS:
+        %   s                   -> estructura con información del modelo
+        %   variables_of_interest -> cell array con nombres de variables
+        %   sensitivities        -> cell array con matrices de sensibilidad
+        %   perturbed            -> cell array con datos perturbados
+        %
+        % OUTPUT:
+        %   S_tensor(p,v,t) -> tensor de sensibilidades
+    
+        init = s.init;
+    
+        extra_vars = {'pm', 'ps', 'pd', 'VTidal', 'BF'};    
+        num_variables = numel(variables_of_interest);       
+        n_time = size(sensitivities{1}, 2);
+    
+        % Inicializar tensor: (parámetros x variables x tiempo)
+        S_tensor = zeros(s.n_params_sens, num_variables, n_time);
+    
+        % ---- Construcción del tensor ----
+        for v = 1:num_variables
+            key = variables_of_interest{v};
+            if ismember(key, extra_vars)
+                extra_idx = find(strcmp(extra_vars, key));
+                target_variable_idx = extra_idx + length(init.keys);
+            else
+                target_variable_idx = find(strcmp(init.keys, key));              
+            end
+    
+            if numel(target_variable_idx) ~= 1
+                error(['Key "' key '" should correspond to a single variable index.']);
+            end
+    
+                for i = 1:s.n_params_sens 
+                %if size(perturbed{i},1) > 1
+                %    % Guardar toda la evolución temporal
+                    S_tensor(i,v,:) = sensitivities{i}(target_variable_idx, :);
+                %else
+                    % Si no hubo perturbación, queda en cero
+                    %S_tensor(i,v,:) = 0;
+                    disp(s.pars_to_sens(i));
+                
+                end
+        end
+    
+        disp('Tensor S(p,v,t) construido');
+    end
+
+
 
     function [reduced_sens, reduced_pars] = filter_params_by_class(s)
 

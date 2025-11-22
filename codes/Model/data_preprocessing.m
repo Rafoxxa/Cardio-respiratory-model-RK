@@ -1,4 +1,4 @@
-function [t_exp, y_exp, VO2_poly, VCO2_poly, fiO2_poly, basal] = data_preprocessing(patient_idx, hipoxia_state, ascend_state, plot_state, VO2_type)
+function [t_exp, y_exp, VO2_poly, VCO2_poly, fiO2_poly, TI_poly, Tresp_poly, basal] = data_preprocessing(patient_idx, hipoxia_state, ascend_state, plot_state, VO2_type)
         
         
 
@@ -93,7 +93,9 @@ function [t_exp, y_exp, VO2_poly, VCO2_poly, fiO2_poly, basal] = data_preprocess
 
         if VO2_type == "poly"
             [~, VO2_poly, ~, ~, ~] = bestPolynomialFit(time_cpet, VO2/1000, 8, "VO2 (l/min)", plot_state);
-            [~, VCO2_poly, ~, ~, ~] = bestPolynomialFit(time_cpet, VCO2/1000, 8, "VCO2 (l/min)" , plot_state);             
+            [~, VCO2_poly, ~, ~, ~] = bestPolynomialFit(time_cpet, VCO2/1000, 8, "VCO2 (l/min)" , plot_state);
+            [~, TI_poly, ~, ~, ~] = bestPolynomialFit(time_cpet, TI, 15, "TI (s)" , 1);             
+            [~, Tresp_poly, ~, ~, ~] = bestPolynomialFit(time_cpet, Tresp, 15, "Tresp (s)" , 1); 
             [~, fiO2_poly, ~, ~, ~] = bestPolynomialFit(time_cpet, fiO2, 4, "fiO2 (%)", plot_state);
         elseif VO2_type == "ori"
             VO2_poly = VO2(1:end-3,:)/1000;
@@ -101,6 +103,8 @@ function [t_exp, y_exp, VO2_poly, VCO2_poly, fiO2_poly, basal] = data_preprocess
             fiO2_poly = fiO2(1:end-3,:);
 
         end
+
+        
 
         
         finapres_nan_mask = zeros(size(t_exp));
@@ -123,8 +127,10 @@ function [t_exp, y_exp, VO2_poly, VCO2_poly, fiO2_poly, basal] = data_preprocess
 
         if VO2_type ~= "ori"
             y_exp = [y_exp, Pow(1:end-3, :), finapres_notnan_mask, on_exercise(4:end)];
+            
         else
             y_exp = [y_exp, VO2_poly, VCO2_poly, Pow(1:end-3, :), finapres_notnan_mask, on_exercise(4:end)];
+            
         end
         basal = [mean(abs(VO2(1:30))), mean(abs(VCO2(1:30)))]/1000;
         basal = [basal, AT/1000, ladder_points(:,1)', ladder_points(:,2)'];
@@ -176,6 +182,7 @@ function [t_exp, y_exp, VO2_poly, VCO2_poly, fiO2_poly, basal] = data_preprocess
         [~, PD] = finapres_merge_cpet(time_cpet, dVE, time_finapres', PD', finapres_delay(patient_idx));
         [~, PM] = finapres_merge_cpet(time_cpet, dVE, time_finapres', PM', finapres_delay(patient_idx));
 
+        disp('alto');
         if HR_CPET ~= 0
             HR = HR_CPET;
         end
@@ -326,6 +333,9 @@ function [t_exp, y_exp, VO2_poly, VCO2_poly, fiO2_poly, basal] = data_preprocess
             [~, PD] = finapres_merge_cpet(time_cpet, dVE, time_finapres, PD, finapres_delay);
             [~, PM] = finapres_merge_cpet(time_cpet, dVE, time_finapres, PM, finapres_delay);
 
+            disp('alto');
+
+            
             if HR_CPET ~= 0
                 HR = HR_CPET;
             end
@@ -391,7 +401,7 @@ end
     HR = HR_values_resized(time_finapres_ >= 0);
 
     
-        
+    
 
     end
 

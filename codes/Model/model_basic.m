@@ -49,7 +49,7 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
     [internal_variables, test] =                               respiratory_pump(t, y, pars, internal_variables, test); % [5]
     [y, ddVua, dGaw, dVua, internal_variables, test] =         upper_airways(t, y, pars, internal_variables, test); % [2][6][7]
     [y, dPmusc, dPpl, dV, ddV, test] =                         pulmonary_mechanics(t, y, pars, internal_variables, test); % [1][2][6][7]
-    [I, internal_variables, test] =                            metabolic_regulation(t, y, pars, internal_variables, test); % [0]   
+    [Iout, internal_variables, test] =                            metabolic_regulation(t, y, pars, internal_variables, test); % [0]   
     [y, dPAgas, ddPa, dP_1, dP_2, dP_3, dP_4, dP_5, a, test] = exchange_mixing(t, y, pars,index, test); % [1][2][9]
     [dv, dMRtgas, test] =                                      tissue(t, y, pars, test); % [0][2][8]
     [dPvbCO2, dPCSFCO2, internal_variables, test] =            brain(t, y, pars, internal_variables, test); %[2][3]
@@ -65,7 +65,7 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
     %Cardiovascular
     [internal_variables, test] =                                                                                  muscle_pump(t, y, pars, internal_variables, test); % [5]
     [internal_variables, test] =                                                                                  vena_cava(t, y, pars, internal_variables, test); % [2]       
-    [internal_variables, dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart, test] = heart(t, y, pars, internal_variables, test); % [0][2][10]
+    [internal_variables, dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart,dQ_i_lv, dQ_lv, dP_max_lv, test] = heart(t, y, pars, internal_variables, test); % [0][2][10]
     [internal_variables, dP_sa, dQ_sa, test] =                                                             systemic_arteries(t, y, pars, internal_variables, test); %[2][5] 
     [internal_variables, dQ_pa, dV_total_pp, dV_total_pv, dV_total_pa, dQpp, test] =                              pulmonary_circulation(t, y, pars, internal_variables, test); %[2][5]
     [internal_variables, dV_total_vc, dV_total_v, dP_sp, dQbp, test__vascular_checking__28_06_24] =                                            systemic_peripheric_and_venous_circulation(t, y, pars, internal_variables, test__vascular_checking__28_06_24); % [2][5]
@@ -104,7 +104,7 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
     %xdot_dict('Pua') =                     dPua;   
     %xdot_dict('Nt') =                      y('Nt'); %fake derivative
     xdot_dict('dVE') =                      ddVE; %fake derivative
-    xdot_dict('I') =                        I;      %fake derivative
+    xdot_dict('I') =                        Iout;      %fake derivative
     xdot_dict('vO2') =                      dv(1);
     xdot_dict('vCO2') =                     dv(2);
     xdot_dict('MRtO2') =                    dMRtgas(1);
@@ -200,7 +200,7 @@ function xdot= model_basic_vascular(t, y, pars, init_keys)
     xdot_dict('R_bp') =                     dR_bp; 
     xdot_dict('xO2_e') =                     dxO2_e;
     xdot_dict('xO2_s') =                     dxO2_s;
-    xdot_dict('xO2_p') =                     dxO2_p;   
+    xdot_dict('xO2_p') =                     dxO2_p;     
     % xdot_dict('Q_e') =                      test__vascular_checking__28_06_24('dQ_e');
     % xdot_dict('Q_s') =                      test__vascular_checking__28_06_24('dQ_s');
     % xdot_dict('Q_h') =                      test__vascular_checking__28_06_24('dQ_h');
@@ -827,6 +827,9 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
                 MRO2 = MRO2 * (MRO2 > MRtO2_basal) + MRtO2_basal * (MRO2 <= MRtO2_basal);
                 MRCO2 = MRCO2 * (MRCO2 > MRtCO2_basal) + MRtCO2_basal * (MRCO2 <= MRtCO2_basal); 
 
+                %MRO2__ = MRO2 * (MRO2 < 0.45) + 0.45 * (MRO2 >= 0.45); 
+                %MRCO2__ = MRCO2 * (MRCO2 < 0.35) + 0.35 * (MRCO2 >= 0.35); 
+
                 
             end               
 
@@ -834,8 +837,8 @@ function [dv, dMRtgas, test_] = tissue(t, y, pars, test)
 
 
         
-        pars('MRO2') = MRO2;
-        pars('MRCO2') = MRCO2;
+        pars('MRO2') = MRO2;%MRtO2_basal;
+        pars('MRCO2') = MRCO2;%MRtCO2_basal;
 
         pars_ = pars;      
         
@@ -1010,6 +1013,7 @@ function [internal_variables_, test_] = vena_cava(t, y, pars, internal_variables
     V_total_ra = y('V_total_ra');
     Ptor = internal_variables('Ptor');  %this is in mmHg
     % Ptor = y('Ptor');
+    %Ptor = 0;
 
     %-----------------------
     %Equations
@@ -1053,7 +1057,7 @@ function [internal_variables_, test_] = vena_cava(t, y, pars, internal_variables
 end
 
 
-function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart, test_] = heart(t, y, pars, internal_variables, test)
+function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total_la, dV_total_lv, dQla, dTheart, dQ_i_lv, dQ_lv, dP_max_lv, test_] = heart(t, y, pars, internal_variables, test)
 
     %--------------------------------
     %pars
@@ -1156,6 +1160,7 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
         V_lv = (V_total_lv - V_unstressed_lv) * ((V_total_lv - V_unstressed_lv) > 0);
         P_max_lv = phi * E_max_lv * (V_total_lv - V_unstressed_lv) + (1 - phi) * P0_lv * (exp(K_E_lv * V_total_lv) - 1);  
         
+        
         R_lv = KR_lv * P_max_lv;
         Q_lv = 1/R_lv * (P_max_lv - P_sa) * ((P_max_lv - P_sa) > 0);
         P_lv = P_max_lv - R_lv * Q_lv + Ptor;
@@ -1183,7 +1188,7 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
 
     %Right ventricle
         V_rv = (V_total_rv - V_unstressed_rv) * ((V_total_rv - V_unstressed_rv) > 0);
-        P_max_rv = phi * E_max_rv * (V_total_rv - V_unstressed_rv) +(1 - phi) * P0_rv * (exp(K_E_rv * V_total_rv) - 1);
+        P_max_rv = phi * E_max_rv * (V_total_rv - V_unstressed_rv) +(1 - phi) * P0_rv *(exp(K_E_rv * V_total_rv) - 1);
         R_rv = KR_rv * P_max_rv;
         Q_rv = 1/(R_rv) * (P_max_rv - P_pa) * ((P_max_rv - P_pa) > 0);
         P_rv = P_max_rv - R_rv * Q_rv + Ptor;
@@ -1203,14 +1208,22 @@ function [internal_variables_,  dzheta_heart, dV_total_rv, dV_total_ra, dV_total
         dV_total_ra = Q_ra - Q_i_rv;
         dV_total_la = Q_la - Q_i_lv;
         dV_total_lv = Q_i_lv - Q_lv;
+
+        
+        
+
         
         %for correct internal_variables handling
         dQla = (Q_la - y('Qla'))/dt;
         dTheart = (Theart - y('Theart'))/dt;
+        dQ_lv = (Q_lv - y('Q_lv'))/dt;
+        dQ_i_lv = (Q_i_lv - y('Q_i_lv'))/dt;
+        dP_max_lv = (P_max_lv- y('P_max_lv'))/dt;
 
-    % y('Q_lv') = Q_lv;
-    % y('Q_rv') = Q_rv;
-    % y('P_la') = P_la;
+        
+
+
+    
     y_ = y;
 
     %------------------------------
@@ -1277,8 +1290,8 @@ function [internal_variables_, dP_sa, dQ_sa, test_] = systemic_arteries(t, y, pa
         
     %Derivatives
         dvar3 = V_total_sa;
-        dP_sa = 1/C_sa * (Q_lv - Q_sa); 
-        dQ_sa = 1/L_sa * ((P_sa - Ptor) - R_sa * Q_sa - P_sp); %Careful with L_sa, it's too sensitive
+        dP_sa = 1/(C_sa) * (Q_lv - Q_sa);       
+        dQ_sa = 1/(L_sa) * ((P_sa - Ptor) - R_sa * Q_sa - P_sp); %Careful with L_sa, it's too sensitive
         
         
     %-----------------------------
@@ -1573,7 +1586,9 @@ function [dP_mean, internal_variables_] = afferent_barorreflex(t,y,pars, interna
     %Equations
 
     %Derivatives
-    dP_mean = 1/tau_p * (P_sa + tau_z * dP_sa - P_mean);    
+    dP_mean = 1/tau_p * (P_sa + 0*tau_z * dP_sa - P_mean);    
+    
+    
     fab = 1/(1 + exp((P_mean - P_n)/kab)) * (f_ab_min + f_ab_max * exp((P_mean - P_n)/kab));
 
     %Saving computations
@@ -1853,7 +1868,8 @@ function [dxO2_am, dx_met, dx_M, dphi_met, internal_variables_] = active_muscle_
 
     %Derivatives
     dxO2_am = 1/tau_O2 * (-xO2_am - gO2_am * (vO2_am - vO2_am_n));
-    dx_M = 1/tau_M * (-x_M + g_M * I);
+    dx_M = 1/tau_M * (-x_M + g_M * (I*(I>0.3) + 0.3*(I<=0.3)));
+    %dx_M = 1/tau_M * (-x_M + g_M * I);
     dx_met = 1/tau_met * (-x_met + phi_met_delayed);
     internal_variables('R_am_p') = R_am_p;
     internal_variables_  = internal_variables;
@@ -2004,7 +2020,7 @@ function [internal_variables_] = efferent_pathways(t, y, pars, internal_variable
     %Equations
     gamma_s = (gamma_min + gamma_max.* exp((I - I_0)./(kcc))) ./ (1 + exp((I - I_0)./(kcc))); %vectorial
     gamma_v = (gamma_v_min + gamma_v_max * exp((I - I_0_v)./(kcc_v))) ./ (1 + exp((I - I_0_v)./(kcc_v))); 
-    fas = Wt_s * Nt + Wb_s * fab + Wc_s * fac + Wp_s * fap - Theta_s; %vectorial
+    fas = Wt_s * Nt + Wb_s * fab + Wc_s * fac + Wp_s * fap - Theta_s; %vectorial 
     fs = fes_inf + (fes_0 + fes_inf) * exp(kes * fas) + gamma_s; %vectorial
     fs = fes_max.* (fs >= fes_max) + fs .* (fs < fes_max); %vectorial
     fv = (fev_0 + fev_inf * exp((fab - fab_0)/(kev)))/(1 + exp((fab - fab_0)/(kev))) - Wt_v * Nt + Wc_v * fac + Wp_v * fap - Theta_v + gamma_v;
@@ -2175,7 +2191,7 @@ function [dDTsym, dDTvagal, dfv, internal_variables_] = reflex_control_HR(t, y, 
     %HR = 1/T;
     
     %Derivatives
-    dDTsym = 1/tau_Tsym * (-DTsym + sigma_Tsym);
+    dDTsym =  1/tau_Tsym * (-DTsym + sigma_Tsym);
     dDTvagal = 1/tau_Tvagal * (-DTvagal + sigma_Tvagal);
 
     
@@ -2255,7 +2271,7 @@ function [internal_variables_] = adding_base_values_in_control_variables(t, y, p
     R_am_p = R_am_p_n/(1 + xO2_am + x_met);    
     Theart = DTvagal + DTsym + T0;    
     R_rm_p_n = Theta(3);
-    Rp_n = [R_h_p_n, R_rm_p_n];   %%%THIS EQUATION MUST CHANGE
+    Rp_n = [R_h_p_n, R_rm_p_n];  
     Rp = Rp_n .* (1 + xCO2) ./ (1 + xO2);   
     G_bp = 1/R_bmp * (1 + xO2_b + xCO2_b);
     R_bp = 1/G_bp; 

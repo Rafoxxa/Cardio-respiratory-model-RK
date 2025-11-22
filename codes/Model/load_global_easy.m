@@ -127,7 +127,7 @@ pars('t0') = 0;
 
 %Cardiovascular pars
 pars('C_sa') = 1.5;%1.2;%0.28;%0.9;%0.28;               % ml/mmHg      | [2][5] | Systemic arterial compliance
-pars('L_sa') = 0.22;%0.22; %* 10^-3;       % mmHgs^2/ml   | [2][5] | Systemic arterial inertance
+pars('L_sa') = 0.22;%0.22;%0.22; %* 10^-3;       % mmHgs^2/ml   | [2][5] | Systemic arterial inertance
 pars('R_sa') = 0.15; %0.3;%0.06;%1;%0.1;%0.06;               % mmHgs^2/ml   | [2][5] | Systemic arterial hydraulic resistance
 pars('V_unstressed_sa') = 0;      % ml           | [2][5] | Systemic arterial unstressed volume
 
@@ -179,10 +179,10 @@ pars('V_vc_min') = 50;              % ml                   | [2]        | Minimu
 pars('C_pa') = 0.76;                % ml/mmHg              | [2][5]     | Pulmonary arterial compliances
 pars('C_pp') = 5.8;                 % ml/mmHg              | [2][5]     | Pulmonary peripheral compliances
 pars('C_pv') = 25.37;               % ml/mmHg              | [2][5]     | Pulmonary venous compliances
-pars('L_pa') = 0.18;%0.18;%0.00018;             % mmHg^2/ml            | [2][5]     | Pulmonary arterial intertance
+pars('L_pa') = 0.18;%0.18;%0.18;%0.00018;             % mmHg^2/ml            | [2][5]     | Pulmonary arterial intertance
 pars('R_pa') = 0.023;               % mmHgs/ml             | [2][5]     | Pulmonary arterial flow resistance
-pars('R_pp') = 0.24266; %0.0894;              % mmHgs/ml             | [2][5]     | Pulmonary peripheral flow resistance
-pars('R_pv') = 0.0298; %0.0056;              % mmHgs/ml             | [2][5]     | Pulmonary venous flow resistance
+pars('R_pp') = 0.0894;              % mmHgs/ml             | [2][5]     | Pulmonary peripheral flow resistance
+pars('R_pv') = 0.0298;%0.0056;%0.0298; %0.0056;              % mmHgs/ml             | [2][5]     | Pulmonary venous flow resistance
 pars('V_unstressed_pa') = 0;        % ml                   | [2][5]     | Pulmonary arterial unstressed volume
 pars('V_unstressed_pp') = 94.9390; %116.6775; % ml                   | [2]        | Pulmonary peripheral unstressed volume
 pars('V_unstressed_pv') = 114.393; %114;      % ml                   | [2]        | Pulmonary venous unstressed volume
@@ -257,7 +257,7 @@ pars('KCO2_h') = 11.11;            % mmHg                 | [4]        | Paramet
 pars('KCO2_rm') = 142.8;           % mmHg                 | [4]        | Parameter related to the slope of the sigmoidal function at the central point
 pars('MO2_h_p_n') = 0.4;           % ml/s                 | [11]       | Nominal value of O2 consumption rate in the heart
 pars('MO2_rm_p') = 0.86;           % ml/s                 | [11]       | Consumption rate in the resting muscle
-pars('R_h_p_n') = 24.0225; %19.71;           % mmHgs/ml             | [2][4]     | Normal peripheral resistance in coronary compartment
+pars('R_h_p_n') = 24;%10;%24.0225; %19.71;           % mmHgs/ml             | [2][4]     | Normal peripheral resistance in coronary compartment
 pars('tau_w') = 5;                 % s                    | [11]       | Time constant of the filter
 pars('Whn') = 12660;               % mmHg/sml             | [11]       | Nominal value of the average power of the cardiac pump
 
@@ -269,7 +269,7 @@ pars('g_M') = 40;                  % --                   | [5]        | Static 
 pars('I0_met') = 0.4266;           % --                   | [5]        | Is I at the central point of the sigmoid
 pars('kmet') = 0.18;               % --                   | [5]        | Parameter related to the slope of the sigmoid at the central point
 pars('MO2_am_p_n') = 0.516;        % ml/s                 | [5]        | Nominal oxygen consumption rate
-pars('phi_max') = 20;              % --                   | [5]        | Upper saturation of the static sigmoidal characteristic
+pars('phi_max') = 13; %20;%20;             % --                   | [5]        | Upper saturation of the static sigmoidal characteristic
 pars('phi_min') = -1.87;           % --                   | [5]        | Lower saturation of the static sigmoidal characteristic 
 pars('tau_M') = 40;                % s                    | [5]        | Time constant
 pars('tau_met') = 10;                % s                    | [5]        | Time constant
@@ -413,20 +413,54 @@ pars('fiO2_poly_2') = 0;
 pars('fiO2_poly_3') = 0;
 pars('fiO2_poly_4') = 0;
 
+pars('TI_poly_0') = 0;
+pars('TI_poly_1') = 0;
+pars('TI_poly_2') = 0;
+pars('TI_poly_3') = 0;
+pars('TI_poly_4') = 0;
+pars('TI_poly_5') = 0;
+pars('TI_poly_6') = 0;
+pars('TI_poly_7') = 0;
+pars('TI_poly_8') = 0;
+pars('TI_poly_9') = 0;
+pars('TI_poly_10') = 0;
+pars('TI_poly_11') = 0;
+pars('TI_poly_12') = 0;
+pars('TI_poly_13') = 0;
+pars('TI_poly_14') = 0;
+pars('TI_poly_15') = 0;
+
+pars('Tresp_poly_0') = 0;
+pars('Tresp_poly_1') = 0;
+pars('Tresp_poly_2') = 0;
+pars('Tresp_poly_3') = 0;
+pars('Tresp_poly_4') = 0;
+pars('Tresp_poly_5') = 0;
+pars('Tresp_poly_6') = 0;
+pars('Tresp_poly_7') = 0;
+pars('Tresp_poly_8') = 0;
+pars('Tresp_poly_9') = 0;
+pars('Tresp_poly_10') = 0;
+pars('Tresp_poly_11') = 0;
+pars('Tresp_poly_12') = 0;
+pars('Tresp_poly_13') = 0;
+pars('Tresp_poly_14') = 0;
+pars('Tresp_poly_15') = 0;
+
 
 pars('vO2_e_n') = 0.13;
 pars('vO2_s_n') = 0.13;
-pars('aO2_n') = 0.9;
+pars('aO2_n') = 0.195;
 
 pars('gO2_e') = 1*pars('gO2_rm'); %0.5*
 pars('gO2_s') = 1*pars('gO2_rm'); %0.5 * 
-pars('gO2_p') = 0.1 * pars('gO2_rm');%
+pars('gO2_p') = 0.5;%0.1 * pars('gO2_rm');%
 
 pars('MO2_e') = 0.6;
 pars('MO2_s') = 0.6;
 pars('MO2_p') = 0;
 
-pars('R_p_p_n') = 0.24266;
+pars('R_p_p_n') = 0.0894; %  0.24266;
 pars('Hgt') = 170;
 pars('BW') = 70;
 pars('Gender') = 2;
@@ -474,7 +508,7 @@ init('Nt') = 0;            %   ?  | []  | Central respiratory neuromuscular driv
 
 %Control optimizer
 init('a0')  = 0;           %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
-init('a1') = 30; %8;%40;%12;          %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
+init('a1') = 20; %8;%40;%12;          %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
 init('a2') = -3;%-1;            %   ?  | []  | Control parameter to optimize (asociated with pmusc curve shape)
 init('t1') = init('TI');   %   ?  | []  | Control parameter to optimize (inspiration time)
 init('t2') = init('TE');   %   ?  | []  | Control parameter to optimize (expiration time)
@@ -664,6 +698,10 @@ init('xCO2_s') = 0;
 init('xO2_p') = 0;
 init('xCO2_p') = 0;
 
+init('Q_lv') = 0;
+init('Q_i_lv') = 0;
+init('P_max_lv') = 0;
+
 
 
 
@@ -682,14 +720,14 @@ taus('tau_gases') =  pars('LCTV') / init('Qla');
 
 pars('lb_TI')  = 1;%1.2;  %we could change them to be 1 the minimum value
 pars('lb_TE') = 1.2;%1.2;   %cambiar a mas bajo
-pars('lb_a1')  = 10; %TESTING 11.8; %15 %11; %36.2;%10;   %36.2  %bajar este también, en base a los papers este debería estar en 20
-pars('lb_a2')  = -5.5;%TESTING -2.5;%-20;  %-5.5
+pars('lb_a1')  = 1; %TESTING 11.8; %15 %11; %36.2;%10;   %36.2  %bajar este también, en base a los papers este debería estar en 20
+pars('lb_a2')  = -40;%TESTING -2.5;%-20;  %-5.5
 pars('lb_tau') = 0.25;
 
 pars('ub_TI') = 3;%1.8;%2;    %this could be 2, its minimum value, cambiar a más alto
 pars('ub_TE') = 5;%1.95;%2.2;
-pars('ub_a1') = 40; %60;  
-pars('ub_a2') = -2.5;%TESTING 0;
+pars('ub_a1') = 80; %60;  
+pars('ub_a2') = -0.5;%TESTING 0;
 pars('ub_tau') = 0.45;
 
 pars('TI') = 0;

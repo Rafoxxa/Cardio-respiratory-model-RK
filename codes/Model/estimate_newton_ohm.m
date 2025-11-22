@@ -6,6 +6,9 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
 
     if nargin < 4
         format_output = 'dict';
+        if nargin < 3
+            patient_idx = 0;
+        end
     end
     % Compute estimated parameters based on x multipliers
 
@@ -15,7 +18,7 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
     Hgt       = pars('Hgt');%172;%data.Hgt;                        % Height (cm)                     
     Gender    = pars('Gender');%2;%data.Gender;                     % Gender (1=female, 2=male)       
     
-
+    
     %% Total blood volume (mL) from general measurements
     if (Gender == 2)  
            ToTBV = ((0.3669 * (Hgt/100)^3) + (0.03219 * BW) + 0.6041) * 1000; % Total blood volume (mL)
@@ -175,6 +178,9 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
     %C_b_v =  V_b_v_delta / P_b_v;
     %C_vc_v = V_vc_v / P_vc_v;
 %
+    % Store old values before updating
+    old_pars = containers.Map(keys(pars), values(pars));
+    
     %Renaming
     pars('V_unstressed_am_p') = V_m_p_un * 0.6;
     %V_unstressed_am_v = V_m_v_un;
@@ -235,5 +241,116 @@ function new_pars = estimate_newton_ohm(x, pars, patient_idx, format_output)
         new_pars = values(pars);
     end
 
+    % %% Generate comparison table
+    % fprintf('\n=== TABLA COMPARATIVA DE PARÁMETROS ===\n');
+    % fprintf('%-25s %15s %15s %15s\n', 'Parámetro', 'Valor Antiguo', 'Valor Nuevo', 'Diferencia');
+    % fprintf('%s\n', repmat('-', 73, 1));
+    % 
+    % % List of parameters that were updated
+    % updated_params = {'V_unstressed_am_p', 'V_unstressed_b_p', 'V_unstressed_b_v', ...
+    %                   'V_unstressed_e_p', 'V_unstressed_h_p', 'V_unstressed_h_v', ...
+    %                   'V_unstressed_pp', 'V_unstressed_pv', 'V_unstressed_rm_p', ...
+    %                   'V_unstressed_s_p', 'V_unstressed_vc', 'V_u_am_v_0', ...
+    %                   'V_u_e_v_0', 'V_u_rm_v_0', 'V_u_s_v_0', 'R_am_n', ...
+    %                   'R_am_p_0', 'R_b_n', 'R_e_n', 'R_e_p_0', 'R_h_n', ...
+    %                   'R_h_p_n', 'R_p_p_n', 'R_pv', 'R_rm_n', 'R_rm_p_0', ...
+    %                   'R_s_n', 'R_s_p_0'};
+    % 
+    % % Prepare data for table
+    % param_names = {};
+    % old_vals = [];
+    % new_vals = [];
+    % diff_vals = [];
+    % 
+    % for i = 1:length(updated_params)
+    %     param_name = updated_params{i};
+    %     if isKey(old_pars, param_name) && isKey(pars, param_name)
+    %         old_val = old_pars(param_name);
+    %         new_val = pars(param_name);
+    %         diff_val = new_val - old_val;
+    % 
+    %         param_names{end+1} = param_name;
+    %         old_vals(end+1) = old_val;
+    %         new_vals(end+1) = new_val;
+    %         diff_vals(end+1) = diff_val;
+    % 
+    %         fprintf('%-25s %15.6f %15.6f %15.6f\n', param_name, old_val, new_val, diff_val);
+    %     elseif isKey(pars, param_name)
+    %         new_val = pars(param_name);
+    % 
+    %         param_names{end+1} = param_name;
+    %         old_vals(end+1) = NaN;
+    %         new_vals(end+1) = new_val;
+    %         diff_vals(end+1) = NaN;
+    % 
+    %         fprintf('%-25s %15s %15.6f %15s\n', param_name, 'N/A', new_val, 'Nuevo');
+    %     end
+    % end
+    % 
+    % fprintf('%s\n', repmat('-', 73, 1));
+    % fprintf('Paciente: %d\n', patient_idx);
+    % fprintf('\n');
+    % 
+    % %% Save comparison table to Excel
+    % % Create table data
+    % tableData = cell(length(param_names) + 1, 4);
+    % 
+    % % Add headers
+    % tableData{1, 1} = 'Parámetro';
+    % tableData{1, 2} = 'Valor Antiguo';
+    % tableData{1, 3} = 'Valor Nuevo';
+    % tableData{1, 4} = 'Diferencia';
+    % 
+    % % Add data rows
+    % for i = 1:length(param_names)
+    %     tableData{i+1, 1} = param_names{i};
+    %     if isnan(old_vals(i))
+    %         tableData{i+1, 2} = 'N/A';
+    %     else
+    %         tableData{i+1, 2} = old_vals(i);
+    %     end
+    %     tableData{i+1, 3} = new_vals(i);
+    %     if isnan(diff_vals(i))
+    %         tableData{i+1, 4} = 'Nuevo';
+    %     else
+    %         tableData{i+1, 4} = diff_vals(i);
+    %     end
+    % end
+    % 
+    % % Create summary statistics
+    % valid_diffs = diff_vals(~isnan(diff_vals));
+    % summary_data = cell(5, 2);
+    % summary_data{1, 1} = 'RESUMEN';
+    % summary_data{1, 2} = '';
+    % summary_data{2, 1} = 'Paciente';
+    % summary_data{2, 2} = patient_idx;
+    % summary_data{3, 1} = 'Total parámetros';
+    % summary_data{3, 2} = length(param_names);
+    % summary_data{4, 1} = 'Parámetros modificados';
+    % summary_data{4, 2} = length(valid_diffs);
+    % summary_data{5, 1} = 'Parámetros nuevos';
+    % summary_data{5, 2} = sum(isnan(old_vals));
+    % 
+    % % Generate filename
+    % filename = sprintf('estimate_ohmnewton_parametros_paciente_%d.xlsx', patient_idx);
+    % 
+    % % Write to Excel
+    % try
+    %     % Write main table
+    %     writecell(tableData, filename, 'Sheet', 'Comparación', 'Range', 'A1');
+    % 
+    %     % Write summary
+    %     writecell(summary_data, filename, 'Sheet', 'Comparación', 'Range', 'F1');
+    % 
+    %     fprintf('Tabla guardada exitosamente en: %s\n', filename);
+    % catch ME
+    %     warning('Error al guardar el archivo Excel: %s', ME.message);
+    %     fprintf('Intentando guardar en formato CSV...\n');
+    % 
+    %     % Fallback to CSV if Excel fails
+    %     csv_filename = sprintf('parametros_paciente_%d.csv', patient_idx);
+    %     writecell(tableData, csv_filename);
+    %     fprintf('Tabla guardada en formato CSV: %s\n', csv_filename);
+    % end
    
 end

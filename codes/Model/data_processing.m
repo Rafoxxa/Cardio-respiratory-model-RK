@@ -86,11 +86,13 @@ function out = data_processing(mode, var, time)
         key_V = 'V';
         key_TI = 'TI';
         key_TE = 'TE';
+        key_pm = 'mean_P_sa'
         
         press_idx = find(strcmp(init.keys, key_press));
         V_idx = find(strcmp(init.keys, key_V));
         TI_idx = find(strcmp(init.keys, key_TI));
         TE_idx = find(strcmp(init.keys, key_TE));
+        pm_idx = find(strcmp(init.keys, key_pm));
 
         pressure = Xin(press_idx, :);
         V = Xin(V_idx, :);
@@ -98,6 +100,7 @@ function out = data_processing(mode, var, time)
         TE = Xin(TE_idx, :);        
 
         [pm, ps, pd] = compute_pressure(pressure, t);
+        pm = Xin(pm_idx, :);
         [VT] = compute_VT(V, t);
         [BF] = compute_BF(TI, TE);
 

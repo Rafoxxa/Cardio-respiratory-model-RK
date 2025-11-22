@@ -1,67 +1,5 @@
-%INSTRUCTIONS
-% This script is the main module for solving an ODE (Ordinary Differential
-% Equation) system. The main ODE solver is run in the 'run_ode' module. The
-% script takes parameters, initial conditions, and optimization boundaries 
-% from the 'load_global_easy' function.
-
-% Functionality:
-% The script can execute different types of simulations based on the 'type_of_input'
-% parameter:
-% 1. 'testing': Runs a small simulation (no longer than 20 seconds) to test 
-%    the system's response to an input value of MRtCO2.
-% 2. 'paper_simulation': Runs a complete simulation of 1260 seconds to observe 
-%    the transient behavior over time.
-% 3. 'deploy_results': Runs steady-state simulations, which means 10 different 
-%    simulations with increasing values of MRtCO2 and picks the last value from 
-%    a specific set of variables.
-% 4. 'tiny paper simulation': Similar to 'paper_simulation' but with a simulation 
-%    time of 0.1x (200 seconds).
-
-% The input characteristics can be modified in the 'input_consumption()' function 
-% within 'model_basic_vascular.m', which is only present in the 'tissue()' function.
-
-% Global Variables:
-% - 'all_global': Stores all the data used for delays and integration.
-
-% Simulation Parameters:
-% - 'type_of_input': Determines the type of simulation to run (1, 2, 3, or 4).
-% - 'control_on': Toggle control mechanisms (1 = on, 0 = off).
-% - 'only_plot': If set to 1, the script will only plot existing data without 
-%   running new simulations.
-% - 'dt': Time step for the simulation.
-% - 'simulation_time': Total duration of the simulation, which varies based on 
-%   'type_of_input'.
-
-% Plotting Options:
-% The script provides various plotting modes to visualize the results:
-% - 'vars_to_show': Plots specified variables with their own axes.
-% - 'multiple_to_show': Plots multiple variables against a common variable.
-% - 'same_units': Plots variables with the same units.
-% - 'interest_variables': Plots a predefined set of variables of interest.
-
-% The script also includes various functions to structure and plot the simulation data.
-
-% Load the necessary parameters, initial conditions, and time constants using
-% the 'load_global_easy()' function. Ensure that the "variables_units.xlsx" file
-% is present in the directory for reading the units of the variables.
-
-%%  Instructions to Run:
-% 1. Set the desired 'type_of_input'.
-% 2. Toggle 'control_on' and 'only_plot' as needed.
-% 3. Set the 'dt' and 'simulation_time' parameters.
-% 4. Run the script to execute the simulation and plot the results based on 
-%    the selected plotting mode.
-
-%% Metasimulation parameters
-
-%INPUT TYPE: (1) testing: Runs a small simulation (no longer than 20s) to test system's response to an input value of MRtCO2
-%          , (2) paper_simulation: Run the whole simulation of 1260s to observe the transient behaviour over time
-%            (3) deploy_results: Run the steady state simulation, that means 10 different simulations with increasing values of MRtCO2 and picks the last value form a specific set of variables
-%            (4) tiny paper simulation: Is the same as (2) but the time is 0.1x.
-%            (6) vo2 and vco2 external, normoxia or hipoxia exercise
-%            (7) vo2, vco2 and fio2 external, hipoxia ascend
-
-%to change input characteristics go to '''input_consumption()''' function from model_basic_vascular.m  which exists only in '''tissue()''' function.
+%INSTRUCTIONS: In README.md there is an example of the model basic
+%simulation that is executed here.
 
 %Clear and setup
 rng(2);  
@@ -73,10 +11,53 @@ clear -global externals_global
 
 vectorize_dicts('run_ode.m', 'model_basic.m', 'run_ode_vec_hipoxia.m', 'model_vec_hipoxia.m');
 
-
-patient_idx = 1;
-[setup] = set_up("simulation", patient_idx, "hipoxia", "mix", "dt", 0.1);%, "pars_from_fitting", 1, "fitting_mat_file", "Fitting_test.mat");
+state = 'normoxia';
+patient_idx = 5;
+[setup] = set_up("simulation", patient_idx, state, "mix", "dt", 0.1,'pars_from_fitting', 1, 'fitting_mat_file', {'07-09-2025', '30-09-2025', '20-10-2025', '24-10-2025', '02-11-2025'}, 'time_from_data', 1);%, "pars_from_fitting", 1, "fitting_mat_file", "Fitting_test.mat");
+%[setup] = set_up("simulation", patient_idx, state, 'mix', 'pars_from_fitting', 0, "dt", 0.1, 'time_from_data', 1, 'estimated_newton', 1);%, "pars_from_fitting", 1, "fitting_mat_file", "Fitting_test.mat");
+%[setup] = set_up("simulation", patient_idx, state, "mix", "dt", 0.1, 'initial_condition_filename', 'initial-conditions', 'time_from_data', 0, 'simulation_time', 500);%, "pars_from_fitting", 1, "fitting_mat_file", "Fitting_test.mat");
+%[setup] = set_up('simulation', patient_idx, state, 'mix', 'dt', 0.1);
 s = setup;
+s.dt = 0.01;
+%s.pars('gO2_p') = 10 * s.pars('gO2_p');
+disp('alto');
+%s.pars('f_ab_max') = 60;
+% correction_I0 = @(I0) (I0 * (1 - 0.3) + 0.3 - s.pars('MRtCO2_basal'))/(s.pars('AT')- s.pars('MRtCO2_basal'));
+% s.pars('I_0_h_s') = correction_I0(s.pars('I_0_h_s'));
+% s.pars('I_0_v_s') = correction_I0(s.pars('I_0_v_s'));
+% s.pars('I_0_p_s') = correction_I0(s.pars('I_0_p_s'));
+% s.pars('I_0_v') = correction_I0(s.pars('I_0_v'));
+% pars('I0_met') = correction_I0(s.pars('I0_met'));F
+%s.pars('P_n') = 100;
+%s.pars('kes') = s.pars('kes') * 0.5; %reduje el efecto de fab sobre el HR
+%s.pars('Wb_v_s') = s.pars('Wb_v_s') + sqrt(eps); %* 1.001;   %-1.3422
+%s.pars('fes_max') = 60;
+%s.pars('phi_max') = 13;
+%This are basals for normoxia
+%s.pars('MRtO2_basal') = s.pars('MRtO2_basal') * 2.5;
+
+%s.pars('MRtCO2_basal') = 0.28;
+%xperturbed_Wb_v_s.mat
+s.simulation_time = 100;
+s.pars('settling_time') = 0;
+%s.pars('vO2_b_n') = 0.14; %0.03; %0.4 ;%0.6 %1  %parece que valores un poco más altos estabilizan la PD, pero en ejercicio se vuelve loco.. muy alto
+%s.pars('vO2_am_n') = 0.08;
+%s.pars('vO2_s_n') = 0.06;
+%s.pars('L_sa') = 0.2;
+%s.pars('gO2_b') = 0.01;
+%s.pars('gO2_am') = 10;
+%s.pars('vO2_am_n') = 0.25;
+
+%s.pars('V_tot') = s.pars('V_tot')  + 2200; 
+%s.simulation_time = 500;
+
+
+%s.pars('R_sa') = 0.1;
+%s.pars('C_sa') = 0.8;
+%s.pars('L_sa') = 0.022;
+%s.pars('GTsym') = s.pars('GTsym');
+
+
 
 % Ejecutar simulación ODE
 [t, x_dot, x_vars, x_keys, index] = s.run_ode_fun(s.model, s.pars, s.init, s.simulation_time, s.dt);
@@ -85,16 +66,17 @@ s = setup;
 struct_vars = arrange_results(x_dot, x_vars, x_keys, t);
 
 % Guardar resultados
-save(s.simulation_filename, 'struct_vars', 't');
+%save(s.simulation_filename, 'struct_vars', 't');
 
-% Cargar datos si es necesario (comentado)
-% load("../Simulations/only_simulation/5/3300_sec_hipoxia-24-04-2025-p.mat")
 
-% Plotting - usando cell arrays y char arrays para compatibilidad
-% custom_plot('vars_to_show', {['dVE'], struct_vars, t, s.units_table}); 
+%Plotting - usando cell arrays y char arrays para compatibilidad
+%custom_plot('vars_to_show', {['dVE'], struct_vars, t, s.units_table}); 
 
-figure;
-% Crear cell array para parámetros de plotting
-plot_params = {t, s.texp, struct_vars, s.yexp, s.xnames_fitting, s.units_table, 5, 2, '', 'off'};
-custom_plot('sim_vs_exp', plot_params);
+
+
+
+%figure;
+%Crear cell array para parámetros de plotting
+%plot_params = {t, s.texp, struct_vars, s.yexp, s.xnames_fitting, s.units_table, 5, 2, '', 'off',  patient_idx, 'actual', [1 2 3 4 5 6 7 8 9 10],state, 0};
+%custom_plot('sim_vs_exp', plot_params);
 

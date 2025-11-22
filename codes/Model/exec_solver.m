@@ -22,9 +22,10 @@ function [out_solver] = exec_solver(type_of_solver, setup)
     %
 %for pattern search
 
-    if strcmp(type_of_solver, 'find-best-solution')
-        % Folder where the .mat files are located
-    folderPath = setup.fitting_folder;  % <-- replace with actual path
+    if strcmp(type_of_solver, 'find-best-solution') || strcmp(type_of_solver, 'find-best-solution-local')
+        
+    folderPath = setup.fitting_folder;  
+
     files = dir(fullfile(folderPath, '*.mat'));
 
     minFval = Inf;
@@ -33,19 +34,45 @@ function [out_solver] = exec_solver(type_of_solver, setup)
     param_space = [];
     J_space = [];
 
+    global JH JN
+
     cnt = 1;
     for i = 1:length(files)
         data = load(fullfile(folderPath, files(i).name));
         
-        % Check that both x and fval exist
+        % % Check that both x and fval exist
+        % if isfield(data, 'x') && isfield(data, 'fval')
+        %     if isfield(data, 'JvsIter')
+        %         go = 1;
+        %     else
+        %         go = 0;
+        %     end
+        % else
+        %     if isfield(data, 'JvsIter_')
+        %         go = 1;
+        %         data.fval = data.JvsIter_.bestfval(end);
+        %         data.x = data.JvsIter_.bestx(:, end);
+        %         data.JvsIter = data.JvsIter_;
+        %     else
+        %         go = 0;
+        %     end
+        % end
+        % 
+        % if go
         if isfield(data, 'x') && isfield(data, 'fval') && isfield(data, 'JvsIter')
         param_space = [param_space, data.JvsIter.bestx];
         J_space = [J_space,  data.JvsIter.bestfval]; 
         otherJvsiter{cnt} = data.JvsIter.bestfval;
+
+        disp(data.fval);
+        disp(data.x)
             if data.fval < minFval
                 minFval = data.fval;
                 bestX = data.x;
-                bestJvsiter = data.JvsIter.bestfval;                
+                disp(bestX);
+                bestJvsiter = data.JvsIter.bestfval;   
+                JN = data.JvsIter.Ji_normoxia(:,end);
+                JH = data.JvsIter.Ji_hipoxia(:,end);
             end
         cnt = cnt + 1;
         else
@@ -53,11 +80,11 @@ function [out_solver] = exec_solver(type_of_solver, setup)
         end
         
     end
-
-    % Result
     fprintf('Minimum fval found: %g\n', minFval);
     disp('Corresponding x:');
     disp(bestX);
+    
+    
 
     pars = setup.pars_list{1};
     pars_keys = keys(pars);
@@ -65,122 +92,131 @@ function [out_solver] = exec_solver(type_of_solver, setup)
     updated_pars = containers.Map(pars_keys_updated, num2cell(bestX'));
     x = bestX;
     fval = minFval;
+    
 
 
     out_solver = struct('x', bestX, 'fval', minFval);    
-    save(setup.best_fitting_filename, 'updated_pars', 'fval', 'x');  
+    save(setup.best_fitting_filename, 'updated_pars', 'fval', 'x'); 
 
-    %Show Iterations over each nuclei
-    figure;
-    hold on;
-    plotHandles = gobjects(length(otherJvsiter) + 1, 1); % uno más para bestJvsiter
-    legendLabels = cell(length(otherJvsiter) + 1, 1);
+     
     
-    % Plots de otherJvsiter
-    for index = 1:length(otherJvsiter)  
-        
-        h = plot(otherJvsiter{index}, '-o');
-        plotHandles(index) = h(1); % en caso de que sean varios, solo toma el primero
-        legendLabels{index} = num2str(index + 3);
-        
-    end    
-    
-    % Plot adicional: bestJvsiter
-    plotHandles(end) = plot(bestJvsiter, '-o', 'LineWidth', 2); % por ejemplo, línea negra
-    legendLabels{end} = 'best';
-    
-    
-    legend(plotHandles, legendLabels);
-    xlabel('iterations');
-    ylabel('J'); 
-    disp('end');
-    uistack(plotHandles(end), 'top');
+    if strcmp(type_of_solver, 'find-best-solution-local')
+        % Result
 
-    %Checking boundries
-    lb = cell2mat(setup.lb);
-    lb_red = lb(setup.idx_optpars);
-    ub = cell2mat(setup.ub);
-    ub_red = ub(setup.idx_optpars);
+        %Show Iterations over each nuclei
+        figure;
+        hold on;
+        plotHandles = gobjects(length(otherJvsiter) + 1, 1); % uno más para bestJvsiter
+        legendLabels = cell(length(otherJvsiter) + 1, 1);
 
-    upper = abs(cell2mat(setup.optpars_0)) * 0.5;
-    initial = abs(cell2mat(setup.optpars_0));
-    lower = abs(cell2mat(setup.optpars_0)) * 10;
-    keys_pars = setup.pars.keys;
-    
-    names = keys_pars(setup.idx_optpars);
-    custom_plot('optim-boundries', {upper, initial, lower, abs(bestX), names});
+        % Plots de otherJvsiter
+        for index = 1:length(otherJvsiter)  
+
+            h = plot(otherJvsiter{index}, '-o');
+            plotHandles(index) = h(1); % en caso de que sean varios, solo toma el primero
+            legendLabels{index} = num2str(index + 3);
+
+        end    
+
+        % Plot adicional: bestJvsiter
+        plotHandles(end) = plot(bestJvsiter, '-o', 'LineWidth', 2); % por ejemplo, línea negra
+        legendLabels{end} = 'best';
 
 
-    % ========== PCA VISUALIZATION OF PARAMETER SPACE ==========
-    % PCA analysis of parameter space with J value coloring
-    if size(param_space, 2) > 1 && size(param_space, 1) > 1
-    fprintf('\nPerforming PCA analysis of parameter space...\n');
-    
-    % Transpose param_space so each row is an observation (solution)
-    
-    param_space = param_space(:, J_space < 0);
-    J_space = J_space(J_space < 0);
-    param_data = param_space';
-    
-    
-    % Standardize the data (center and scale)
-    param_centered = param_data - mean(param_data, 1);
-    param_std = param_centered ./ std(param_centered, 0, 1);
-    
-    % Perform PCA
-    [coeff, score, latent, ~, explained] = pca(param_std);
-    
-    % Find minimum J value and its index
-    [min_J, min_idx] = min(J_space);
-    
-    % Create PCA visualization
-    figure('Name', 'PCA Parameter Space Analysis', 'Position', [100, 100, 1200, 400]);
-    
-    % Subplot 1: PCA scatter plot (2D projection)
-    subplot(1, 3, 1);
-    scatter(score(:, 1), score(:, 2), 50, J_space, 'filled');
-    hold on;
-    % Highlight the minimum
-    scatter(score(min_idx, 1), score(min_idx, 2), 200, 'red', 'filled', 'MarkerEdgeColor', 'black', 'LineWidth', 2);
-    colorbar;
-    colormap(jet);
-    xlabel(sprintf('PC1 (%.1f%% variance)', explained(1)));
-    ylabel(sprintf('PC2 (%.1f%% variance)', explained(2)));
-    title('PCA Parameter Space (colored by J value)');
-    grid on;
-    legend('Solutions', 'Best Solution', 'Location', 'best');
-    
-    % Subplot 2: Explained variance
-    subplot(1, 3, 2);
-    bar(explained(1:min(10, length(explained))));
-    xlabel('Principal Component');
-    ylabel('Explained Variance (%)');
-    title('PCA Explained Variance');
-    grid on;
-    
-    % Subplot 3: Parameter contributions to PC1 and PC2
-    subplot(1, 3, 3);
-    n_params = min(size(coeff, 1), 10); % Show max 10 parameters
-    x_pos = 1:n_params;
-    bar_width = 0.35;
-    
-    bar(x_pos - bar_width/2, coeff(1:n_params, 1), bar_width, 'DisplayName', 'PC1');
-    hold on;
-    bar(x_pos + bar_width/2, coeff(1:n_params, 2), bar_width, 'DisplayName', 'PC2');
-    
-    xlabel('Parameter Index');
-    ylabel('Loading Coefficient');
-    title('Parameter Loadings on PC1 & PC2');
-    legend('Location', 'best');
-    grid on;
-    xticks(x_pos);
-    
-    % Print PCA summary
-    fprintf('PCA Summary:\n');
-    fprintf('- Total variance explained by PC1-PC2: %.1f%%\n', sum(explained(1:2)));
-    fprintf('- Minimum J value: %.6g at solution %d\n', min_J, min_idx);
-    fprintf('- PC1 coordinates of best solution: %.3f\n', score(min_idx, 1));
-    fprintf('- PC2 coordinates of best solution: %.3f\n', score(min_idx, 2));
+        legend(plotHandles, legendLabels);
+        xlabel('iterations');
+        ylabel('logJ'); 
+        disp('end');
+        title_ = sprintf('Subject %d', setup.patient_idx);
+        title(title_);
+        uistack(plotHandles(end), 'top');
+
+        %Checking boundries
+        lb = cell2mat(setup.lb);
+        lb_red = lb(setup.idx_optpars);
+        ub = cell2mat(setup.ub);
+        ub_red = ub(setup.idx_optpars);
+
+        upper = abs(cell2mat(setup.optpars_0)) * 0.05;
+        initial = abs(cell2mat(setup.optpars_0));
+        lower = abs(cell2mat(setup.optpars_0)) * 10;
+        keys_pars = setup.pars.keys;
+
+        names = keys_pars(setup.idx_optpars);
+        %custom_plot('optim-boundries', {upper, initial, lower, abs(bestX), names});
+
+
+        % % ========== PCA VISUALIZATION OF PARAMETER SPACE ==========
+        % % PCA analysis of parameter space with J value coloring
+        % if size(param_space, 2) > 1 && size(param_space, 1) > 1
+        % fprintf('\nPerforming PCA analysis of parameter space...\n');
+        % 
+        % % Transpose param_space so each row is an observation (solution)
+        % 
+        % param_space = param_space(:, J_space < 0);
+        % J_space = J_space(J_space < 0);
+        % param_data = param_space';
+        % 
+        % 
+        % % Standardize the data (center and scale)
+        % param_centered = param_data - mean(param_data, 1);
+        % param_std = param_centered ./ std(param_centered, 0, 1);
+        % 
+        % % Perform PCA
+        % [coeff, score, latent, ~, explained] = pca(param_std);
+        % 
+        % % Find minimum J value and its index
+        % [min_J, min_idx] = min(J_space);
+        % 
+        % % Create PCA visualization
+        % figure('Name', 'PCA Parameter Space Analysis', 'Position', [100, 100, 1200, 400]);
+        % 
+        % % Subplot 1: PCA scatter plot (2D projection)
+        % subplot(1, 3, 1);
+        % scatter(score(:, 1), score(:, 2), 50, J_space, 'filled');
+        % hold on;
+        % % Highlight the minimum
+        % scatter(score(min_idx, 1), score(min_idx, 2), 200, 'red', 'filled', 'MarkerEdgeColor', 'black', 'LineWidth', 2);
+        % colorbar;
+        % colormap(jet);
+        % xlabel(sprintf('PC1 (%.1f%% variance)', explained(1)));
+        % ylabel(sprintf('PC2 (%.1f%% variance)', explained(2)));
+        % title('PCA Parameter Space (colored by J value)');
+        % grid on;
+        % legend('Solutions', 'Best Solution', 'Location', 'best');
+        % 
+        % % Subplot 2: Explained variance
+        % subplot(1, 3, 2);
+        % bar(explained(1:min(10, length(explained))));
+        % xlabel('Principal Component');
+        % ylabel('Explained Variance (%)');
+        % title('PCA Explained Variance');
+        % grid on;
+        % 
+        % % Subplot 3: Parameter contributions to PC1 and PC2
+        % subplot(1, 3, 3);
+        % n_params = min(size(coeff, 1), 10); % Show max 10 parameters
+        % x_pos = 1:n_params;
+        % bar_width = 0.35;
+        % 
+        % bar(x_pos - bar_width/2, coeff(1:n_params, 1), bar_width, 'DisplayName', 'PC1');
+        % hold on;
+        % bar(x_pos + bar_width/2, coeff(1:n_params, 2), bar_width, 'DisplayName', 'PC2');
+        % 
+        % xlabel('Parameter Index');
+        % ylabel('Loading Coefficient');
+        % title('Parameter Loadings on PC1 & PC2');
+        % legend('Location', 'best');
+        % grid on;
+        % xticks(x_pos);
+        % 
+        % % Print PCA summary
+        % fprintf('PCA Summary:\n');
+        % fprintf('- Total variance explained by PC1-PC2: %.1f%%\n', sum(explained(1:2)));
+        % fprintf('- Minimum J value: %.6g at solution %d\n', min_J, min_idx);
+        % fprintf('- PC1 coordinates of best solution: %.3f\n', score(min_idx, 1));
+        % fprintf('- PC2 coordinates of best solution: %.3f\n', score(min_idx, 2));
+        % end
     end
     
 
@@ -200,6 +236,8 @@ elseif strcmp(type_of_solver, 'pattern_search')
         
         lower_boundries = setup.lb;
         upper_boundries = setup.ub;
+
+
         
         objFunParams.texp_list =  setup.texp_list;
         objFunParams.yexp_list = setup.yexp_list;
@@ -219,7 +257,8 @@ elseif strcmp(type_of_solver, 'pattern_search')
         ub = cell2mat(upper_boundries(setup.idx_optpars)); % Upper boundaries
         % Initial guesses for the optimization
         %num_start_points = 4; % Number of starting points
-        initial_point = cell2mat(setup.optpars_0) .* (1 + rand(1, length(setup.optpars_0)) * 0.5); % Add small random perturbations
+        
+        initial_point = cell2mat(setup.optpars_0) .* (1 + rand(1, length(setup.optpars_0)) * setup.initial_noise); % Add small random perturbations
         initial_point = max(lb, min(ub, initial_point));
         disp(sprintf('SEED: %s', mat2str(initial_point, 2)));
         %Folder to store results in case of a crush
@@ -236,14 +275,27 @@ elseif strcmp(type_of_solver, 'pattern_search')
         % end
 
         % Options for patternsearch
-        options = optimoptions('patternsearch', ...
-        'OutputFcn', @saving_optim_info, ...
-        'UseParallel', false, ...
-        'Display', 'iter', ...
-        'PollMethod', 'GPSPositiveBasis2N', ...
-        'MaxFunctionEvaluations', 5);%, ...
-        %'MaxIterations', 5, ... % Example maximum number of iterations
-       % 'OutputFcn', @(optimValues, optold, flag) saveResultsOutputFcn(optimValues, optold, flag, folderName)); % Example max time (1 hour)
+        if strcmp(class(setup.iterations), 'char')
+            options = optimoptions('patternsearch', ...
+            'OutputFcn', @saving_optim_info, ...
+            'UseParallel', false, ...
+            'Display', 'iter', ...
+            'PollMethod', 'GPSPositiveBasis2N', ...
+            'MaxFunctionEvaluations', 5);%, ...
+            %'MaxIterations', 5, ... % Example maximum number of iterations           
+        else
+             options = optimoptions('patternsearch', ...
+            'OutputFcn', @saving_optim_info, ...
+            'UseParallel', false, ...
+            'Display', 'iter', ...
+            'PollMethod', 'GPSPositiveBasis2N', ...
+            'InitialMeshSize', 4.0, ...
+            'MaxMeshSize', 20, ...
+            'MeshExpansionFactor', 4.0, ...
+            'MaxFunctionEvaluations', 200, ...
+            'MaxIterations', setup.iterations);  
+           
+        end
 
         % Initialize results storage
         %results = struct('x', [], 'fval', [], 'exitflag', [], 'output', []);       
@@ -259,7 +311,8 @@ elseif strcmp(type_of_solver, 'pattern_search')
         %exitflag = exitflag;
         %output = output;
        
-        JvsIter = logStruct;
+        JvsIter = logStruct;       
+        
         save(setup.fitting_filename, 'x', 'fval', 'JvsIter'); 
         %out_solver.JvsIter = logStruct;
 
@@ -726,12 +779,29 @@ elseif strcmp(type_of_solver, 'pattern_search')
                 logStruct.bestfval = [];
                 logStruct.meshsize = [];
                 logStruct.bestx = [];
+                logStruct.Ji_normoxia = [];
+                logStruct.Ji_hipoxia = [];
 
             case 'iter'
+                global Ji_normoxia_global Ji_hipoxia_global
+                
+                
                 logStruct.iteration(end+1) = optimValues.iteration;
                 logStruct.bestfval(end+1) = optimValues.fval;
                 logStruct.meshsize(end+1) = optimValues.meshsize;
                 logStruct.bestx(:,end+1) = optimValues.x;
+                try
+                    logStruct.Ji_normoxia(:,end+1) = Ji_normoxia_global;
+                    logStruct.Ji_hipoxia (:,end+1) = Ji_hipoxia_global;
+                catch
+                    logStruct.Ji_normoxia(:,end+1) = ones(10) * 1000;
+                    logStruct.Ji_hipoxia (:,end+1) = ones(10) * 1000;
+                    disp('error');
+                                    
+                end
+                
+                JvsIter_ = logStruct;
+                save(setup.fitting_filename, 'JvsIter_'); 
 
                 fprintf('Iter %d | fval = %.4f\n', ...
                     optimValues.iteration, optimValues.fval);

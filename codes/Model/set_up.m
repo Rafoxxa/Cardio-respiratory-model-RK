@@ -17,7 +17,7 @@ function [setup_out] = ...
     solver            = 'pattern_search';
     lb                = 'lb';
     ub                = 'ub';
-    simulation_filename          = 'simulation_filename';
+    simulation_filename  = 'initial-conditions';
     fitting_filename   = 'fitting_filename';
     xnames_fitting    = 'xnames_fitting';
     percentages       = 'percentages';
@@ -30,12 +30,27 @@ function [setup_out] = ...
     best_fitting_filename = 'best_fitting_filename';    
     params_sample_size = 0;
     type_of_optim = 'pattern_search';
+    initial_condition_filename = 'initial-conditions';%'old-classic';
+    pars2loadfolder = 'last';
+    time_from_data = 0;
+    load_averaged_fitted_values = 0;
+    param_index_sens = 1;
+    load_rb = 0;
+    estimated_newton = 1;
+    
     
 
-    if strcmp(case_of_use, 'simulation')
-        dt = 0.01;
+    if strcmp(case_of_use, 'compute-initials')
+        dt = 0.1;
+        settling_time = 0;
+        simulation_folder = 'only_simulation';
+        
+    
+    elseif strcmp(case_of_use, 'simulation')
+        dt = 0.1;
         settling_time = 10;
         simulation_folder = 'only_simulation';
+        load_averaged_fitted_values = 0;
 
     elseif strcmp(case_of_use, 'fitting')
         dt = 0.1;
@@ -44,9 +59,14 @@ function [setup_out] = ...
 
     elseif strcmp(case_of_use, 'sens')
         dt = 0.1;
-        settling_time = 11;        
+        %settling_time = 11;  
+        %simulation_time = 10;
+        settling_time = 10;
         simulation_folder = 'sens_simulation';
         epsilon           = 1e-2; 
+        load_averaged_fitted_values = 0;
+        pars_from_fitting = 1;
+
 
     elseif strcmp(case_of_use, 'fiO2_ladder')
         dt = 0.1;
@@ -61,11 +81,11 @@ function [setup_out] = ...
         
     end
 
-    if strcmp(hipoxia_state, 'normoxia') && ~strcmp(case_of_use, 'fiO2_ladder')
+    if strcmp(hipoxia_state, 'normoxia') && ~strcmp(case_of_use, 'fiO2_ladder') %&& ~strcmp(case_of_use, 'sens')
         type_of_input = 6;
         simulation_time = 1200;%1200;
         
-    elseif strcmp(hipoxia_state, 'hipoxia') && ~strcmp(case_of_use, 'fiO2_ladder')
+    elseif strcmp(hipoxia_state, 'hipoxia') && ~strcmp(case_of_use, 'fiO2_ladder') %&& ~strcmp(case_of_use, 'sens')
         type_of_input = 7;
         if strcmp(ascend_state, 'ascend')
             simulation_time = 2200;
@@ -103,6 +123,15 @@ function [setup_out] = ...
     defaults.requestedDate    = requestedDate;
     defaults.params_sample_size = params_sample_size;
     defaults.type_of_optim = type_of_optim;
+    defaults.initial_noise = 0.5;
+    defaults.iterations = 'None';
+    defaults.initial_condition_filename = initial_condition_filename; 
+    defaults.simulation_filename = simulation_filename; 
+    defaults.pars2loadfolder = pars2loadfolder;
+    defaults.time_from_data = time_from_data;
+    defaults.param_index_sens = param_index_sens;
+    defaults.load_rb = load_rb;
+    defaults.estimated_newton = estimated_newton;
 
     
 
@@ -133,6 +162,17 @@ function [setup_out] = ...
     addParameter(p, 'requestedDate', defaults.requestedDate);
     addParameter(p, 'params_sample_size', defaults.params_sample_size);
     addParameter(p, 'type_of_optim', defaults.type_of_optim);
+    addParameter(p, 'initial_noise', defaults.initial_noise);
+    addParameter(p, 'iterations', defaults.iterations);
+    addParameter(p, 'initial_condition_filename', defaults.initial_condition_filename);
+    addParameter(p, 'simulation_filename', defaults.simulation_filename);
+    addParameter(p, 'pars2loadfolder', defaults.pars2loadfolder);
+    addParameter(p, 'time_from_data', defaults.time_from_data);
+    addParameter(p, 'param_index_sens', defaults.param_index_sens);
+    addParameter(p,'load_rb', defaults.load_rb);
+    addParameter(p,'estimated_newton', defaults.estimated_newton);
+    
+
 
 
 
@@ -164,6 +204,17 @@ function [setup_out] = ...
     epsilon           = opts.epsilon;
     requestedDate     = opts.requestedDate;
     params_sample_size = opts.params_sample_size;
+    initial_noise = opts.initial_noise;
+    iterations = opts.iterations;
+    initial_condition_filename = opts.initial_condition_filename;
+    simulation_filename = opts.simulation_filename;
+    pars2loadfolder = opts.pars2loadfolder;
+    time_from_data = opts.time_from_data;
+    param_index_sens = opts.param_index_sens;
+    load_rb = opts.load_rb;
+    estimated_newton = opts.estimated_newton;
+
+    
 
 
     
@@ -184,14 +235,19 @@ function [setup_out] = ...
     percentages = percentages.percentages;
     
     %Estimation of cardiovascular circuit components
-    pars = estimate_newton_ohm(percentages, pars);
+    if estimated_newton
+        pars = estimate_newton_ohm(percentages, pars, patient_idx);
+    end
     pars_keys = keys(pars);
-
     %Sensitivity analysis
     pars_not_to_sens = load_pars_not_to_sens();
     pars_free2move = setdiff(pars_keys, pars_not_to_sens);     
     pars_to_sens = pars_free2move;
-    %pars_to_sens =  {'GVdead'    'I_0_h_s'    'Wp_p_s'    'Wp_v_s'    'dPmax'    'f_ab_max'    'f_ab_min'    'k_isc_v_s'    'phi_min'    'tau_V_u_s_v'    'x_h_s'    'x_v_s'};
+    disp(size(pars_to_sens));
+    pars_to_sens = {pars_to_sens{param_index_sens}};
+    %pars_to_sens =  {'GVdead'    'I_0_h_s'    'Wp_p_s'    'Wp_v_s'};%    'dPmax'    'f_ab_max'    'f_ab_min'    'k_isc_v_s'    'phi_min'    'tau_V_u_s_v'    'x_h_s'    'x_v_s'};
+    %pars_to_sens = {'A','AT','C_ra','Kbg','LCTV','MO2_bp','P_n','PaO2_ac_n','V_unstressed_la','Wp_p_s','beta1','f_ac_max','gcc_p_s','kcc_v_s','tau_V_u_s_v','tau_w','ub_TI','ub_a1','ub_tau','vO2_am_n','vO2_b_n','vO2_e_n','vO2_h_n','vO2_rm_n','vO2_s_n','x_h_s','x_p_s','x_v_s'};
+
     %pars_to_sens = {'GTsym', 'G_R_e_p'}; %, 'G_R_e_p', 'T0', 'I0_met', 'kmet'];
     %pars_to_sens = {'GTsym', 'GTvagal', 'G_R_e_p', 'T0', 'I0_met', 'kmet', 'PaCO2_n', 'P_n', 'phi_max', 'K_E_lv', 'K_E_rv', 'KR_lv', 'KR_rv', 'R_sa', 'A2', 'alpha2', 'C1', 'C2', 'K2', 'MRbCO2', 'Vtissue_CO2', 'Kbg', 'KcCO2', 'KpCO2', 'KpO2', 'lambda1', 'lambda2', 'n', 'dPmax', 'Vdead', 'El', 'Rrs', 'Ecw'};
     n_params_sens = length(pars_to_sens);
@@ -199,41 +255,118 @@ function [setup_out] = ...
     idx_variable_of_interest = [1:numel(variables_of_interest)];
 
     %Load fitting parameters
+    updated_pars_old = {};
+    optpars_0_old = {};
+    try
     if pars_from_fitting
         %disp(patient_idx)
         if strcmp(fitting_mat_file, 'last')
             basePath = sprintf('../Fitting/parsFitted/%d', patient_idx);
             formattedDate = getLatestFittingDateStr(basePath);
             disp(formattedDate);
-            fitting_mat_file = sprintf('Fitting-%s-%s/best.mat', type_of_optim, formattedDate);
+            fitting_mat_file = sprintf('Fitting-%s/best.mat', formattedDate);
+
+            fitting_mat_path = sprintf('../Fitting/parsFitted/%d/%s', patient_idx, fitting_mat_file);
+
+            pars_struct = load(fitting_mat_path);
+            updated_pars = pars_struct.updated_pars;
+    
+            pars_keys_updated = keys(updated_pars);
             
-        end
-        fitting_mat_path = sprintf('../Fitting/parsFitted/%d/%s', patient_idx, fitting_mat_file);
-
-        pars_struct = load(fitting_mat_path);
-        updated_pars = pars_struct.updated_pars;
+            for in = 1:length(pars_keys_updated)
+                keyy = pars_keys_updated{in};
+                pars(keyy) = updatedpars(keyy);
+            end
+                
         
-        pars_keys_updated = keys(updated_pars);
-        for i = 1:length(pars_keys_updated)
-            key_ = pars_keys_updated{i};
-            pars(key_) = updated_pars(key_);
-        end
+        %fitting_mat_path = sprintf('../Fitting/parsFitted/%d/%s', patient_idx, fitting_mat_file);
+        
+        else
+            fitting_mat_files = fitting_mat_file;
+            for file_idx = 1:length(fitting_mat_files)
+                disp(file_idx);
+                fitting_mat_file = fitting_mat_files{file_idx};
+                fitting_mat_path = sprintf('../Fitting/parsFitted/%d/Fitting-%s/best.mat', patient_idx, fitting_mat_file);
+                
+                pars_struct = load(fitting_mat_path);
+                updated_pars = pars_struct.updated_pars;
+                
+                pars_keys_updated = keys(updated_pars);
+                disp(pars_keys_updated);
+                disp(updated_pars.values);
+                for in = 1:length(pars_keys_updated)
+                    key_ = pars_keys_updated{in};
+                    pars(key_) = updated_pars(key_);  % Las claves repetidas se sobrescriben
+                end
+                updated_pars_old{file_idx} = updated_pars;
 
-        simulation_folder = 'simulation_after_fitting';
+            if file_idx == length(fitting_mat_files) - 1 %tomo los olds
+                
+                if strcmp(pars2loadfolder, 'last')
+                    p2lf = '';
+                else
+                    p2lf = pars2loadfolder;
+                end
+                [lb_old, ub_old] = load_optim_boundries(pars, patient_idx, p2lf);
+                %Small size pars domain for optim solver
+                pars_values = pars.values;
+                idx_optpars_old = find(~cellfun(@isequal, ub_old, lb_old));                
+                optpars_0_old{file_idx} = pars_values(idx_optpars_old);  
+                
+                lb_old_mat = cell2mat(lb_old);
+                ub_old_mat = cell2mat(ub_old);
+                
+                lb_old_tiny = lb_old_mat(idx_optpars_old);
+                ub_old_tiny = ub_old_mat(idx_optpars_old);
+                
+                
+               
+
+            end
+            end
+
+
+            disp('pars loaded')
+        end
+    
+    
+        
+
+        %simulation_folder = 'simulation_after_fitting';
     end
+    catch
+        disp('continue');
+    end
+
+    disp('check');
 
     %read fast data from each pacient
     %if strcmp(hipoxia_state, 'normoxia') || strcmp(hipoxia_state, 'hipoxia')
+    
     fast_data_filename = sprintf('../fast_data/%d/%s_data_preprocessed.mat', patient_idx, hipoxia_state);
-    load(fast_data_filename, 'texp', 'yexp', 'VO2_poly', 'VCO2_poly', 'fO2_poly', 'basal', 'VO2_ladder_points', 'VCO2_ladder_points', 'AT');
+    load(fast_data_filename, 'texp', 'yexp', 'VO2_poly', 'VCO2_poly', 'fO2_poly', 'TI_poly', 'Tresp_poly', 'basal', 'VO2_ladder_points', 'VCO2_ladder_points', 'AT', 'simulation_time_from_data');
+    initials = take_initials(yexp);
+    disp(simulation_time_from_data);
+
+    if time_from_data
+        simulation_time = simulation_time_from_data;
+    end
+
+
+    
+
+    
+
     disp(basal(1))
     disp(basal(2))
     disp(AT);
     %end
     pars('AT') = AT;
     
-    pars('MRtO2_basal') = basal(1); %this is making trouble
-    pars('MRtCO2_basal') = basal(2); %this is making trouble
+    pars('MRtO2_basal') = basal(1);%0.4;%basal(1); %this is making trouble
+    pars('MRtCO2_basal') = basal(2);%0.33;%basal(2); %this is making trouble
+    pars('MRO2') = pars('MRtO2_basal');
+    pars('MRCO2') = pars('MRtCO2_basal'); 
 
     VO2_ladder_points_ = VO2_ladder_points;
     VCO2_ladder_points_ = VCO2_ladder_points;
@@ -281,7 +414,42 @@ function [setup_out] = ...
         pars('MRCO2_poly_5') = VCO2_poly(6);
         pars('MRCO2_poly_6') = VCO2_poly(7);
         pars('MRCO2_poly_7') = VCO2_poly(8);
-        pars('MRCO2_poly_8') = VCO2_poly(9);
+        pars('MRCO2_poly_8') = VCO2_poly(9);      
+
+        pars('TI_poly_0') = TI_poly(1);
+        pars('TI_poly_1') = TI_poly(2);
+        pars('TI_poly_2') = TI_poly(3);
+        pars('TI_poly_3') = TI_poly(4);
+        pars('TI_poly_4') = TI_poly(5);
+        pars('TI_poly_5') = TI_poly(6);
+        pars('TI_poly_6') = TI_poly(7);
+        pars('TI_poly_7') = TI_poly(8);
+        pars('TI_poly_8') = TI_poly(9);
+        pars('TI_poly_9') = TI_poly(10);
+        pars('TI_poly_10') = TI_poly(11);
+        pars('TI_poly_11') = TI_poly(12);
+        pars('TI_poly_12') = TI_poly(13);
+        pars('TI_poly_13') = TI_poly(14);
+        pars('TI_poly_14') = TI_poly(15);
+        pars('TI_poly_15') = TI_poly(16);
+
+        pars('Tresp_poly_0') = Tresp_poly(1);
+        pars('Tresp_poly_1') = Tresp_poly(2);
+        pars('Tresp_poly_2') = Tresp_poly(3);
+        pars('Tresp_poly_3') = Tresp_poly(4);
+        pars('Tresp_poly_4') = Tresp_poly(5);
+        pars('Tresp_poly_5') = Tresp_poly(6);
+        pars('Tresp_poly_6') = Tresp_poly(7);
+        pars('Tresp_poly_7') = Tresp_poly(8);
+        pars('Tresp_poly_8') = Tresp_poly(9);
+        pars('Tresp_poly_9') = Tresp_poly(10);
+        pars('Tresp_poly_10') = Tresp_poly(11);
+        pars('Tresp_poly_11') = Tresp_poly(12);
+        pars('Tresp_poly_12') = Tresp_poly(13);
+        pars('Tresp_poly_13') = Tresp_poly(14);
+        pars('Tresp_poly_14') = Tresp_poly(15);
+        pars('Tresp_poly_15') = Tresp_poly(16);
+
     end
 
     %
@@ -292,10 +460,16 @@ function [setup_out] = ...
     pars('type_of_input') = type_of_input;
     pars('settling_time') = settling_time;
     units_table = readtable('variables_units.xlsx');
+    disp('stop');
 
     %Load initial conditions in init
     if ~only_plot
-        preloaded_vars = load('../Simulations/only_simulation/90sec_simulation.mat');
+        if strcmp(initial_condition_filename, 'old-classic')
+            preloaded_vars = load('../Simulations/only_simulation/90sec_simulation.mat');
+        else
+            path_file = sprintf('../Simulations/only_simulation/%d/%s.mat', patient_idx, initial_condition_filename);
+            preloaded_vars = load(path_file);
+        end
         init_values_loaded = preloaded_vars.x_vars(:, end);
         init_keys_loaded = fieldnames(preloaded_vars.struct_vars);
 
@@ -303,45 +477,105 @@ function [setup_out] = ...
 
 
         % Redefine the values in the dictionary using the new vector
-        for i = 1:length(init_values_loaded)
-            if ~strcmp(init_keys_loaded{i}, 'vO2') && ~strcmp(init_keys_loaded{i}, 'PAO2') && ~strcmp(init_keys_loaded{i}, 'P_1O2') && ~strcmp(init_keys_loaded{i}, 'P_2O2') && ~strcmp(init_keys_loaded{i}, 'P_3O2') && ~strcmp(init_keys_loaded{i}, 'P_4O2') && ~strcmp(init_keys_loaded{i}, 'P_5O2') && ~strcmp(init_keys_loaded{i}, 'MRtO2') && ~strcmp(init_keys_loaded{i}, 'aO2') && ~strcmp(init_keys_loaded{i}, 'vO2')  && ~strcmp(init_keys_loaded{i}, 'PvbCO2') && ~strcmp(init_keys_loaded{i}, 'PbCO2') && ~strcmp(init_keys_loaded{i}, 'PCSFCO2')  && ~strcmp(init_keys_loaded{i}, 'mean_PbCO2') && ~strcmp(init_keys_loaded{i}, 'TI') && ~strcmp(init_keys_loaded{i}, 'TE') && ~strcmp(init_keys_loaded{i}, 'a1') && ~strcmp(init_keys_loaded{i}, 'a2') && ~strcmp(init_keys_loaded{i}, 'a0') 
+        if strcmp(initial_condition_filename, 'old-classic')
+            for i = 1:length(init_values_loaded)
+                if ~strcmp(init_keys_loaded{i}, 'vO2') && ~strcmp(init_keys_loaded{i}, 'PAO2') && ~strcmp(init_keys_loaded{i}, 'P_1O2') && ~strcmp(init_keys_loaded{i}, 'P_2O2') && ~strcmp(init_keys_loaded{i}, 'P_3O2') && ~strcmp(init_keys_loaded{i}, 'P_4O2') && ~strcmp(init_keys_loaded{i}, 'P_5O2') && ~strcmp(init_keys_loaded{i}, 'MRtO2') && ~strcmp(init_keys_loaded{i}, 'aO2') && ~strcmp(init_keys_loaded{i}, 'vO2')  && ~strcmp(init_keys_loaded{i}, 'PvbCO2') && ~strcmp(init_keys_loaded{i}, 'PbCO2') && ~strcmp(init_keys_loaded{i}, 'PCSFCO2')  && ~strcmp(init_keys_loaded{i}, 'mean_PbCO2') && ~strcmp(init_keys_loaded{i}, 'TI') && ~strcmp(init_keys_loaded{i}, 'TE') && ~strcmp(init_keys_loaded{i}, 'a1') && ~strcmp(init_keys_loaded{i}, 'a2') && ~strcmp(init_keys_loaded{i}, 'a0') 
+                    key_i_idx = find(strcmp(init_keys, init_keys_loaded{i}));
+                    if ~isempty(key_i_idx)
+                        key_i = init_keys{key_i_idx(1)};
+                        init(key_i) = init_values_loaded(i);
+                    end
+                end
+            end
+            init('MRtO2') = 0.4;
+            init('MRtCO2') = 0.33;
+            %{"dVE", "VT", "TI", "Tresp", "PAO2", "PACO2", "HR", "PS", "PD", "PM"}
+            init('dVE') = initials(1);  
+            init('TI') = initials(3);
+            init('Tresp') = initials(4);
+            init('PAO2') = initials(5);
+            init('PACO2') = initials(6);
+            if initials(7) > 0
+                init('Theart') = 1/initials(7);
+            end
+            if initials(9) > 0
+                init('P_sa') = initials(9);
+            end
+        
+        else
+            for i = 1:length(init_values_loaded)                
                 key_i_idx = find(strcmp(init_keys, init_keys_loaded{i}));
                 if ~isempty(key_i_idx)
                     key_i = init_keys{key_i_idx(1)};
                     init(key_i) = init_values_loaded(i);
                 end
-            end
+                init('vO2') = 0.185;
+            end                
+
         end
         
+        
+    end
+    %init('MRtO2') = pars('MRtO2_basal');
+    %init('MRtCO2') = pars('MRtCO2_basal');
+    %init('V_total_e_v') = 1000;
+    if estimated_newton
+        correction_I0 = @(I0) (I0 * (1 - 0.3) + 0.3 - pars('MRtCO2_basal'))/(pars('AT')- pars('MRtCO2_basal'));
+        pars('I_0_h_s') = correction_I0(pars('I_0_h_s'));
+        pars('I_0_v_s') = correction_I0(pars('I_0_v_s'));
+        pars('I_0_p_s') = correction_I0(pars('I_0_p_s'));
+        pars('I0_met') = correction_I0(pars('I0_met'));
+    end
+
+    if load_averaged_fitted_values
+        pars = load_averaged_fitted_values_fun(pars);
+    end
+    
+    %pars('PaO2_ac_n') = 45;
+    %pars('f_ab_max') = 100;%47.78;
+    %pars('kev') = 7.06;
+    %pars('Wt_v_s') = 0.4;
+    pars('R_p_p_n') = 0.0894;
+    if estimated_newton
+        pars('phi_max') = 13;
     end
 
     %Simulation savings
     currentDate = datetime('today');  
     formattedDate = datestr(currentDate, 'dd-mm-yyyy');
-    simulation_filename = sprintf('../Simulations/%s/%d/%d_sec_%s-%s.mat',simulation_folder, patient_idx, simulation_time, hipoxia_state,formattedDate);
+    if strcmp(case_of_use, 'compute-initials')
+        simulation_filename = sprintf('../Simulations/%s/%d/%s.mat',simulation_folder, patient_idx, simulation_filename);
+    else
+        simulation_filename = sprintf('../Simulations/%s/%d/%d_sec_%s-%s.mat',simulation_folder, patient_idx, simulation_time, hipoxia_state,formattedDate);
+    end
+    
     %Sensitivity    
     sensitivity_write_all_filename = sprintf('../Sens_analysis/%d/sensitivities_%s_%s.mat', patient_idx, hipoxia_state, formattedDate); 
-    sensitivity_write_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', patient_idx, hipoxia_state ,formattedDate);
-    sensitivity_load_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', patient_idx, hipoxia_state, requestedDate);
+    %sensitivity_write_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', patient_idx, hipoxia_state ,formattedDate);
+    sensitivity_write_filename = sprintf('../Sens_analysis/%d/SensTensor_%s_%s.mat', patient_idx, pars_to_sens{1},formattedDate);
+    sensitivity_load_filename = sprintf('../Sens_analysis/%d/SensTensor_%s_%s.mat', patient_idx, pars_to_sens{1}, requestedDate);
+    %sensitivity_load_filename = sprintf('../Sens_analysis/%d/SensMatrix_%s_%s.mat', patient_idx, hipoxia_state, requestedDate);
 
 
     %optimization hyperparameters
     %[texp, yexp, ~, ~, ~] = data_preprocessing(patient_idx, hipoxia_state, ascend_state); %its better to run it always
-    xnames_fitting = {'dVE', 'V', 'TI', 'Tresp', 'PAO2', 'PACO2', 'HR', 'PS', 'PD', 'PM'};  
+    xnames_fitting = {'dVE', 'VT', 'TI', 'Tresp', 'PAO2', 'PACO2', 'HR', 'PS', 'PD', 'PM'};  
     
     if strcmp(case_of_use, 'fitting')
         currentDate = datetime('today');  
         formattedDate = datestr(currentDate, 'dd-mm-yyyy');
+        formattedDate = sprintf('Fitting-%s',formattedDate);
         if ~strcmp(requestedDate, '')
             if strcmp(requestedDate, 'last')
                 basePath = sprintf('../Fitting/parsFitted/%d', patient_idx);
                 formattedDate = getLatestFittingDateStr(basePath);
-            else
-                formattedDate = requestedDate;    
+                formattedDate = sprintf('Fitting-%s',formattedDate);
+            else   %comentar si se quiere entregar un fecha especÃ­fica para optimizar
+                formattedDate = sprintf('Fitting-%s', requestedDate);  %Esto solo sirve para local, para calcular el best.mat de una fecha en particular  
             end
                 
         end
-        fitting_folder = sprintf('../Fitting/parsFitted/%d/Fitting-%s/', patient_idx, formattedDate);              
+        fitting_folder = sprintf('../Fitting/parsFitted/%d/%s/', patient_idx, formattedDate);              
         if ~exist(fitting_folder, 'dir')
             mkdir(fitting_folder);
         end 
@@ -350,11 +584,14 @@ function [setup_out] = ...
         fitting_filename = sprintf('%s%s.mat', fitting_folder, timestamp);
         best_fitting_filename = sprintf('%sbest.mat', fitting_folder);
         
-        [lb, ub] = load_optim_boundries(pars, patient_idx);
+        [lb, ub] = load_optim_boundries(pars, patient_idx, pars2loadfolder);
         %Small size pars domain for optim solver
         idx_optpars = find(~cellfun(@isequal, ub, lb));
         pars_values = values(pars);
         optpars_0 = pars_values(idx_optpars);  
+        disp('optpars_0');
+        disp(optpars_0);
+        
 
     end
 
@@ -362,9 +599,9 @@ function [setup_out] = ...
     
     %id for particle-swarm
     timestamp = round(posixtime(datetime('now')) * 1000);    
-    % Número aleatorio (6 dígitos)
+    % NÃºmero aleatorio (6 dÃ­gitos)
     randomNum = randi([100000, 999999]);    
-    % Combinar como números
+    % Combinar como nÃºmeros
     node_id = timestamp * 1000000 + randomNum; % Multiplico por 1M para hacer espacio
        
     
@@ -414,34 +651,95 @@ function [setup_out] = ...
     setup_out.node_id = node_id;
     setup_out.patient_idx = patient_idx;
     
+    setup_out.iterations = iterations;
+    setup_out.initial_noise = initial_noise;
+    setup_out.hipoxia_state = hipoxia_state;
+    setup_out.load_rb = load_rb;
 
-    function [lb, ub] = load_optim_boundries(pars, patient_idx)
+    try 
+        setup_out.updated_pars_old = updated_pars_old;
+        setup_out.optpars_0_old = optpars_0_old;
+        setup_out.lb_old_tiny = lb_old_tiny;
+        setup_out.ub_old_tiny = ub_old_tiny;
+    catch
+        setup_out.updated_pars_old = 'error';
+    end
+    
+
+    function [lb, ub] = load_optim_boundries(pars, patient_idx, pars2loadfolder)
         lb = containers.Map(pars.keys, pars.values);
         ub = containers.Map(pars.keys, pars.values);
         %list_of_pars = {'C2', 'G_R_e_p', 'KpCO2', 'T0', 'MRbCO2', 'lambda1'};    
-        try    
-           cell_of_pars = load_pars_to_fit(patient_idx);      %instead of this code we should use pars2fit files.
-        catch
-           error('parameters to fit not correctly saved');
-        end
+        %try    
+           cell_of_pars = load_pars_to_fit(patient_idx, pars2loadfolder);      %instead of this code we should use pars2fit files.
+        %catch
+        %   error('parameters to fit not correctly saved');
+        %end
         
         
         for i = 1:length(cell_of_pars)  %10 y 0.1
             key = cell_of_pars{i}; 
+            [big, little] = boundries_factor(key, pars);
             if sign(pars(key)) >= 0
-                lb(key) = pars(key) * 0.7;
-                ub(key) = pars(key) * 2;
+                lb(key) = pars(key) * little;
+                ub(key) = pars(key) * big;
                 
             else
-                lb(key) = pars(key) * 2;
-                ub(key) = pars(key) * 0.7;    
+                lb(key) = pars(key) * big;
+                ub(key) = pars(key) * little;    
                 
-            end    
+            end  
+            disp('-----')
+            disp(key);
+            disp(pars(key));
+            disp(lb(key));
+            disp(ub(key));
         end
 
         lb = values(lb);
         ub = values(ub);
     end
+function  [b,l, pars] = boundries_factor(key, pars)
+    %b = 10;
+    b = 2.5;
+    l = 0.05;
+    
+    switch key
+        case 'PaO2_ac_n'            
+            b = 60/pars(key); %mmHg
+            l = 40/pars(key);
+        case 'f_ab_max'
+            b = 100/pars(key); %Hz(o spikes/s)
+        case 'aO2_n'
+            b = 1.2;
+            l = 0.8;
+        case 'R_p_p_n'
+            b = 2;
+            l = 0.5;
+        case 'P_n'
+            b = 100/pars(key);
+            l = 85/pars(key);
+        case 'C_sa'
+            b = 4;
+            l = 0.1;
+        case 'R_sa'
+            b = 10;
+            l = 0.1;
+        case 'L_sa'
+            b = 1;
+            l = 0.01;
+        case 'GTsym'
+            b = 5;
+            l = 0.1;
+        case 'phi_max'
+            b = 1.1;
+            l = 0.9;
+       
+        
+        
+    end
+    
+end
 
 function latestDateStr = getLatestFittingDateStr(basePath)
 %GETLATESTFITTINGDATESTR Returns the latest dd-MM-yyyy string from Fitting-dd-MM-yyyy folders,
@@ -501,6 +799,13 @@ function latestDateStr = getLatestFittingDateStr(basePath)
     latestDateStr = '';
     warning('No valid Fitting-dd-MM-yyyy folders with files found in %s (excluding today)', basePath);
 end
+
+function initials = take_initials(yexp)
+    initials = mean(yexp(1:30, :), 1);
+    
+end
+
+
 
 
         

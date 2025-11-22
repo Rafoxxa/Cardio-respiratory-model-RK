@@ -52,10 +52,10 @@ function [bestDegree, bestP_flipped, bestFit, x_fitted, y_fitted] = bestPolynomi
             disp(bestP);
         end
     end
-% p = polyfit(x,y,maxDegree);
-% bestP = p;
-% bestP_flipped = flip(bestP);
-% y_fitted = polyval(p, x_fitted);
+p = polyfit(x,y,maxDegree);
+bestP = p;
+bestP_flipped = flip(bestP);
+y_fitted = polyval(p, x_fitted);
 
 
  if plot_state > 0
@@ -63,20 +63,23 @@ function [bestDegree, bestP_flipped, bestFit, x_fitted, y_fitted] = bestPolynomi
     if plot_state == 1
         figure;
     end
-    experimentalLine = plot(x, y, '-', 'LineWidth', 2, ...
+    experimentalLine = plot(x/60, y, '-', 'LineWidth', 2, ...
         'DisplayName', 'Experimental Data');
     experimentalLine.Color(4) = 0.3; % Set transparency (alpha) of experimental data to 30%
 
     hold on;
 
     % Plot best-fit polynomial
-    plot(x_fitted, y_fitted, '-', 'LineWidth', 2, ...
-         'DisplayName', ['Best Polynomial Fit (degree = ', num2str(bestDegree), ')']); % Best fit
+    %plot(x_fitted/60, y_fitted, '-', 'LineWidth', 2, ...
+    %     'DisplayName', ['Best Polynomial Fit (degree = ', num2str(bestDegree), ')']); % Best fit
+
+    plot(x_fitted/60, y_fitted, '-', 'LineWidth', 2, ...
+         'DisplayName', 'Polynomial Fit'); % Best fit
 
     hold off;
 
     %Customize plot
-    xlabel('time (s)');
+    xlabel('time (min)');
     ylabel(name);
     title(['Best Polynomial Fit (R² = ', num2str(bestFit, '%.4f'), ')']);
     legend('show');

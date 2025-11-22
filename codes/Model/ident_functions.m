@@ -23,14 +23,34 @@ function corr_matrix = compute_corr_matrix(sens_matrix)
     S = sens_matrix';
 
     sigma = 0.05;   
-    W = diag(1 ./ sigma^2);  
-    FIM = S' * W * S;  
+    p1m = [1.0870    2.9189    4.2307    9.3023  110.4937   48.3194    1/3.0849  176.6589  136.7549  155.4391];
+    p4m = [1.0330    2.8000    1.9661    6.0127  111.0803   44.0947    2.7840 * 60   203.6085  132.7027  161.3660];
+    p5m = [0.9996    3.1379    2.9470    7.0525  102.3333   50.9686    2.0473 * 60  229.6756  203.3467  212.4784];
+    p6m = [0.9346    2.5861    3.6130    9.9826  103.8647   51.6685    2.6860 * 60  183.5269  145.2870  154.6818];
+    pmax_averaged = (p1m + p4m + p5m + p6m)/4;
+    p = pmax_averaged; %p1m;
+
+    %"dVE", "VT", "TI", "Tresp", "PAO2", "PACO2", "HR", "PS", "PD", "PM"
+    %datos
+    %{'PAO2', 'PACO2', 'pd', 'ps', 'pm', 'Theart', 'TI', 'BF', 'VTidal', 'dVE'};
+    p1_maximums = [p(5) p(6) p(9) p(8) p(10) p(7) p(3) p(4) p(2) p(1)];
+    I = eye(size(sens_matrix, 2));  
+    W_different_sigmas = diag((1./(sigma.^2 * p1_maximums)).^1);
+    W_single_sigma = I./sigma.^2;
+    FIM_d = S' * W_different_sigmas * S;  
+    FIM_s = S' * W_single_sigma * S;
+
+    
 
     %intentar pearson sobre S si FIM singular.
 
-    covariance_matrix = pinv(FIM);
-    std_devs = sqrt(diag(covariance_matrix));
-    corr_matrix = covariance_matrix ./ (std_devs * std_devs');
+    covariance_matrix_d = inv(FIM_d);
+    std_devs_d = sqrt(diag(covariance_matrix_d));
+    corr_matrix_d = covariance_matrix_d ./ (std_devs_d * std_devs_d');
+
+    covariance_matrix_s = inv(FIM_s);
+    std_devs_s = sqrt(diag(covariance_matrix_s));
+    corr_matrix_s = covariance_matrix_s ./ (std_devs_s * std_devs_s');
 
 
 

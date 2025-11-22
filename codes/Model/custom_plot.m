@@ -21,13 +21,18 @@ function custom_plot(type_of_plot, custom_args)
      final_values = custom_args{4};
      names = custom_args{5};
      boundary_saturation_table(lower_bounds, initial_values, upper_bounds, final_values, names);
+
+     
+ 
  elseif strcmp(type_of_plot, 'sim_vs_exp')
+     disp('aloha');
     %figure;  
     t_sim = custom_args{1};
     t_exp = custom_args{2};
     struct_vars = custom_args{3};
     X_exp = custom_args{4};
     Power = X_exp(:,11);
+    notnan_mask = X_exp(:, 12);
     X_exp = X_exp(:, 1:10);    
     list_of_names = custom_args{5};
     units_table = custom_args{6};
@@ -35,19 +40,60 @@ function custom_plot(type_of_plot, custom_args)
     height = custom_args{8};
     simulation_filename = custom_args{9};
     old_mode = custom_args{10};
+    patient_number = custom_args{11};
+    fitting_status = custom_args{12};
+    J = custom_args{13};
+    state = custom_args{14};
+    
+    if numel(custom_args) > 14
+        reverse = custom_args{15};
+    else
+        reverse = 0;
+    end
 
     
 
     if strcmp(old_mode, 'only-exp')
-        plot_simulated_vs_experimental(t_sim, t_exp, [0], X_exp, list_of_names, units_table, width, height);
+        plot_simulated_vs_experimental(t_sim, t_exp, [0], X_exp, list_of_names, units_table, width, height, state);
     else
 
     
         if ~strcmp(simulation_filename, '')
            loaded_simulation = load(simulation_filename);
            cell_l_s = fieldnames(loaded_simulation);
-           struct_vars_name = cell_l_s{1};
-           t_name = cell_l_s{2};
+           cell_1_name = cell_l_s{1};
+           cell_2_name = cell_l_s{2};
+           try
+               cell_3_name = cell_l_s{3};
+           catch
+               cell_3_name = 0;
+           end
+
+           if strcmp(class(loaded_simulation.(cell_1_name)), 'struct')
+               struct_vars_name = cell_1_name;
+               t_name = cell_2_name;
+           elseif numel(loaded_simulation.(cell_1_name)) > 10
+               t_name = cell_1_name;
+               if strcmp(class(loaded_simulation.(cell_2_name)), 'struct')
+                   struct_vars_name = cell_2_name;
+                   J_name = cell_3_name;
+               else
+                   struct_vars_name = cell_3_name;
+                   J_name = cell_2_name;
+               end
+           
+           else
+               J_name = cell_1_name;
+               if strcmp(class(loaded_simulation.(cell_2_name)), 'struct')
+                   struct_vars_name = cell_2_name;
+                   t_name = cell_3_name;
+               else
+                   struct_vars_name = cell_3_name;
+                   t_name = cell_2_name;
+               end
+
+               
+           end
 
            struct_vars = loaded_simulation.(struct_vars_name);
            t_sim = loaded_simulation.(t_name);
@@ -72,8 +118,13 @@ function custom_plot(type_of_plot, custom_args)
         t_exp = t_exp(t_exp <= t_sim(end));
         X_exp = X_exp(t_exp <= t_sim(end),:);
         Power = Power(t_exp <= t_sim(end),:);
+        notnan_mask = notnan_mask(t_exp <= t_sim(end),:);
+
+        MRtCO2 = struct_vars.MRtCO2;
+        MRtO2 = struct_vars.MRtO2;
+
         
-        plot_simulated_vs_experimental(t_sim, t_exp, X_sim, X_exp, list_of_names, units_table, width, height, Power);
+        plot_simulated_vs_experimental(t_sim, t_exp, X_sim, X_exp, list_of_names, units_table, width, height, Power, patient_number, fitting_status,J, MRtO2, MRtCO2, reverse, state, notnan_mask);
     end
 elseif strcmp(type_of_plot,'LSA-plot')
     
@@ -190,31 +241,69 @@ elseif strcmp(type_of_plot,'multiple_to_show')
 
 %Plotting
 
-function plot_simulated_vs_experimental(t_sim, t_exp, X_sim, X_exp, Xnames, Xunits, width, height, Power)
+    function plot_simulated_vs_experimental(t_sim, t_exp, X_sim, X_exp, Xnames, Xunits, width, height, Power, patient_number, fitting_status, J, MRtO2, MRtCO2, reverse, state, notnan_mask)
     t_exp = t_exp;
     x_exp = X_exp;
     x_sim = X_sim;
     variable_names = Xnames;
     units_table = Xunits;
+
+    
     % Create the figure and 5x2 grid of subplots
     %figure;
+    JJ = [J(3) J(4) J(5) J(6) J(1) J(2) J(7) J(10) J(8) J(9)]; %small adjustment because order discrepancies
+    if reverse
+        ww = width;
+        width = height;
+        height = ww;
+    end
     
     % Loop through each variable
     for i = 1:size(x_exp, 2)
         subplot(width, height, i); % Define the subplot position
         hold on;
         %yyaxis left
-        plot(t_exp, x_exp(:, i)); % Plot the variable against time
-        %yyaxis right
-        %plot(t_exp, Power);
-        %yyaxis left
+        if i >= 8
+            var = x_exp(logical(notnan_mask),i);
+            time_ = t_exp(logical(notnan_mask));
+        else
+            if patient_number == 1 && strcmp(state, 'Normoxia') && i >= 7
+                var = x_exp(logical(notnan_mask),i);
+                time_ = t_exp(logical(notnan_mask));
+            else
+                var = x_exp(:,i);
+                time_ = t_exp;                
+            end
+
+        end
+        yyaxis right
+        plot(t_exp, Power, 'Color', 'black', 'LineWidth', 1.5); % mostaza
+        ylabel('Power (W)');
+    
+        yyaxis left
+        
+        plot(time_, var, 'Color', [0.4, 0.6, 0.8], 'LineWidth', 1, ...
+             'LineStyle', '-'); % lÌnea sÛlida azul suave
+        
+        % --- ConfiguraciÛn de ejes uniformes ---
+        ax = gca;
+        ax.YColor = 'k'; % eje izquierdo negro
+        ax.YAxis(2).Color = 'k'; % eje derecho negro
+        ax.XColor = 'k';
+        ax.Box = 'on'; % mantiene bordes visibles
+        
         xlim([0 Inf]);
         ylim([0 Inf]);
-        if iscell(variable_names)
-            title(variable_names{i}); % Set the title to the variable name
+        if iscell(variable_names)             
+            %title_ = sprintf('%s, J: %.3f', variable_names{i}, JJ(i));% Set the title to the variable name
+            title_ = sprintf('%s', variable_names{i});% Set the title to the variable name
+            title(title_); 
         else
-            title(variable_names(i)); 
+            %title_ = sprintf('%s:%d', variable_names(i), JJ(i));
+            title_ = sprintf('%s', variable_names(i));
+            title(title_); 
         end
+        
         xlabel('Time (s)'); % Label the x-axis
         unit = find_unit(units_table, variable_names{i});
         if iscell(variable_names)
@@ -230,28 +319,48 @@ function plot_simulated_vs_experimental(t_sim, t_exp, X_sim, X_exp, Xnames, Xuni
         subplot(width, height, i); % Define the subplot position
         hold on;
         
-        plot(t_sim, x_sim(:, i)); % Plot the variable against time
+        if strcmp(fitting_status, 'actual')
+           plot(t_sim, x_sim(:, i),  'Color', [1.0, 0.5, 0.0], 'LineWidth', 1, 'LineStyle', '-', 'DisplayName', 'actual'); % Plot the variable against time
+            
+        elseif strcmp(fitting_status, 'old')
+            plot(t_sim, x_sim(:, i), 'Color', [0.5, 0.0, 0.6], 'LineWidth', 1, 'LineStyle', '-', 'DisplayName', 'old'); % Plot the variable against time
+        else
+            plot(t_sim, x_sim(:, i), 'DisplayName', 'data'); 
+
+        end
         grid on; % Add grid for better visualization
+    end
+    for i = 1:size(x_sim, 2)
+        subplot(width, height, i);
+        %lgd = legend('show');
+        %lgd.Position = [0.8 0.9 0.15 0.1]; 
     end
     
     
-    % for i = 1:size(x_sim, 2)
-    %     subplot(width, height, i);
-    %     hold on;
-    %     % Manual yyaxis implementation for MATLAB 2017
-    %     ax1 = gca;
-    %     ax2 = axes('Position', get(ax1, 'Position'), 'Color', 'none', ...
-    %                'YAxisLocation', 'right', 'XTick', [], 'Box', 'off');
-    %     axes(ax2);
-    %     plot(t_exp, Power, 'Color', [0.5 0.5 0.5]);
-    %     set(ax2, 'YColor', [0.5 0.5 0.5]);
-    %     axes(ax1); % Return to original axis
-    % end
+    %for i = 1:size(x_sim, 2)
+    %    subplot(width, height, i);
+    %    hold on;
+        % Manual yyaxis implementation for MATLAB 2017
+        %ax1 = gca;
+        %ax2 = axes('Position', get(ax1, 'Position'), 'Color', 'none', ...
+                   %'YAxisLocation', 'right', 'XTick', [], 'Box', 'off');
+        %axes(ax2);
+    %    yyaxis right;
+    %    plot(t_sim, MRtO2, 'Color', [0.9, 0.5, 0.5]);
+    %    set(gca, 'YColor', 'red');
+        %hold on;
+        %plot(t_exp, MRtCO2);
+
+        %set(ax2, 'YColor', [0.5 0.5 0.5]);
+        %axes(ax1); % Return to original axis
+        %yyaxis left;
+    %end
 
     
     % Adjust the layout to prevent overlap
     % sgtitle not available in 2017, use manual title
-    annotation('textbox', [0 0.9 1 0.1], 'String', 'Sim vs Exp', ...
+    title_name = sprintf('Sim vs Exp: S%d - %s', patient_number, state);
+    annotation('textbox', [0 0.9 1 0.1], 'String', title_name, ...
                'EdgeColor', 'none', 'HorizontalAlignment', 'center', 'FontSize', 14);
 end
 
@@ -475,7 +584,7 @@ T = table(param_names', lower_bounds', initial_values', upper_bounds', final_val
 
 % Mostrar la tabla
 disp(' ');
-disp('=============== AN√ÅLISIS DE SATURACI√ìN DE PAR√ÅMETROS ===============');
+disp('=============== AN√?LISIS DE SATURACI√ìN DE PAR√?METROS ===============');
 disp(T);
 
 % Mostrar resumen estad√≠stico

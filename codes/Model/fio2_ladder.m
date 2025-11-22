@@ -132,6 +132,8 @@ fiO2_input = fiO2_init - hipoxic_iterations * 0.005;
 num_points = 6;   % VO2/VCO2 ladder has 6 points
 M = 10;           % Number of variables of interest
 
+letter = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'};
+
 % Initialize subplot layout
 rows = ceil(sqrt(M));
 cols = ceil(M / rows);
@@ -151,20 +153,22 @@ color_list = lines(num_points);
 % Get VO2 and VCO2 ladder values only once
 s0 = set_up("fiO2_ladder", patient_idx, "hipoxia", "mix", "dt", 0.1, ...
             "simulation_time", 200, "settling_time", 40);
+ 
 VO2_ladder = s0.VO2_ladder_points / 1000;
 VCO2_ladder = s0.VCO2_ladder_points / 1000;
-
+vars_matrix = zeros(length(hipoxic_iterations), M, num_points); 
 for point_idx = 1:num_points
     all_vars = cell(1, length(hipoxic_iterations));
-    vars_matrix = zeros(length(hipoxic_iterations), M); 
+    
 
     for hi = hipoxic_iterations
         s = set_up("fiO2_ladder", patient_idx, "hipoxia", "mix", "dt", 0.1, ...
                    "simulation_time", 200, "settling_time", 40);
-        
+
         s.pars("MRO2") = VO2_ladder(point_idx);
         s.pars("MRCO2") = VCO2_ladder(point_idx);
         s.pars("fO2") = fiO2_input(hi) * 100;
+        s.pars = reset_respiratory_times(s.pars);
 
         [t, x_dot, x_vars, x_keys, index] = s.run_ode_fun(s.model, s.pars, s.init, s.simulation_time, s.dt);
         struct_vars = arrange_results(x_dot, x_vars, x_keys, t);
@@ -177,7 +181,9 @@ for point_idx = 1:num_points
                             struct_vars.PAO2', struct_vars.PACO2', 60 * struct_vars.HR', ...
                             pout{2}', pout{3}', struct_vars.mean_P_sa'];    
         final_values = mean(vars_of_interest(end-500:end, :), 1);
-        vars_matrix(hi, :) = final_values;
+        vars_matrix(hi, :, point_idx) = final_values;
+
+        disp('lets check');
     end
 
     % Generate label and color
@@ -188,10 +194,11 @@ for point_idx = 1:num_points
     for i = 1:M
         axes(subplot_axes(i));
         if point_idx == 1
-            title(s.xnames_fitting{i}, 'Interpreter', 'none');
+            name = sprintf('%s.%s',letter{i},s.xnames_fitting{i});
+            title(name, 'Interpreter', 'none');
             ylabel(s.xnames_fitting{i});
         end
-        plot(fiO2_input, vars_matrix(:, i), 'o-', ...
+        plot(fiO2_input, vars_matrix(:, i, point_idx), 'o-', ...
              'Color', this_color, ...
              'DisplayName', label_str);
     end
@@ -203,3 +210,38 @@ for i = 1:M
     legend('show');
 end
 
+function pars = reset_respiratory_times(pars)
+    pars('TI_poly_0') = 2.3;
+    pars('TI_poly_1') = 0;
+    pars('TI_poly_2') = 0;
+    pars('TI_poly_3') = 0;
+    pars('TI_poly_4') = 0;
+    pars('TI_poly_5') = 0;
+    pars('TI_poly_6') = 0;
+    pars('TI_poly_7') = 0;
+    pars('TI_poly_8') = 0;
+    pars('TI_poly_9') = 0;
+    pars('TI_poly_10') = 0;
+    pars('TI_poly_11') = 0;
+    pars('TI_poly_12') = 0;
+    pars('TI_poly_13') = 0;
+    pars('TI_poly_14') = 0;
+    pars('TI_poly_15') = 0;
+    
+    pars('Tresp_poly_0') = 4.5;
+    pars('Tresp_poly_1') = 0;
+    pars('Tresp_poly_2') = 0;
+    pars('Tresp_poly_3') = 0;
+    pars('Tresp_poly_4') = 0;
+    pars('Tresp_poly_5') = 0;
+    pars('Tresp_poly_6') = 0;
+    pars('Tresp_poly_7') = 0;
+    pars('Tresp_poly_8') = 0;
+    pars('Tresp_poly_9') = 0;
+    pars('Tresp_poly_10') = 0;
+    pars('Tresp_poly_11') = 0;
+    pars('Tresp_poly_12') = 0;
+    pars('Tresp_poly_13') = 0;
+    pars('Tresp_poly_14') = 0;
+    pars('Tresp_poly_15') = 0;
+end

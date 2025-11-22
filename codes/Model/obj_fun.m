@@ -23,6 +23,12 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
     global all_global;
     model = @(varargin) model_vec_hipoxia(varargin{:});
     run_ode_fun = @(varargin) run_ode_vec_hipoxia(varargin{:});
+    
+    global Ji_normoxia_global Ji_hipoxia_global 
+
+
+   
+    
 
     init_time = tic;
     if length(pars_list) < 2        
@@ -46,7 +52,12 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
             show_each_J(J_hipoxia, 'INDIVIDUAL JH: ');
             J = sum(Jp);
             logJ = log(J);
+            %if J < 1 
+            %     logJ = J - 1;
+            %end
             %J = 10*Jp(7)/numel(Jp) + J;
+            Ji_normoxia_global = J_normoxia(:)';
+            Ji_hipoxia_global = J_hipoxia(:)';
 
             real_total_time = toc(init_time);
             sim_total_time = simulation_time_normoxia + simulation_time_hipoxia;
@@ -61,7 +72,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
     catch ME
         J = 10^10;
         logJ = log(J);
-        disp(sprintf('EVAL INCOMPLETED | Error: %s | J: %.4f', ME.message, J));
+        %disp(sprintf('EVAL INCOMPLETED | Error: %s | J: %.4f', ME.message, J));
 
         %disp(ME.message);
         %disp(ME.identifier);
@@ -93,10 +104,20 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
         %remove "nan" values
         
         
-        R_all(7,:)  = R_all(7,:)  .* finapres_notnan_mask_crop; 
+        if (mean(exp_vars(7, 1:75)) == 0) 
+            R_all(7,:)  = R_all(7,:)  .* finapres_notnan_mask_crop; 
+           
+        end
         R_all(8,:)  = R_all(8,:)  .* finapres_notnan_mask_crop; 
         R_all(9,:)  = R_all(9,:)  .* finapres_notnan_mask_crop;
         R_all(10,:) = R_all(10,:) .* finapres_notnan_mask_crop;
+        
+        %Weight factor for cardiovascular variables
+        %R_all(7,:)  = 1.5 * R_all(7,:);  
+        
+        R_all(8,:)  = 1.5 * R_all(8,:);  
+        R_all(9,:)  = 1.5 * R_all(9,:);  
+        R_all(10,:) = 1.5 * R_all(10,:); 
 
         nan_values = sum(~finapres_notnan_mask_crop(:));
         [sz_vars, sz_time] = size(R_all);
@@ -116,6 +137,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
 
         %Ignored data points
         %Jp(1) = 0;
+        
         Jp(5) = 0;
         Jp(6) = 0;
         
@@ -144,7 +166,7 @@ function logJ = obj_fun(optpars_iter,objFunParams) %agregar pa
        PM_sim = x_vars(:, find(strcmp(x_keys, 'mean_P_sa')));
        
        %Theart_sim = (Theart_sim <= 0).*(Theart_sim);
-       HR_sim = Theart_sim.^1 * 60;
+       HR_sim = Theart_sim.^(-1) * 60;
        VT_sim = data_processing('volume', V_sim, t);
        out_pressure = data_processing('pressure', P_sa_sim, t);
        PS_sim = out_pressure{2};
