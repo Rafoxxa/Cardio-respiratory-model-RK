@@ -71,11 +71,6 @@ Esta función llama a:
 - **`estimate_newton_ohm`**: Lee archivo de parámetros y estima parámetros vasculares usando la ecuación de Newton-Ohm
 - **`readBeatscopeData20`**: Archivo especializado para leer datos de resultados FINAPRES
 
-### Pre-estimación de parámetros
-
-- **`sensitivity_analysis`**: Similar a `ForwardModel`, pero ejecuta múltiples instancias con computación paralela para análisis de sensibilidad
-- **`sensitivity_lab`**: Herramienta para probar variaciones de parámetros en el modelo
-- **`identificability_analysis`**: Calcula la matriz de información de Fisher (FIM) a partir de la matriz de sensibilidad para revelar correlaciones entre parámetros
 
 ### Configuración
 
@@ -83,7 +78,4 @@ Esta función llama a:
   - **`transformation_imported_dict`**: Usa expresiones regulares para actualizar líneas en `run_ode` y `model_basic` a tipo vector
 - **`Optimize_percentages`**: Define porcentajes de diferentes condiciones vasculares para estimar parámetros correctamente usando ecuaciones de Newton-Ohm. Ya no es necesario después de su uso inicial
 
-### Gráficos
 
-- **`plot_for_document`**: Códigos para generar figuras que irán en el documento
-- **`deploy_papers_results`**: Grafica resultados de simulación en estado estacionario
