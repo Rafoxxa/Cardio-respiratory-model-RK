@@ -22,14 +22,14 @@ function [t, x_dot, x_vars, X_KEYS, INDEX] = run_ode(model, pars, init, simulati
     %TINY_INDEX = containers.Map(TINY_X_KEYS, num2cell(1:length(TINY_X_KEYS)));
     %OPTIONS = ddeset('AbsTol',1e-8,'RelTol',1e-5); 
     if isa(pars, 'containers.Map')
-        %OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
-        OPTIONS_CENTRAL = odeset('AbsTol',1e-9,'RelTol',1e-8, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
+        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
+        %OPTIONS_CENTRAL = odeset('AbsTol',1e-9,'RelTol',1e-8, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, values(pars), varargin) );
     else
-        %OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
-        OPTIONS_CENTRAL = odeset('AbsTol',1e-9,'RelTol',1e-8, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
+        OPTIONS_CENTRAL = odeset('AbsTol',1e-3,'RelTol',1e-2, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
+        %OPTIONS_CENTRAL = odeset('AbsTol',1e-9,'RelTol',1e-8, 'OutputFcn', @(t, y, flag, varargin) simple_output_fcn(t, y, flag, pars, varargin) );
     end
-    %OPTIONS = odeset('AbsTol',1e-3,'RelTol',1e-2);
-    OPTIONS = odeset('AbsTol',1e-9,'RelTol',1e-8);
+    OPTIONS = odeset('AbsTol',1e-3,'RelTol',1e-2);
+    %OPTIONS = odeset('AbsTol',1e-9,'RelTol',1e-8);
     SIMULATION_TIME = simulation_time;
     DT = dt;
     
