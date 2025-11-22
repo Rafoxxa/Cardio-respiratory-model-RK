@@ -9,7 +9,25 @@ For the simulation the following files are needed:
 - `ForwardModel`: it's like the `main` for the simulation, it contains:
   - `run_ode`: it's the solver's driver:
     - `model_basic`: it's the model, is the code which contains all the equations that are used within the solver
-  - `load_global_easy`: it's a python file which contains all the parameters and initial conditions for the model
+*IMPORTANT:
+To run ForwardModel, is very important the hyperparameters assigned in the set_up functions. To run the simulation with the fitted parameters the dates of the fitted parameters must be assigned.
+Also, if respiratory times will be given, it has to be specified. The default for the moment is this:
+[setup] = set_up("simulation", patient_idx, state, "mix", "dt", 0.1,'pars_from_fitting', 1, 'fitting_mat_file', {'07-09-2025', '30-09-2025', '20-10-2025', '24-10-2025', '02-11-2025'}, 'time_from_data', 1);
+"pars_from_fitting" allows loading parameters from fitted files
+"fitting_mat_file" are all the fitting dates from which the parameters will be loaded
+"time_from_data" allows to take respiratory times from data.
+  
+ 
+### Sensitivity Analysis
+
+To run sensitivity analysis use the function  `parameter_analysis_fun` which recieves: 
+patient_number: char (1,2,3,4);
+pindex: char; the parameter index of the parameter to be perturbed
+load_rb: char (1,0); is 1 if results_base will be loaded and 0 if it will be computed and saved as a new results_base.
+ This function calls:
+     -  `sens_functions`: the driver for all the senstivities computations: run base, compute perturbed simulations and sensitivities, build STensor. It calls:
+          -  `data_processing`
+          -  `run_ode`
 
 ### Fitting
 
