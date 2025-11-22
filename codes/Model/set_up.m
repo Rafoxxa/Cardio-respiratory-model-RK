@@ -863,7 +863,7 @@ end
     % ---------------------------------------------------------------------
     % 23) getLatestFittingDateStr: devuelve la última carpeta Fitting-... con archivos
     % ---------------------------------------------------------------------
-function latestDateStr = getLatestFittingDateStr(basePath)
+
 
 function latestDateStr = getLatestFittingDateStr(basePath)
 %GETLATESTFITTINGDATESTR Returns the latest dd-MM-yyyy string from Fitting-dd-MM-yyyy folders,
